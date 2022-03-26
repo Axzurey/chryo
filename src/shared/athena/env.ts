@@ -1,5 +1,0 @@
-namespace env {
-    
-}
-
-export = env;

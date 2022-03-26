@@ -6,7 +6,7 @@ export default abstract class path {
         for (const [i, v] of pairs(paths)) {
             let t = inst.FindFirstChild(v)
             if (t) {
-
+                inst = t;
             }
             else {
                 error = true;
@@ -14,5 +14,17 @@ export default abstract class path {
             }
         }
         return error? undefined: inst;
+    }
+    static join(...pathlike: string[]): string {
+        let l = ''
+        pathlike.forEach((v, i) => {
+            if (i === 0) {
+                l = v
+            }
+            else {
+                l = `${l}//${v}`
+            }
+        })
+        return l;
     }
 }
