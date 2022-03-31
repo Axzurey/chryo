@@ -4,6 +4,7 @@ import entity from "./basic/entity";
 
 namespace space {
     const entityMaps: Map<component[], entity[]> = new Map();
+    export const ignoreInstances: Instance[] = [];
 
     export namespace query {
         export function findAllWithComponents(components: component[]): entity[] {
