@@ -1,6 +1,10 @@
-type anyFunctionVoid = (...args: never[]) => void
+import { Players, RunService } from "@rbxts/services"
+import { getSharedEnvironment } from "shared/constants/environment"
 
-interface protocolEars<T extends anyFunctionVoid> {
+type anyFunctionVoid = (...args: any[]) => void
+type playerFuncVoid = (player: Player, ...args: unknown[]) => void
+
+interface protocolListener<T extends anyFunctionVoid> {
     callback?: T
 	disconnect: () => void
 	called?: true
@@ -9,31 +13,101 @@ interface protocolEars<T extends anyFunctionVoid> {
 	disconnected: boolean
 }
 
-export default class remoteProtocol<T extends anyFunctionVoid> {
-	listeners: Record<string, protocolEars<T>[]> = {};
+export type GetGenericOfClassServer<T> = T extends remoteProtocol<infer A, infer B> ? A : never;
+export type GetGenericOfClassClient<T> = T extends remoteProtocol<infer A, infer B> ? B : never;
 
-    private constructor(uniqueAlias: string) {
+/**
+ * the parameters of the generic are what the component recieves: FireServer would send Parameters<Server>
+ */
+export default class remoteProtocol<Server extends (player: Player, ...args: any[]) => void, Client extends anyFunctionVoid> {
+	private listeners: protocolListener<Server | Client>[] = [];
+    private remote: RemoteEvent
 
-    }
-	static createRemoteProtocol(uniqueAlias: string) {
-        return new this(uniqueAlias);
-    }
+    constructor(uniqueAlias: string) {
+        if (RunService.IsServer()) {
+            this.remote = new Instance('RemoteEvent');
+            this.remote.Name = `protocol:${uniqueAlias}`;
+            this.remote.Parent = getSharedEnvironment().Remotes;
 
-    private addListener(protocol: string, constructed: protocolEars<T>) {
-        let list = this.listeners[protocol];
-        if (list) {
-            list.push(constructed);
+            this.remote.OnServerEvent.Connect((client, ...args: unknown[]) => {
+                this.listeners.forEach((v) => {
+                    if (v.callback) {
+                        let callback = v.callback as Server;
+                        callback(client, ...args)
+                    }
+                })
+            })
         }
         else {
-            let l = [constructed];
-            this.listeners[protocol] = l
+            this.remote = getSharedEnvironment().Remotes.WaitForChild(`protocol:${uniqueAlias}`) as RemoteEvent;
+            this.remote.OnClientEvent.Connect((...args: unknown[]) => {
+                this.listeners.forEach((v) => {
+                    if (v.callback) {
+                        let callback = v.callback as Client;
+                        callback(...args as unknown[])
+                    }
+                })
+            })
         }
     }
 
-	on(protocol: string, callback: T) {
-        
+    private disconnectSomething(d: protocolListener<Server | Client>) {
+		let index = this.listeners.indexOf(d);
+		if (d.disconnected) {
+			throw `unable to disconnect a connection that has already been disconnected`
+		}
+		if (index !== -1) {
+			d.disconnected = true;
+			this.listeners.remove(index);
+		}
 	}
-    fire(protocol: string, args: Parameters<T>) {
 
+    private addListener(constructed: protocolListener<Server | Client>) {;
+        this.listeners.push(constructed)
+    }
+
+	public listenServer(callback: Server) {
+        let c: protocolListener<Server> = {
+            callback: callback,
+            disconnected: false,
+            disconnect: () => {
+                this.disconnectSomething(c)
+            },
+        }
+        this.addListener(c);
+        return c;
+	}
+
+    public listenClient(callback: Client) {
+        let c: protocolListener<Client> = {
+            callback: callback,
+            disconnected: false,
+            disconnect: () => {
+                this.disconnectSomething(c)
+            },
+        }
+        this.addListener(c);
+        return c;
+	}
+
+    public fireClient(client: Player, args: Parameters<Client>) {
+        if (RunService.IsClient()) throw `this method may not be called from the client!`;
+
+        this.remote.FireClient(client, ...args as unknown[]);
+    }
+    public fireClients(clients: Player[], args: Parameters<Client>) {
+        if (RunService.IsClient()) throw `this method may not be called from the client!`;
+
+        clients.forEach((client) => {
+            this.remote.FireClient(client, ...args as unknown[]);
+        })
+    }
+    public fireAllClientsExcept(blacklist: Player[], args: Parameters<Client>) {
+        if (RunService.IsClient()) throw `this method may not be called from the client!`;
+
+        Players.GetPlayers().forEach((client) => {
+            if (blacklist.indexOf(client) !== -1) return;
+            this.remote.FireClient(client, ...args as unknown[]);
+        })
     }
 }

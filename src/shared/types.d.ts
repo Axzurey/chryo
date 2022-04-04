@@ -8,7 +8,9 @@ declare global {
 	type Parameters2<T> = T extends (...args: infer P) => any ? P : never;
 	type ReturnType2<T> = T extends (...args: Array<any>) => infer R ? R : never;
 
-    export type propertyExists<P extends string, T> = { [k in P]: T}
+    type propertyExists<P extends string, T> = { [k in P]: T}
+
+    type pathLike = string;
 
 	interface TypedPropertyDescriptor<T> {
 		value: (self: InferThis<T>, ...parameters: Parameters2<T>) => ReturnType2<T>;
