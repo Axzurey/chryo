@@ -1,3 +1,4 @@
+import gunwork from "shared/types/gunwork";
 
 export default abstract class item {
 

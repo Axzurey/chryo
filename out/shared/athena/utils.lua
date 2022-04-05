@@ -10,6 +10,47 @@ do
 		return false
 	end
 	_container.propertyExistsInObject = propertyExistsInObject
+	local function newThread(callback)
+		coroutine.wrap(function()
+			callback()
+		end)()
+	end
+	_container.newThread = newThread
+	local instanceUtils = {}
+	do
+		local _container_1 = instanceUtils
+		--[[
+			*
+			* makes all children as if they aren't there(uninteractable)
+		]]
+		local function nominalizeAllChildren(parent)
+			local _exp = parent:GetChildren()
+			local _arg0 = function(v)
+				if v:IsA("BasePart") then
+					v.CanCollide = false
+					v.CanTouch = false
+					v.CanQuery = false
+				end
+			end
+			for _k, _v in ipairs(_exp) do
+				_arg0(_v, _k - 1, _exp)
+			end
+		end
+		_container_1.nominalizeAllChildren = nominalizeAllChildren
+		local function anchorAllChildren(parent)
+			local _exp = parent:GetChildren()
+			local _arg0 = function(v)
+				if v:IsA("BasePart") then
+					v.Anchored = true
+				end
+			end
+			for _k, _v in ipairs(_exp) do
+				_arg0(_v, _k - 1, _exp)
+			end
+		end
+		_container_1.anchorAllChildren = anchorAllChildren
+	end
+	_container.instanceUtils = instanceUtils
 	local tableUtils = {}
 	do
 		local _container_1 = tableUtils

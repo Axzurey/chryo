@@ -5,6 +5,35 @@ namespace utils {
         return false;
     }
 
+    export function newThread(callback: () => void) {
+        coroutine.wrap(() => {
+            callback()
+        })()
+    }
+
+    export namespace instanceUtils {
+        /**
+         * makes all children as if they aren't there(uninteractable)
+         */
+        export function nominalizeAllChildren(parent: Instance) {
+            parent.GetChildren().forEach((v) => {
+                if (v.IsA("BasePart")) {
+                    v.CanCollide = false;
+                    v.CanTouch = false;
+                    v.CanQuery = false;
+                }
+            })
+        }
+
+        export function anchorAllChildren(parent: Instance) {
+            parent.GetChildren().forEach((v) => {
+                if (v.IsA("BasePart")) {
+                    v.Anchored = true;
+                }
+            })
+        }
+    }
+
     export namespace tableUtils {
 
         export function fillDefaults<T extends Record<any, any>>(passed: Partial<T>, fill: T): T {

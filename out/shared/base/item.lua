@@ -1,4 +1,6 @@
 -- Compiled with roblox-ts v1.3.3
+local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
+local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local item
 do
 	item = {}

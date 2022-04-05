@@ -1,5 +1,7 @@
-import { ContextActionService } from "@rbxts/services";
+import { ContextActionService, RunService, Workspace } from "@rbxts/services";
 import gun from "shared/extended/gun";
+import clientExposed from "shared/middleware/clientExposed";
+import gunwork from "shared/types/gunwork";
 import item from "./item";
 
 export default class actionController {
@@ -14,6 +16,7 @@ export default class actionController {
 	private actionMap: Record<keyof typeof this.keybinds, (state: Enum.UserInputState) => void> = {
 		aim: (state) => {
 			if (this.equippedIsAGun(this.equippedItem)) {
+				print('aim switch!')
 				let gun = this.equippedItem;
 				gun.aim(state === Enum.UserInputState.Begin? true: false);
 			}
@@ -27,12 +30,23 @@ export default class actionController {
 	}
 
 	constructor() {
+		clientExposed.setCamera(Workspace.CurrentCamera as Camera);
 		ContextActionService.BindAction('context:actionController', (_action, state, input) => {
 			let key = this.getKeybind(input);
             if (key) {
                 this.actionMap[key](state);
             }
-		}, false)
+		}, false, ...[...Enum.KeyCode.GetEnumItems(), ...Enum.UserInputType.GetEnumItems()]);
+
+		let render = RunService.RenderStepped.Connect((dt) => {
+			let equipped = this.equippedItem;
+			if (this.equippedIsAGun(equipped)) {
+				equipped.update(dt);
+			}
+		})
+
+		let item = new gun('$xoo', 'ReplicatedStorage//guns//hk416');
+		this.equippedItem = item;
 	}
 
 	private getKeybind(input: InputObject) {

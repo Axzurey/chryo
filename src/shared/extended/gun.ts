@@ -1,8 +1,12 @@
 import path from "shared/athena/path";
 import item from "shared/base/item";
 import paths from "shared/constants/paths";
+import clientExposed from "shared/middleware/clientExposed";
+import gunwork from "shared/types/gunwork";
+import utils, { newThread } from 'shared/athena/utils';
+import { TweenService } from "@rbxts/services";
 
-export default abstract class gun extends item {
+export default class gun extends item {
 
 	//absolute
 	typeIdentifier = gunwork.itemTypeIdentifier.gun
@@ -32,10 +36,6 @@ export default abstract class gun extends item {
 	 */
 	spreadDelta: number = 0;
 
-    values = {
-        aimDelta: new Instance("NumberValue"),
-    }
-
 	sprinting: boolean = false;
 	aiming: boolean = false;
 	reloading: boolean = false;
@@ -55,6 +55,10 @@ export default abstract class gun extends item {
 		aimOffset: new CFrame(),
 		sprintOffset: new CFrame(),
 	}
+
+	values = {
+        aimDelta: new Instance("NumberValue"),
+    }
 
 	//config
 
@@ -123,6 +127,10 @@ export default abstract class gun extends item {
 	 * how much time it takes for spread to decrease after a shot
 	 */
 	spreadPopTime: number = 0;
+	/**
+	 * how long it takes to ads
+	 */
+	adsLength: number = .5;
 	constructor(serverItemIndentification: string, pathToGun: pathLike) {
 		super(serverItemIndentification);
 
@@ -137,8 +145,14 @@ export default abstract class gun extends item {
 			v.Parent = viewmodel;
 			if (v.Name === 'aimpart') {
 				viewmodel.PrimaryPart = v as BasePart;
+				print('set aimpart')
 			}
 		})
+
+
+		print(viewmodel.GetChildren())
+		utils.instanceUtils.anchorAllChildren(viewmodel);
+		utils.instanceUtils.nominalizeAllChildren(viewmodel);
 
 		//setup attachments if possible
 
@@ -148,16 +162,40 @@ export default abstract class gun extends item {
 
 		//load animations!
 
-		this.viewmodel = viewmodel as gunwork.gunViewmodel
+		this.viewmodel = viewmodel as gunwork.gunViewmodel;
+		this.viewmodel.SetPrimaryPartCFrame(new CFrame(0, 10000, 0))
 	}
 	fire() {
-		if (!this.firePoint && !this.camera) throw `fire can not be called without a character or camera`
-		const fireCFrame = this.camera? this.camera.CFrame: (this.firePoint as BasePart).CFrame;
+		newThread(() => {
+			if (!this.firePoint && !this.camera) throw `fire can not be called without a character or camera`
+			const fireCFrame = this.camera? this.camera.CFrame: (this.firePoint as BasePart).CFrame;
+		})
 	}
 	aim(t: boolean) {
-		//todo
+		newThread(() => {
+			let calculated = math.abs(this.values.aimDelta.Value - .5)
+			let info = new TweenInfo(this.adsLength - calculated, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
+
+			TweenService.Create(this.values.aimDelta, info, {
+				Value: t? 1: 0
+			});
+
+			task.wait(this.adsLength);
+
+			this.aiming = t;
+		})
 	}
     update(dt: number) {
+		if (!this.viewmodel.PrimaryPart) return;
         //todo
+		const camera = clientExposed.getCamera();
+
+		let idleOffset = this.cframes.idle.Lerp(new CFrame(), this.values.aimDelta.Value);
+
+		let finalCameraCframe = camera.CFrame.mul(idleOffset);
+
+		this.viewmodel.SetPrimaryPartCFrame(finalCameraCframe);
+
+		this.viewmodel.Parent = camera;
     }
 }

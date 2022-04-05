@@ -3,6 +3,12 @@ local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_incl
 local path = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "path").default
 local item = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base", "item").default
 local paths = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "paths")
+local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed").default
+local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
+local _utils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils")
+local utils = _utils
+local newThread = _utils.newThread
+local TweenService = TS.import(script, TS.getModule(script, "@rbxts", "services")).TweenService
 local gun
 do
 	local super = item
@@ -13,6 +19,10 @@ do
 		__index = super,
 	})
 	gun.__index = gun
+	function gun.new(...)
+		local self = setmetatable({}, gun)
+		return self:constructor(...) or self
+	end
 	function gun:constructor(serverItemIndentification, pathToGun)
 		super.constructor(self, serverItemIndentification)
 		self.typeIdentifier = gunwork.itemTypeIdentifier.gun
@@ -24,9 +34,6 @@ do
 		self.currentRecoilIndex = 0
 		self.lastReload = 0
 		self.spreadDelta = 0
-		self.values = {
-			aimDelta = Instance.new("NumberValue"),
-		}
 		self.sprinting = false
 		self.aiming = false
 		self.reloading = false
@@ -43,6 +50,9 @@ do
 			leanOffset = CFrame.new(),
 			aimOffset = CFrame.new(),
 			sprintOffset = CFrame.new(),
+		}
+		self.values = {
+			aimDelta = Instance.new("NumberValue"),
 		}
 		self.spread = 0
 		self.firerate = {
@@ -77,6 +87,7 @@ do
 		self.spreadUpPerShot = 0
 		self.maxAllowedSpread = 0
 		self.spreadPopTime = 0
+		self.adsLength = .5
 		-- get the gun model from path
 		local gun = path:sure(pathToGun):Clone()
 		-- get the viewmodel from path
@@ -87,26 +98,53 @@ do
 			v.Parent = viewmodel
 			if v.Name == "aimpart" then
 				viewmodel.PrimaryPart = v
+				print("set aimpart")
 			end
 		end
 		for _k, _v in ipairs(_exp) do
 			_arg0(_v, _k - 1, _exp)
 		end
+		print(viewmodel:GetChildren())
+		utils.instanceUtils.anchorAllChildren(viewmodel)
+		utils.instanceUtils.nominalizeAllChildren(viewmodel)
 		-- setup attachments if possible
 		-- connect motor6ds
 		-- set viewmodel far below!
 		-- load animations!
 		self.viewmodel = viewmodel
+		self.viewmodel:SetPrimaryPartCFrame(CFrame.new(0, 10000, 0))
 	end
 	function gun:fire()
-		if not self.firePoint and not self.camera then
-			error("fire can not be called without a character or camera")
-		end
-		local fireCFrame = if self.camera then self.camera.CFrame else (self.firePoint).CFrame
+		newThread(function()
+			if not self.firePoint and not self.camera then
+				error("fire can not be called without a character or camera")
+			end
+			local fireCFrame = if self.camera then self.camera.CFrame else (self.firePoint).CFrame
+		end)
 	end
 	function gun:aim(t)
+		newThread(function()
+			local calculated = math.abs(self.values.aimDelta.Value - .5)
+			local info = TweenInfo.new(self.adsLength - calculated, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+			TweenService:Create(self.values.aimDelta, info, {
+				Value = if t then 1 else 0,
+			})
+			task.wait(self.adsLength)
+			self.aiming = t
+		end)
 	end
 	function gun:update(dt)
+		if not self.viewmodel.PrimaryPart then
+			return nil
+		end
+		-- todo
+		local camera = clientExposed:getCamera()
+		local idleOffset = self.cframes.idle:Lerp(CFrame.new(), self.values.aimDelta.Value)
+		local _cFrame = camera.CFrame
+		local _idleOffset = idleOffset
+		local finalCameraCframe = _cFrame * _idleOffset
+		self.viewmodel:SetPrimaryPartCFrame(finalCameraCframe)
+		self.viewmodel.Parent = camera
 	end
 end
 return {
