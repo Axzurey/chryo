@@ -51,13 +51,18 @@ export default class gun extends item {
 
 	cframes = {
 		idle: new CFrame(),
-		leanOffset: new CFrame(),
 		aimOffset: new CFrame(),
 		sprintOffset: new CFrame(),
 	}
 
+	staticOffsets = {
+		leanRight: new CFrame(.1, 0, 0).mul(CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-35))),
+		leanLeft: new CFrame(-.1, 0, 0).mul(CFrame.fromEulerAnglesYXZ(0, 0, math.rad(35))),
+	}
+
 	values = {
         aimDelta: new Instance("NumberValue"),
+		leanOffsetViewmodel: new Instance("CFrameValue")
     }
 
 	//config
@@ -131,6 +136,10 @@ export default class gun extends item {
 	 * how long it takes to ads
 	 */
 	adsLength: number = .5;
+	/**
+	 * how long it takes to lean
+	 */
+	leanLength: number = .35;
 	constructor(serverItemIndentification: string, pathToGun: pathLike) {
 		super(serverItemIndentification);
 
@@ -139,6 +148,8 @@ export default class gun extends item {
 
 		//get the viewmodel from path
 		let viewmodel = path.sure(paths.fps.standard_viewmodel).Clone() as gunwork.viewmodel;
+
+		print(gun, gun.GetChildren())
 
 		//copy gun stuff to the viewmodel
 		gun.GetChildren().forEach((v) => {
@@ -178,11 +189,34 @@ export default class gun extends item {
 
 			TweenService.Create(this.values.aimDelta, info, {
 				Value: t? 1: 0
-			});
+			}).Play();
 
 			task.wait(this.adsLength);
 
 			this.aiming = t;
+		})
+	}
+	lean(t: 1 | 0 | -1) {
+		newThread(() => {
+			let info = new TweenInfo(this.leanLength, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
+			let val = new CFrame();
+
+			if (t === this.leanDirection) {
+				t = 0;
+			}
+
+			this.leanDirection = t;
+
+			if (t === 1) {
+				val = this.staticOffsets.leanRight;
+			}
+			else if (t === -1) {
+				val = this.staticOffsets.leanLeft;
+			}
+
+			TweenService.Create(this.values.leanOffsetViewmodel, info, {
+				Value: val
+			}).Play()
 		})
 	}
     update(dt: number) {
@@ -191,6 +225,8 @@ export default class gun extends item {
 		const camera = clientExposed.getCamera();
 
 		let idleOffset = this.cframes.idle.Lerp(new CFrame(), this.values.aimDelta.Value);
+		
+		idleOffset = idleOffset.mul(this.values.leanOffsetViewmodel.Value)
 
 		let finalCameraCframe = camera.CFrame.mul(idleOffset);
 

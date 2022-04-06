@@ -24,6 +24,8 @@ do
 			aim = Enum.UserInputType.MouseButton2,
 			fire = Enum.UserInputType.MouseButton1,
 			reload = Enum.KeyCode.R,
+			leanRight = Enum.KeyCode.E,
+			leanLeft = Enum.KeyCode.Q,
 		}
 		self.actionMap = {
 			aim = function(state)
@@ -33,13 +35,27 @@ do
 					gun:aim(if state == Enum.UserInputState.Begin then true else false)
 				end
 			end,
-			fire = function()
+			fire = function(state)
 				return "TODO"
 			end,
-			reload = function()
+			reload = function(state)
 				return "TODO"
+			end,
+			leanLeft = function(state)
+				if self:starting(state) and self:equippedIsAGun(self.equippedItem) then
+					local gun = self.equippedItem
+					gun:lean(-1)
+				end
+			end,
+			leanRight = function(state)
+				if self:starting(state) and self:equippedIsAGun(self.equippedItem) then
+					local gun = self.equippedItem
+					gun:lean(1)
+				end
 			end,
 		}
+		local item = gun.new("$xoo", "ReplicatedStorage//guns//hk416")
+		self.equippedItem = item
 		clientExposed:setCamera(Workspace.CurrentCamera)
 		local _fn = ContextActionService
 		local _exp = function(_action, state, input)
@@ -47,6 +63,7 @@ do
 			if key then
 				self.actionMap[key](state)
 			end
+			return Enum.ContextActionResult.Pass
 		end
 		local _array = {}
 		local _length = #_array
@@ -63,8 +80,18 @@ do
 				equipped:update(dt)
 			end
 		end)
-		local item = gun.new("$xoo", "ReplicatedStorage//guns//hk416")
-		self.equippedItem = item
+	end
+	function actionController:starting(state)
+		if state == Enum.UserInputState.Begin then
+			return true
+		end
+		return false
+	end
+	function actionController:ending(state)
+		if state == Enum.UserInputState.End then
+			return true
+		end
+		return false
 	end
 	function actionController:getKeybind(input)
 		for alias, key in pairs(self.keybinds) do

@@ -47,12 +47,22 @@ do
 		self.wantsToAim = false
 		self.cframes = {
 			idle = CFrame.new(),
-			leanOffset = CFrame.new(),
 			aimOffset = CFrame.new(),
 			sprintOffset = CFrame.new(),
 		}
+		local _object = {}
+		local _left = "leanRight"
+		local _cFrame = CFrame.new(.1, 0, 0)
+		local _arg0 = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-35))
+		_object[_left] = _cFrame * _arg0
+		local _left_1 = "leanLeft"
+		local _cFrame_1 = CFrame.new(-.1, 0, 0)
+		local _arg0_1 = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(35))
+		_object[_left_1] = _cFrame_1 * _arg0_1
+		self.staticOffsets = _object
 		self.values = {
 			aimDelta = Instance.new("NumberValue"),
+			leanOffsetViewmodel = Instance.new("CFrameValue"),
 		}
 		self.spread = 0
 		self.firerate = {
@@ -88,13 +98,15 @@ do
 		self.maxAllowedSpread = 0
 		self.spreadPopTime = 0
 		self.adsLength = .5
+		self.leanLength = .35
 		-- get the gun model from path
 		local gun = path:sure(pathToGun):Clone()
 		-- get the viewmodel from path
 		local viewmodel = path:sure(paths.fps.standard_viewmodel):Clone()
+		print(gun, gun:GetChildren())
 		-- copy gun stuff to the viewmodel
 		local _exp = gun:GetChildren()
-		local _arg0 = function(v)
+		local _arg0_2 = function(v)
 			v.Parent = viewmodel
 			if v.Name == "aimpart" then
 				viewmodel.PrimaryPart = v
@@ -102,7 +114,7 @@ do
 			end
 		end
 		for _k, _v in ipairs(_exp) do
-			_arg0(_v, _k - 1, _exp)
+			_arg0_2(_v, _k - 1, _exp)
 		end
 		print(viewmodel:GetChildren())
 		utils.instanceUtils.anchorAllChildren(viewmodel)
@@ -128,9 +140,27 @@ do
 			local info = TweenInfo.new(self.adsLength - calculated, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 			TweenService:Create(self.values.aimDelta, info, {
 				Value = if t then 1 else 0,
-			})
+			}):Play()
 			task.wait(self.adsLength)
 			self.aiming = t
+		end)
+	end
+	function gun:lean(t)
+		newThread(function()
+			local info = TweenInfo.new(self.leanLength, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+			local val = CFrame.new()
+			if t == self.leanDirection then
+				t = 0
+			end
+			self.leanDirection = t
+			if t == 1 then
+				val = self.staticOffsets.leanRight
+			elseif t == -1 then
+				val = self.staticOffsets.leanLeft
+			end
+			TweenService:Create(self.values.leanOffsetViewmodel, info, {
+				Value = val,
+			}):Play()
 		end)
 	end
 	function gun:update(dt)
@@ -140,9 +170,12 @@ do
 		-- todo
 		local camera = clientExposed:getCamera()
 		local idleOffset = self.cframes.idle:Lerp(CFrame.new(), self.values.aimDelta.Value)
-		local _cFrame = camera.CFrame
 		local _idleOffset = idleOffset
-		local finalCameraCframe = _cFrame * _idleOffset
+		local _value = self.values.leanOffsetViewmodel.Value
+		idleOffset = _idleOffset * _value
+		local _cFrame = camera.CFrame
+		local _idleOffset_1 = idleOffset
+		local finalCameraCframe = _cFrame * _idleOffset_1
 		self.viewmodel:SetPrimaryPartCFrame(finalCameraCframe)
 		self.viewmodel.Parent = camera
 	end

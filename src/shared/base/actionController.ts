@@ -11,6 +11,8 @@ export default class actionController {
 		aim: Enum.UserInputType.MouseButton2,
 		fire: Enum.UserInputType.MouseButton1,
         reload: Enum.KeyCode.R,
+		leanRight: Enum.KeyCode.E,
+		leanLeft: Enum.KeyCode.Q
 	}
 
 	private actionMap: Record<keyof typeof this.keybinds, (state: Enum.UserInputState) => void> = {
@@ -21,21 +23,49 @@ export default class actionController {
 				gun.aim(state === Enum.UserInputState.Begin? true: false);
 			}
 		},
-		fire: () => {
+		fire: (state) => {
 			return 'TODO'
 		},
-        reload: () => {
+        reload: (state) => {
             return 'TODO'
-        }
+        },
+		leanLeft: (state) => {
+			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
+				let gun = this.equippedItem;
+				gun.lean(-1)
+			}
+		},
+		leanRight: (state) => {
+			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
+				let gun = this.equippedItem;
+				gun.lean(1)
+			}
+		}
+	}
+
+	private starting(state: Enum.UserInputState): state is Enum.UserInputState.Begin {
+		if (state === Enum.UserInputState.Begin) return true;
+		return false;
+	}
+
+	private ending(state: Enum.UserInputState): state is Enum.UserInputState.End {
+		if (state === Enum.UserInputState.End) return true;
+		return false;
 	}
 
 	constructor() {
+		
+		let item = new gun('$xoo', 'ReplicatedStorage//guns//hk416');
+		this.equippedItem = item;
+
 		clientExposed.setCamera(Workspace.CurrentCamera as Camera);
+		
 		ContextActionService.BindAction('context:actionController', (_action, state, input) => {
 			let key = this.getKeybind(input);
             if (key) {
                 this.actionMap[key](state);
             }
+			return Enum.ContextActionResult.Pass
 		}, false, ...[...Enum.KeyCode.GetEnumItems(), ...Enum.UserInputType.GetEnumItems()]);
 
 		let render = RunService.RenderStepped.Connect((dt) => {
@@ -44,9 +74,6 @@ export default class actionController {
 				equipped.update(dt);
 			}
 		})
-
-		let item = new gun('$xoo', 'ReplicatedStorage//guns//hk416');
-		this.equippedItem = item;
 	}
 
 	private getKeybind(input: InputObject) {
