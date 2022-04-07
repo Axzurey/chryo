@@ -1,4 +1,5 @@
-import { ContextActionService, RunService, Workspace } from "@rbxts/services";
+import { RunService, UserInputService, Workspace } from "@rbxts/services";
+import { newThread } from "shared/athena/utils";
 import gun from "shared/extended/gun";
 import clientExposed from "shared/middleware/clientExposed";
 import gunwork from "shared/types/gunwork";
@@ -54,21 +55,28 @@ export default class actionController {
 	}
 
 	constructor() {
-		
-		let item = new gun('$xoo', 'ReplicatedStorage//guns//hk416');
+
+		let item = new gun('$xoo', 'ReplicatedStorage//guns//hk416&class=Model');
 		this.equippedItem = item;
 
 		clientExposed.setCamera(Workspace.CurrentCamera as Camera);
 		
-		ContextActionService.BindAction('context:actionController', (_action, state, input) => {
+		let mainInputStart = UserInputService.InputBegan.Connect((input, gp) => {
+			if (gp) return;
 			let key = this.getKeybind(input);
-            if (key) {
-                this.actionMap[key](state);
-            }
-			return Enum.ContextActionResult.Pass
-		}, false, ...[...Enum.KeyCode.GetEnumItems(), ...Enum.UserInputType.GetEnumItems()]);
+			if (key) {
+				this.actionMap[key](input.UserInputState);
+			}
+		})
 
-		let render = RunService.RenderStepped.Connect((dt) => {
+		let mainInputEnd = UserInputService.InputEnded.Connect((input) => {
+			let key = this.getKeybind(input);
+			if (key) {
+				this.actionMap[key](input.UserInputState);
+			}
+		})
+
+		let mainRender = RunService.RenderStepped.Connect((dt) => {
 			let equipped = this.equippedItem;
 			if (this.equippedIsAGun(equipped)) {
 				equipped.update(dt);

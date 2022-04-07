@@ -10,8 +10,7 @@ namespace gunwork {
     export type viewmodel = Model & {
         leftArm: MeshPart,
         rightArm: MeshPart,
-        aimpart?: Part,
-        rootPart?: Part,
+        aimpart: Part,
     }
     
     export type gunViewmodel = viewmodel & {

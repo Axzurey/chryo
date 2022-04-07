@@ -103,25 +103,30 @@ do
 		local gun = path:sure(pathToGun):Clone()
 		-- get the viewmodel from path
 		local viewmodel = path:sure(paths.fps.standard_viewmodel):Clone()
-		print(gun, gun:GetChildren())
 		-- copy gun stuff to the viewmodel
 		local _exp = gun:GetChildren()
 		local _arg0_2 = function(v)
 			v.Parent = viewmodel
-			if v.Name == "aimpart" then
-				viewmodel.PrimaryPart = v
-				print("set aimpart")
-			end
 		end
 		for _k, _v in ipairs(_exp) do
 			_arg0_2(_v, _k - 1, _exp)
 		end
-		print(viewmodel:GetChildren())
 		utils.instanceUtils.anchorAllChildren(viewmodel)
 		utils.instanceUtils.nominalizeAllChildren(viewmodel)
+		local ap = viewmodel.aimpart
+		local vm = viewmodel
+		local m0 = Instance.new("Motor6D")
+		m0.Part0 = ap
+		m0.Name = "rightMotor"
+		m0.Part1 = vm.rightArm
+		m0.Parent = vm
+		local m1 = Instance.new("Motor6D")
+		m1.Part0 = ap
+		m1.Part1 = vm.leftArm
+		m1.Name = "leftMotor"
+		m1.Parent = vm
+		viewmodel.PrimaryPart = viewmodel.aimpart
 		-- setup attachments if possible
-		-- connect motor6ds
-		-- set viewmodel far below!
 		-- load animations!
 		self.viewmodel = viewmodel
 		self.viewmodel:SetPrimaryPartCFrame(CFrame.new(0, 10000, 0))
@@ -136,8 +141,7 @@ do
 	end
 	function gun:aim(t)
 		newThread(function()
-			local calculated = math.abs(self.values.aimDelta.Value - .5)
-			local info = TweenInfo.new(self.adsLength - calculated, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+			local info = TweenInfo.new(self.adsLength, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 			TweenService:Create(self.values.aimDelta, info, {
 				Value = if t then 1 else 0,
 			}):Play()
@@ -167,7 +171,7 @@ do
 		if not self.viewmodel.PrimaryPart then
 			return nil
 		end
-		-- todo
+		self.cframes.idle = self.viewmodel.offsets.idle.Value
 		local camera = clientExposed:getCamera()
 		local idleOffset = self.cframes.idle:Lerp(CFrame.new(), self.values.aimDelta.Value)
 		local _idleOffset = idleOffset

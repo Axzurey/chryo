@@ -15,7 +15,7 @@ export default class gun extends item {
 
 	connections: Record<string, RBXScriptConnection> = {}
 
-	viewmodel: gunwork.viewmodel
+	viewmodel: gunwork.gunViewmodel
 
 	camera?: Camera;
 	character?: Model;
@@ -149,32 +149,37 @@ export default class gun extends item {
 		//get the viewmodel from path
 		let viewmodel = path.sure(paths.fps.standard_viewmodel).Clone() as gunwork.viewmodel;
 
-		print(gun, gun.GetChildren())
-
 		//copy gun stuff to the viewmodel
 		gun.GetChildren().forEach((v) => {
 			v.Parent = viewmodel;
-			if (v.Name === 'aimpart') {
-				viewmodel.PrimaryPart = v as BasePart;
-				print('set aimpart')
-			}
 		})
 
-
-		print(viewmodel.GetChildren())
 		utils.instanceUtils.anchorAllChildren(viewmodel);
 		utils.instanceUtils.nominalizeAllChildren(viewmodel);
 
+		let ap = viewmodel.aimpart;
+		let vm = viewmodel;
+
+		let m0 = new Instance("Motor6D");
+		m0.Part0 = ap;
+		m0.Name = 'rightMotor';
+		m0.Part1 = vm.rightArm;
+		m0.Parent = vm;
+
+		let m1 = new Instance("Motor6D");
+		m1.Part0 = ap;
+		m1.Part1 = vm.leftArm;
+		m1.Name = 'leftMotor';
+		m1.Parent = vm;
+
+		viewmodel.PrimaryPart = viewmodel.aimpart;
+
 		//setup attachments if possible
-
-		//connect motor6ds
-
-		//set viewmodel far below!
 
 		//load animations!
 
 		this.viewmodel = viewmodel as gunwork.gunViewmodel;
-		this.viewmodel.SetPrimaryPartCFrame(new CFrame(0, 10000, 0))
+		this.viewmodel.SetPrimaryPartCFrame(new CFrame(0, 10000, 0));
 	}
 	fire() {
 		newThread(() => {
@@ -184,8 +189,7 @@ export default class gun extends item {
 	}
 	aim(t: boolean) {
 		newThread(() => {
-			let calculated = math.abs(this.values.aimDelta.Value - .5)
-			let info = new TweenInfo(this.adsLength - calculated, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
+			let info = new TweenInfo(this.adsLength, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
 
 			TweenService.Create(this.values.aimDelta, info, {
 				Value: t? 1: 0
@@ -221,7 +225,9 @@ export default class gun extends item {
 	}
     update(dt: number) {
 		if (!this.viewmodel.PrimaryPart) return;
-        //todo
+
+		this.cframes.idle = this.viewmodel.offsets.idle.Value;
+
 		const camera = clientExposed.getCamera();
 
 		let idleOffset = this.cframes.idle.Lerp(new CFrame(), this.values.aimDelta.Value);

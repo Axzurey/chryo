@@ -1,10 +1,13 @@
 -- Compiled with roblox-ts v1.3.3
+local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
+local pattern = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "pattern").default
 local path
 do
 	path = {}
 	function path:constructor()
 	end
 	function path:getInstance(pathlike)
+		pathlike = string.split(pathlike, "&")[1]
 		local paths = string.split(pathlike, "//")
 		local inst = game
 		local err = false
@@ -20,9 +23,20 @@ do
 		return if err then nil else inst
 	end
 	function path:sure(pathlike)
+		-- now make it accept args that tell like if it's of a certain class or smth
 		local i = self:getInstance(pathlike)
 		if not i then
 			error(pathlike .. " is an invalid path")
+		end
+		local matches = pattern:match(pathlike, {
+			classMust = "&class:%a+",
+		})
+		local _condition = matches.classMust
+		if _condition ~= "" and _condition then
+			_condition = i.ClassName ~= matches.classMust
+		end
+		if _condition ~= "" and _condition then
+			error("instance found does not match class " .. (matches.classMust .. (". it has class " .. i.ClassName)))
 		end
 		return i
 	end

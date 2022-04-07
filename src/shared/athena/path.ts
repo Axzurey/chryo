@@ -1,8 +1,13 @@
+import pattern from "./pattern";
+
 export default abstract class path {
     static getInstance(pathlike: string): Instance | undefined {
+        pathlike = pathlike.split('&')[0];
+
         let paths = pathlike.split('//');
         let inst: Instance = game;
         let err = false;
+        
         for (const [i, v] of pairs(paths)) {
             let t = inst.FindFirstChild(v)
             if (t) {
@@ -20,8 +25,16 @@ export default abstract class path {
      * use this if you're sure the path exists. if it doesn't, this method will throw an error
      */
     static sure(pathlike: string): Instance {
+        //now make it accept args that tell like if it's of a certain class or smth
         let i = this.getInstance(pathlike) as Instance;
-        if (!i) throw `${pathlike} is an invalid path`
+        if (!i) throw `${pathlike} is an invalid path`;
+
+        let matches = pattern.match(pathlike, {
+            'classMust': '&class:%a+'
+        })
+
+        if (matches.classMust && i.ClassName !== matches.classMust) throw `instance found does not match class ${matches.classMust}. it has class ${i.ClassName}`
+
         return i
     }
 
