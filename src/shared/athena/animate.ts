@@ -1,7 +1,7 @@
 import { Workspace } from "@rbxts/services";
 
 export default class animationCompile {
-    private constructor(private animation: Instance) {
+    private constructor(private animation: Animation) {
         
     }
     static create(animationId: string) {

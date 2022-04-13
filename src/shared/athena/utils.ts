@@ -6,9 +6,7 @@ namespace utils {
     }
 
     export function newThread(callback: () => void) {
-        coroutine.wrap(() => {
-            callback()
-        })()
+        task.spawn(callback);
     }
 
     export namespace instanceUtils {
@@ -25,10 +23,28 @@ namespace utils {
             })
         }
 
-        export function anchorAllChildren(parent: Instance) {
+        export function nominalizeAllDescendants(parent: Instance) {
+            parent.GetDescendants().forEach((v) => {
+                if (v.IsA("BasePart")) {
+                    v.CanCollide = false;
+                    v.CanTouch = false;
+                    v.CanQuery = false;
+                }
+            })
+        }
+
+        export function unanchorAllChildren(parent: Instance) {
             parent.GetChildren().forEach((v) => {
                 if (v.IsA("BasePart")) {
-                    v.Anchored = true;
+                    v.Anchored = false;
+                }
+            })
+        }
+
+        export function unanchorAllDescendants(parent: Instance) {
+            parent.GetDescendants().forEach((v) => {
+                if (v.IsA("BasePart")) {
+                    v.Anchored = false;
                 }
             })
         }

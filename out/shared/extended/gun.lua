@@ -8,7 +8,10 @@ local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "t
 local _utils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils")
 local utils = _utils
 local newThread = _utils.newThread
-local TweenService = TS.import(script, TS.getModule(script, "@rbxts", "services")).TweenService
+local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
+local Players = _services.Players
+local TweenService = _services.TweenService
+local animationCompile = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "animate").default
 local gun
 do
 	local super = item
@@ -23,8 +26,12 @@ do
 		local self = setmetatable({}, gun)
 		return self:constructor(...) or self
 	end
-	function gun:constructor(serverItemIndentification, pathToGun)
-		super.constructor(self, serverItemIndentification)
+	function gun:constructor(serverItemIdentification, pathToGun, attachments, animationIDS)
+		super.constructor(self, serverItemIdentification)
+		self.serverItemIdentification = serverItemIdentification
+		self.pathToGun = pathToGun
+		self.attachments = attachments
+		self.animationIDS = animationIDS
 		self.typeIdentifier = gunwork.itemTypeIdentifier.gun
 		self.connections = {}
 		self.lastFired = 0
@@ -49,20 +56,35 @@ do
 			idle = CFrame.new(),
 			aimOffset = CFrame.new(),
 			sprintOffset = CFrame.new(),
+			cameraBob = CFrame.new(),
+			viewmodelBob = CFrame.new(),
 		}
-		local _object = {}
-		local _left = "leanRight"
-		local _cFrame = CFrame.new(.1, 0, 0)
-		local _arg0 = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-35))
+		local _object = {
+			leanRight = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-25)),
+			leanLeft = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(25)),
+		}
+		local _left = "leanRightCamera"
+		local _cFrame = CFrame.new(.7, 0, 0)
+		local _arg0 = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-10))
 		_object[_left] = _cFrame * _arg0
-		local _left_1 = "leanLeft"
-		local _cFrame_1 = CFrame.new(-.1, 0, 0)
-		local _arg0_1 = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(35))
+		local _left_1 = "leanLeftCamera"
+		local _cFrame_1 = CFrame.new(-.7, 0, 0)
+		local _arg0_1 = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(10))
 		_object[_left_1] = _cFrame_1 * _arg0_1
+		_object.crouchOffset = CFrame.new(0, -1, 0)
+		_object.proneOffset = CFrame.new(0, -3, 0)
 		self.staticOffsets = _object
 		self.values = {
 			aimDelta = Instance.new("NumberValue"),
 			leanOffsetViewmodel = Instance.new("CFrameValue"),
+			leanOffsetCamera = Instance.new("CFrameValue"),
+			stanceOffset = Instance.new("CFrameValue"),
+		}
+		self.multipliers = {
+			speed = {
+				prone = .2,
+				crouch = .5,
+			},
 		}
 		self.spread = 0
 		self.firerate = {
@@ -99,6 +121,9 @@ do
 		self.spreadPopTime = 0
 		self.adsLength = .5
 		self.leanLength = .35
+		self.crouchTranitionTime = .25
+		self.proneTransitionTime = .5
+		self.character = Players.LocalPlayer.Character
 		-- get the gun model from path
 		local gun = path:sure(pathToGun):Clone()
 		-- get the viewmodel from path
@@ -111,8 +136,8 @@ do
 		for _k, _v in ipairs(_exp) do
 			_arg0_2(_v, _k - 1, _exp)
 		end
-		utils.instanceUtils.anchorAllChildren(viewmodel)
-		utils.instanceUtils.nominalizeAllChildren(viewmodel)
+		utils.instanceUtils.unanchorAllDescendants(viewmodel)
+		utils.instanceUtils.nominalizeAllDescendants(viewmodel)
 		local ap = viewmodel.aimpart
 		local vm = viewmodel
 		local m0 = Instance.new("Motor6D")
@@ -125,11 +150,45 @@ do
 		m1.Part1 = vm.leftArm
 		m1.Name = "leftMotor"
 		m1.Parent = vm
+		local m2 = Instance.new("Motor6D")
+		m2.Part0 = vm.rootpart
+		m2.Part1 = ap
+		m2.Name = "rootMotor"
+		m2.Parent = vm
 		viewmodel.PrimaryPart = viewmodel.aimpart
 		-- setup attachments if possible
 		-- load animations!
 		self.viewmodel = viewmodel
-		self.viewmodel:SetPrimaryPartCFrame(CFrame.new(0, 10000, 0))
+		self.viewmodel:SetPrimaryPartCFrame(clientExposed:getCamera().CFrame)
+		local idleanim = animationCompile:create(animationIDS.idle):final()
+		self.viewmodel.Parent = clientExposed:getCamera()
+		self.loadedAnimations = {
+			idle = viewmodel.controller.animator:LoadAnimation(idleanim),
+		}
+		self.viewmodel.Parent = nil
+		if attachments.sight then
+			local sightmodel = path:sure(attachments.sight.path):Clone()
+			sightmodel:SetPrimaryPartCFrame(viewmodel.sightNode.CFrame)
+			sightmodel.Parent = viewmodel
+			local md = Instance.new("Motor6D")
+			md.Part0 = viewmodel.sightNode
+			md.Part1 = sightmodel.PrimaryPart
+			md.Parent = sightmodel.PrimaryPart
+			viewmodel.aimpart.Position = sightmodel.focus.Position
+			print(viewmodel.aimpart.Position, "vs", sightmodel.focus.Position)
+			task.wait(1)
+			print(viewmodel.aimpart.Position, "vs", sightmodel.focus.Position)
+			newThread(function()
+				while true do
+					task.wait(.25)
+					print(viewmodel.aimpart.Position, "vs", sightmodel.focus.Position)
+				end
+			end)
+		end
+		utils.instanceUtils.unanchorAllDescendants(viewmodel)
+		utils.instanceUtils.nominalizeAllDescendants(viewmodel)
+		viewmodel.aimpart.Anchored = true
+		self.viewmodel.Parent = clientExposed:getCamera()
 	end
 	function gun:fire()
 		newThread(function()
@@ -151,20 +210,48 @@ do
 	end
 	function gun:lean(t)
 		newThread(function()
-			local info = TweenInfo.new(self.leanLength, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+			local info = TweenInfo.new(self.leanLength)
 			local val = CFrame.new()
+			local camval = CFrame.new()
 			if t == self.leanDirection then
 				t = 0
 			end
 			self.leanDirection = t
 			if t == 1 then
 				val = self.staticOffsets.leanRight
+				camval = self.staticOffsets.leanRightCamera
 			elseif t == -1 then
 				val = self.staticOffsets.leanLeft
+				camval = self.staticOffsets.leanLeftCamera
 			end
 			TweenService:Create(self.values.leanOffsetViewmodel, info, {
 				Value = val,
 			}):Play()
+			TweenService:Create(self.values.leanOffsetCamera, info, {
+				Value = camval,
+			}):Play()
+		end)
+	end
+	function gun:changeStance(t)
+		newThread(function()
+			if t == self.stance then
+				if t == 0 then
+					t = 1
+				elseif t == -1 then
+					t = 0
+				end
+			end
+			local value = if t == 1 then CFrame.new() elseif t == 0 then self.staticOffsets.crouchOffset else self.staticOffsets.proneOffset
+			local info = TweenInfo.new(if self.stance == -1 or t == -1 then self.proneTransitionTime else self.crouchTranitionTime)
+			TweenService:Create(self.values.stanceOffset, info, {
+				Value = value,
+			}):Play()
+			self.stance = t
+			if t == -1 then
+				self.proneChanging = true
+				task.wait(info.Time)
+				self.proneChanging = false
+			end
 		end)
 	end
 	function gun:update(dt)
@@ -172,16 +259,44 @@ do
 			return nil
 		end
 		self.cframes.idle = self.viewmodel.offsets.idle.Value
+		local movedirection = self.character.Humanoid.MoveDirection
 		local camera = clientExposed:getCamera()
-		local idleOffset = self.cframes.idle:Lerp(CFrame.new(), self.values.aimDelta.Value)
+		local idleOffset = self.cframes.idle:Lerp(CFrame.new(0, 0, if self.attachments.sight then -self.attachments.sight.zOffset else 0), self.values.aimDelta.Value)
+		local cx, cy, cz = camera.CFrame:ToOrientation()
+		local function bobLemnBern(speed, intensity)
+			local t = tick() * speed
+			local scale = 2 / (3 - math.cos(2 * t))
+			return { scale * math.cos(t) * intensity, scale * math.sin(2 * t) / 2 * intensity }
+		end
+		local oscMVMT = bobLemnBern(self.character.Humanoid.WalkSpeed * .4, self.character.Humanoid.WalkSpeed * .005)
+		local _fn = self.cframes.viewmodelBob
+		local _result
+		if movedirection.Magnitude == 0 then
+			_result = CFrame.new()
+		else
+			local _vector3 = Vector3.new(oscMVMT[2], oscMVMT[1], 0)
+			local _arg0 = if self.aiming then 0.1 else 1
+			_result = CFrame.new(_vector3 * _arg0)
+		end
+		self.cframes.viewmodelBob = _fn:Lerp(_result, .1)
+		local _fn_1 = self.viewmodel
+		local _cFrame = CFrame.new(camera.CFrame.Position)
+		local _value = self.values.stanceOffset.Value
+		local _arg0 = CFrame.fromOrientation(cx, cy, cz)
 		local _idleOffset = idleOffset
-		local _value = self.values.leanOffsetViewmodel.Value
-		idleOffset = _idleOffset * _value
-		local _cFrame = camera.CFrame
-		local _idleOffset_1 = idleOffset
-		local finalCameraCframe = _cFrame * _idleOffset_1
-		self.viewmodel:SetPrimaryPartCFrame(finalCameraCframe)
+		local _value_1 = self.values.leanOffsetCamera.Value
+		local _value_2 = self.values.leanOffsetViewmodel.Value
+		_fn_1:SetPrimaryPartCFrame(_cFrame * _value * _arg0 * _idleOffset * _value_1 * _value_2)
+		local _cFrame_1 = CFrame.new(camera.CFrame.Position)
+		local _value_3 = self.values.stanceOffset.Value
+		local _arg0_1 = CFrame.fromOrientation(cx, cy, cz)
+		local _value_4 = self.values.leanOffsetCamera.Value
+		camera.CFrame = _cFrame_1 * _value_3 * _arg0_1 * _value_4
 		self.viewmodel.Parent = camera
+		self.character.Humanoid.WalkSpeed = clientExposed:getBaseWalkSpeed() * (if self.stance == -1 then self.multipliers.speed.prone else (if self.stance == 0 then self.multipliers.speed.crouch else 1))
+		if not self.loadedAnimations.idle.IsPlaying then
+			self.loadedAnimations.idle:Play()
+		end
 	end
 end
 return {

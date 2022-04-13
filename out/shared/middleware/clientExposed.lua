@@ -13,6 +13,12 @@ do
 	function clientExposed:setCamera(camera)
 		self.camera = camera
 	end
+	function clientExposed:getBaseWalkSpeed()
+		return self.baseWalkspeed
+	end
+	function clientExposed:setBaseWalkSpeed(speed)
+		self.baseWalkspeed = speed
+	end
 end
 return {
 	default = clientExposed,

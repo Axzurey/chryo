@@ -2,9 +2,10 @@ import path from "shared/athena/path";
 import item from "shared/base/item";
 import paths from "shared/constants/paths";
 import clientExposed from "shared/middleware/clientExposed";
-import gunwork from "shared/types/gunwork";
+import gunwork, { gunAnimationsConfig, gunAttachmentConfig, sightModel } from "shared/types/gunwork";
 import utils, { newThread } from 'shared/athena/utils';
-import { TweenService } from "@rbxts/services";
+import { Players, TweenService } from "@rbxts/services";
+import animationCompile from "shared/athena/animate";
 
 export default class gun extends item {
 
@@ -18,7 +19,7 @@ export default class gun extends item {
 	viewmodel: gunwork.gunViewmodel
 
 	camera?: Camera;
-	character?: Model;
+	character: gunwork.basicCharacter;
 	
 	firePoint?: BasePart;
 
@@ -53,17 +54,34 @@ export default class gun extends item {
 		idle: new CFrame(),
 		aimOffset: new CFrame(),
 		sprintOffset: new CFrame(),
+		cameraBob: new CFrame(),
+		viewmodelBob: new CFrame()
 	}
 
+	loadedAnimations: {idle: AnimationTrack}
+
 	staticOffsets = {
-		leanRight: new CFrame(.1, 0, 0).mul(CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-35))),
-		leanLeft: new CFrame(-.1, 0, 0).mul(CFrame.fromEulerAnglesYXZ(0, 0, math.rad(35))),
+		leanRight: CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-25)),
+		leanLeft: CFrame.fromEulerAnglesYXZ(0, 0, math.rad(25)),
+		leanRightCamera: new CFrame(.7, 0, 0).mul(CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-10))),
+		leanLeftCamera: new CFrame(-.7, 0, 0).mul(CFrame.fromEulerAnglesYXZ(0, 0, math.rad(10))),
+		crouchOffset: new CFrame(0, -1, 0),
+		proneOffset: new CFrame(0, -3, 0),
 	}
 
 	values = {
         aimDelta: new Instance("NumberValue"),
-		leanOffsetViewmodel: new Instance("CFrameValue")
+		leanOffsetViewmodel: new Instance("CFrameValue"),
+		leanOffsetCamera: new Instance("CFrameValue"),
+		stanceOffset: new Instance("CFrameValue"),
     }
+
+	multipliers = {
+		speed: {
+			prone: .2,
+			crouch: .5,
+		}
+	}
 
 	//config
 
@@ -140,22 +158,36 @@ export default class gun extends item {
 	 * how long it takes to lean
 	 */
 	leanLength: number = .35;
-	constructor(serverItemIndentification: string, pathToGun: pathLike) {
-		super(serverItemIndentification);
+	/**
+	 * time to crouch / uncrouch
+	 */
+	crouchTranitionTime: number = .25;
+	/**
+	 * time to prone / unprone
+	 */
+	proneTransitionTime: number = .5;
+	constructor(public serverItemIdentification: string, 
+		private pathToGun: pathLike, 
+		private attachments: gunAttachmentConfig, 
+		private animationIDS: gunAnimationsConfig
+		){
+		super(serverItemIdentification);
+
+		this.character = Players.LocalPlayer.Character as gunwork.basicCharacter;
 
 		//get the gun model from path
 		let gun = path.sure(pathToGun).Clone();
 
 		//get the viewmodel from path
-		let viewmodel = path.sure(paths.fps.standard_viewmodel).Clone() as gunwork.viewmodel;
+		let viewmodel = path.sure(paths.fps.standard_viewmodel).Clone() as gunwork.gunViewmodel;
 
 		//copy gun stuff to the viewmodel
 		gun.GetChildren().forEach((v) => {
 			v.Parent = viewmodel;
 		})
 
-		utils.instanceUtils.anchorAllChildren(viewmodel);
-		utils.instanceUtils.nominalizeAllChildren(viewmodel);
+		utils.instanceUtils.unanchorAllDescendants(viewmodel);
+		utils.instanceUtils.nominalizeAllDescendants(viewmodel);
 
 		let ap = viewmodel.aimpart;
 		let vm = viewmodel;
@@ -172,6 +204,12 @@ export default class gun extends item {
 		m1.Name = 'leftMotor';
 		m1.Parent = vm;
 
+		let m2 = new Instance("Motor6D");
+		m2.Part0 = vm.rootpart;
+		m2.Part1 = ap;
+		m2.Name = 'rootMotor';
+		m2.Parent = vm;
+
 		viewmodel.PrimaryPart = viewmodel.aimpart;
 
 		//setup attachments if possible
@@ -179,7 +217,45 @@ export default class gun extends item {
 		//load animations!
 
 		this.viewmodel = viewmodel as gunwork.gunViewmodel;
-		this.viewmodel.SetPrimaryPartCFrame(new CFrame(0, 10000, 0));
+		this.viewmodel.SetPrimaryPartCFrame(clientExposed.getCamera().CFrame);
+
+		let idleanim = animationCompile.create(animationIDS.idle).final();
+
+		this.viewmodel.Parent = clientExposed.getCamera()
+
+		this.loadedAnimations = {
+			idle: viewmodel.controller.animator.LoadAnimation(idleanim)
+		}
+
+		this.viewmodel.Parent = undefined;
+
+		if (attachments.sight) {
+			let sightmodel = path.sure(attachments.sight.path).Clone() as sightModel;
+			sightmodel.SetPrimaryPartCFrame(viewmodel.sightNode.CFrame)
+			sightmodel.Parent = viewmodel;
+
+			let md = new Instance('Motor6D');
+			md.Part0 = viewmodel.sightNode;
+			md.Part1 = sightmodel.PrimaryPart;
+			md.Parent = sightmodel.PrimaryPart;
+
+			viewmodel.aimpart.Position = sightmodel.focus.Position;
+			print(viewmodel.aimpart.Position, 'vs', sightmodel.focus.Position);
+			task.wait(1)
+			print(viewmodel.aimpart.Position, 'vs', sightmodel.focus.Position);
+			newThread(() => {
+				while (true) {
+					task.wait(.25)
+					print(viewmodel.aimpart.Position, 'vs', sightmodel.focus.Position);
+				}
+			})
+		}
+
+		utils.instanceUtils.unanchorAllDescendants(viewmodel);
+		utils.instanceUtils.nominalizeAllDescendants(viewmodel);
+
+		viewmodel.aimpart.Anchored = true;
+		this.viewmodel.Parent = clientExposed.getCamera()
 	}
 	fire() {
 		newThread(() => {
@@ -202,8 +278,9 @@ export default class gun extends item {
 	}
 	lean(t: 1 | 0 | -1) {
 		newThread(() => {
-			let info = new TweenInfo(this.leanLength, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
+			let info = new TweenInfo(this.leanLength);
 			let val = new CFrame();
+			let camval = new CFrame();
 
 			if (t === this.leanDirection) {
 				t = 0;
@@ -213,31 +290,102 @@ export default class gun extends item {
 
 			if (t === 1) {
 				val = this.staticOffsets.leanRight;
+				camval = this.staticOffsets.leanRightCamera;
 			}
 			else if (t === -1) {
 				val = this.staticOffsets.leanLeft;
+				camval = this.staticOffsets.leanLeftCamera;
 			}
 
 			TweenService.Create(this.values.leanOffsetViewmodel, info, {
 				Value: val
 			}).Play()
+			
+			TweenService.Create(this.values.leanOffsetCamera, info, {
+				Value: camval
+			}).Play()
+		})
+	}
+	changeStance(t: 1 | 0 | -1) {
+		newThread(() => {
+			if (t === this.stance) {
+				if (t === 0) {
+					t = 1;
+				}
+				else if (t === -1) {
+					t = 0;
+				}
+			}
+	
+			let value = t === 1? new CFrame(): t === 0? this.staticOffsets.crouchOffset: this.staticOffsets.proneOffset;
+			let info = new TweenInfo(this.stance === -1 || t === -1? this.proneTransitionTime: this.crouchTranitionTime);
+	
+			TweenService.Create(this.values.stanceOffset, info, {
+				Value: value
+			}).Play()
+	
+			this.stance = t;
+			if (t === -1) {
+				this.proneChanging = true;
+				task.wait(info.Time)
+				this.proneChanging = false;
+			}
 		})
 	}
     update(dt: number) {
+		
 		if (!this.viewmodel.PrimaryPart) return;
 
 		this.cframes.idle = this.viewmodel.offsets.idle.Value;
 
+		let movedirection = this.character.Humanoid.MoveDirection;
+
 		const camera = clientExposed.getCamera();
 
-		let idleOffset = this.cframes.idle.Lerp(new CFrame(), this.values.aimDelta.Value);
+		let idleOffset = this.cframes.idle.Lerp(new CFrame(0, 0, this.attachments.sight? -this.attachments.sight.zOffset: 0), this.values.aimDelta.Value);
+
+		let [cx, cy, cz] = camera.CFrame.ToOrientation();
+
+		function bobLemnBern(speed: number, intensity: number): [number, number] {
+			let t = tick() * speed;
+			let scale = 2 / (3 - math.cos(2 * t))
+			return [scale * math.cos(t) * intensity, scale * math.sin(2 * t) / 2 * intensity]
+		}
+
+		const oscMVMT = bobLemnBern(
+			this.character.Humanoid.WalkSpeed * .4,
+			this.character.Humanoid.WalkSpeed * .005);
 		
-		idleOffset = idleOffset.mul(this.values.leanOffsetViewmodel.Value)
+		this.cframes.viewmodelBob = this.cframes.viewmodelBob.Lerp(
+			movedirection.Magnitude === 0? new CFrame(): 
+			new CFrame(new Vector3(oscMVMT[1], oscMVMT[0], 0).mul(this.aiming? 0.1: 1)),
+			.1
+		)
 
-		let finalCameraCframe = camera.CFrame.mul(idleOffset);
+		this.viewmodel.SetPrimaryPartCFrame(
+			new CFrame(camera.CFrame.Position)
+			.mul(this.values.stanceOffset.Value)
+			.mul(CFrame.fromOrientation(cx, cy, cz))
+			.mul(idleOffset)
+			.mul(this.values.leanOffsetCamera.Value)
+			.mul(this.values.leanOffsetViewmodel.Value)
+			//.mul(this.cframes.viewmodelBob)
+		);
 
-		this.viewmodel.SetPrimaryPartCFrame(finalCameraCframe);
+		camera.CFrame = new CFrame(camera.CFrame.Position)
+			.mul(this.values.stanceOffset.Value)
+			.mul(CFrame.fromOrientation(cx, cy, cz))
+			.mul(this.values.leanOffsetCamera.Value)
 
 		this.viewmodel.Parent = camera;
+
+		this.character.Humanoid.WalkSpeed = clientExposed.getBaseWalkSpeed() 
+			* (this.stance === -1? this.multipliers.speed.prone: (this.stance === 0? this.multipliers.speed.crouch: 1))
+		
+
+
+		if (!this.loadedAnimations.idle.IsPlaying) {
+			this.loadedAnimations.idle.Play()
+		}
     }
 }

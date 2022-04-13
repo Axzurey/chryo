@@ -1,6 +1,7 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
+local Players = _services.Players
 local RunService = _services.RunService
 local UserInputService = _services.UserInputService
 local Workspace = _services.Workspace
@@ -26,6 +27,8 @@ do
 			reload = Enum.KeyCode.R,
 			leanRight = Enum.KeyCode.E,
 			leanLeft = Enum.KeyCode.Q,
+			prone = Enum.KeyCode.Z,
+			crouch = Enum.KeyCode.C,
 		}
 		self.actionMap = {
 			aim = function(state)
@@ -53,10 +56,42 @@ do
 					gun:lean(1)
 				end
 			end,
+			crouch = function(state)
+				if self:starting(state) and self:equippedIsAGun(self.equippedItem) then
+					local gun = self.equippedItem
+					gun:changeStance(0)
+				end
+			end,
+			prone = function(state)
+				if self:starting(state) and self:equippedIsAGun(self.equippedItem) then
+					local gun = self.equippedItem
+					gun:changeStance(-1)
+				end
+			end,
 		}
-		local item = gun.new("$xoo", "ReplicatedStorage//guns//hk416&class=Model")
-		self.equippedItem = item
+		if not Players.LocalPlayer.Character then
+			Players.LocalPlayer.CharacterAdded:Wait()
+		end
 		clientExposed:setCamera(Workspace.CurrentCamera)
+		clientExposed:setBaseWalkSpeed(12)
+		local item = gun.new("$xoo", "ReplicatedStorage//guns//hk416&class=Model", {
+			sight = {
+				name = "holographic",
+				path = "ReplicatedStorage//sights//holographic&class=Model",
+				zOffset = .13,
+			},
+		}, {
+			idle = "rbxassetid://9335189959",
+		})
+		self.equippedItem = item
+		local mainRender = RunService.RenderStepped:Connect(function(dt)
+			local equipped = self.equippedItem
+			if self:equippedIsAGun(equipped) then
+				equipped:update(dt)
+			end
+		end)
+		UserInputService.MouseIconEnabled = false
+		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 		local mainInputStart = UserInputService.InputBegan:Connect(function(input, gp)
 			if gp then
 				return nil
@@ -70,12 +105,6 @@ do
 			local key = self:getKeybind(input)
 			if key then
 				self.actionMap[key](input.UserInputState)
-			end
-		end)
-		local mainRender = RunService.RenderStepped:Connect(function(dt)
-			local equipped = self.equippedItem
-			if self:equippedIsAGun(equipped) then
-				equipped:update(dt)
 			end
 		end)
 	end

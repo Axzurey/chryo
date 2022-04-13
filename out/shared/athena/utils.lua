@@ -11,9 +11,7 @@ do
 	end
 	_container.propertyExistsInObject = propertyExistsInObject
 	local function newThread(callback)
-		coroutine.wrap(function()
-			callback()
-		end)()
+		task.spawn(callback)
 	end
 	_container.newThread = newThread
 	local instanceUtils = {}
@@ -37,18 +35,44 @@ do
 			end
 		end
 		_container_1.nominalizeAllChildren = nominalizeAllChildren
-		local function anchorAllChildren(parent)
-			local _exp = parent:GetChildren()
+		local function nominalizeAllDescendants(parent)
+			local _exp = parent:GetDescendants()
 			local _arg0 = function(v)
 				if v:IsA("BasePart") then
-					v.Anchored = true
+					v.CanCollide = false
+					v.CanTouch = false
+					v.CanQuery = false
 				end
 			end
 			for _k, _v in ipairs(_exp) do
 				_arg0(_v, _k - 1, _exp)
 			end
 		end
-		_container_1.anchorAllChildren = anchorAllChildren
+		_container_1.nominalizeAllDescendants = nominalizeAllDescendants
+		local function unanchorAllChildren(parent)
+			local _exp = parent:GetChildren()
+			local _arg0 = function(v)
+				if v:IsA("BasePart") then
+					v.Anchored = false
+				end
+			end
+			for _k, _v in ipairs(_exp) do
+				_arg0(_v, _k - 1, _exp)
+			end
+		end
+		_container_1.unanchorAllChildren = unanchorAllChildren
+		local function unanchorAllDescendants(parent)
+			local _exp = parent:GetDescendants()
+			local _arg0 = function(v)
+				if v:IsA("BasePart") then
+					v.Anchored = false
+				end
+			end
+			for _k, _v in ipairs(_exp) do
+				_arg0(_v, _k - 1, _exp)
+			end
+		end
+		_container_1.unanchorAllDescendants = unanchorAllDescendants
 	end
 	_container.instanceUtils = instanceUtils
 	local tableUtils = {}

@@ -1,4 +1,4 @@
-import { RunService, UserInputService, Workspace } from "@rbxts/services";
+import { Players, RunService, UserInputService, Workspace } from "@rbxts/services";
 import { newThread } from "shared/athena/utils";
 import gun from "shared/extended/gun";
 import clientExposed from "shared/middleware/clientExposed";
@@ -13,7 +13,9 @@ export default class actionController {
 		fire: Enum.UserInputType.MouseButton1,
         reload: Enum.KeyCode.R,
 		leanRight: Enum.KeyCode.E,
-		leanLeft: Enum.KeyCode.Q
+		leanLeft: Enum.KeyCode.Q,
+		prone: Enum.KeyCode.Z,
+		crouch: Enum.KeyCode.C
 	}
 
 	private actionMap: Record<keyof typeof this.keybinds, (state: Enum.UserInputState) => void> = {
@@ -41,6 +43,18 @@ export default class actionController {
 				let gun = this.equippedItem;
 				gun.lean(1)
 			}
+		},
+		crouch: (state) => {
+			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
+				let gun = this.equippedItem;
+				gun.changeStance(0)
+			}
+		},
+		prone: (state) => {
+			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
+				let gun = this.equippedItem;
+				gun.changeStance(-1)
+			}
 		}
 	}
 
@@ -56,10 +70,34 @@ export default class actionController {
 
 	constructor() {
 
-		let item = new gun('$xoo', 'ReplicatedStorage//guns//hk416&class=Model');
-		this.equippedItem = item;
+		if (!Players.LocalPlayer.Character) {
+			Players.LocalPlayer.CharacterAdded.Wait()
+		}
 
 		clientExposed.setCamera(Workspace.CurrentCamera as Camera);
+		clientExposed.setBaseWalkSpeed(12);
+
+		let item = new gun('$xoo', 'ReplicatedStorage//guns//hk416&class=Model', {
+			sight: {
+				name: 'holographic',
+				path: 'ReplicatedStorage//sights//holographic&class=Model',
+				zOffset: .13
+			}
+		}, {
+			idle: 'rbxassetid://9335189959'
+		});
+
+		this.equippedItem = item;
+
+		let mainRender = RunService.RenderStepped.Connect((dt) => {
+			let equipped = this.equippedItem;
+			if (this.equippedIsAGun(equipped)) {
+				equipped.update(dt);
+			}
+		})
+
+		UserInputService.MouseIconEnabled = false;
+		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter;
 		
 		let mainInputStart = UserInputService.InputBegan.Connect((input, gp) => {
 			if (gp) return;
@@ -73,13 +111,6 @@ export default class actionController {
 			let key = this.getKeybind(input);
 			if (key) {
 				this.actionMap[key](input.UserInputState);
-			}
-		})
-
-		let mainRender = RunService.RenderStepped.Connect((dt) => {
-			let equipped = this.equippedItem;
-			if (this.equippedIsAGun(equipped)) {
-				equipped.update(dt);
 			}
 		})
 	}
