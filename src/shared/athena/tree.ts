@@ -1,3 +1,5 @@
+import { ReplicatedStorage } from "@rbxts/services";
+
 interface InstanceTree {
 	$className?: keyof Instances;
     $properties?: Record<keyof WritableInstanceProperties<any>, any>;
@@ -32,20 +34,6 @@ type KeyExtendsPropertyName<T extends InstanceTree, K, V> = K extends "Changed"
 		: V
 	: V;
 
-const treex = {
-    $className: 'Folder',
-    $properties: {
-        Name: 'helo!'
-    },
-    hello: {
-        $className: 'Part',
-        cookies: 'Folder',
-        $properties: {
-            Color: Color3.fromRGB(1, 1, 1)
-        }
-    }
-} as const;
-
 export type castTree<I extends Instance, T extends InstanceTree> = I & EvaluateInstanceTree<T, I>
 
 export default abstract class tree {
@@ -59,25 +47,30 @@ export default abstract class tree {
             x = new Instance(l as keyof CreatableInstances)
         }
         for (const [i, v] of pairs(tree)) {
+            if (i === '$className') continue;
             if (i === '$properties' && x) {
                 for (const [r, t] of pairs(v)) {
                     x[r as keyof WritableInstanceProperties<typeof x>] = t as never
                 }
             }
             else if (typeOf(v) === 'table') {
-                let n = this.createTree(container, v);
-                n.Parent = x;
+                this.createTree(container, v);
             }
+            /*
             else if(typeOf(v) === 'string' && !container[i as keyof typeof container]) {
                 let n = new Instance(v as keyof CreatableInstances);
                 n.Parent = x;
-            }
+            }*/
+        }
+        if (x) {
+            x.Parent = container;
         }
         return container as I & EvaluateInstanceTree<T, I>
     }
     static createFolder(name: string, parent: Instance) {
         let l = new Instance("Folder");
         l.Name = name;
+        l.Parent = parent;
         return l;
     }
 }

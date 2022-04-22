@@ -110,4 +110,13 @@ export default class remoteProtocol<Server extends (player: Player, ...args: any
             this.remote.FireClient(client, ...args as unknown[]);
         })
     }
+
+    public destroy() {
+        if (RunService.IsClient()) throw `this method may not be called from the client!`;
+        this.listeners.forEach((v) => {
+            v.disconnect()
+        })
+
+        this.remote.Destroy();
+    }
 }

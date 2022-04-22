@@ -241,20 +241,17 @@ export default class gun extends item {
 
 			viewmodel.aimpart.Position = sightmodel.focus.Position;
 			print(viewmodel.aimpart.Position, 'vs', sightmodel.focus.Position);
-			task.wait(1)
-			print(viewmodel.aimpart.Position, 'vs', sightmodel.focus.Position);
 			newThread(() => {
 				while (true) {
 					task.wait(.25)
 					print(viewmodel.aimpart.Position, 'vs', sightmodel.focus.Position);
 				}
-			})
+			});
 		}
 
 		utils.instanceUtils.unanchorAllDescendants(viewmodel);
 		utils.instanceUtils.nominalizeAllDescendants(viewmodel);
 
-		viewmodel.aimpart.Anchored = true;
 		this.viewmodel.Parent = clientExposed.getCamera()
 	}
 	fire() {

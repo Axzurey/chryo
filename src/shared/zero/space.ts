@@ -39,6 +39,15 @@ namespace space {
             }
             return selected;
         }
+        export function findFirstEntityWithVesselThatContainsInstance(instance: Instance) {
+            for (let [_, z] of entityMaps) {
+                for (const [_, v] of pairs(z)) {
+                    if (v.vessel && instance.IsDescendantOf(v.vessel)) {
+                        return v;
+                    }
+                }
+            }
+        }
     }
 }
 

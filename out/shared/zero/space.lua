@@ -55,6 +55,16 @@ do
 			return selected
 		end
 		_container_1.filterAllWithPropertyAs = filterAllWithPropertyAs
+		local function findFirstEntityWithVesselThatContainsInstance(instance)
+			for _, z in pairs(entityMaps) do
+				for _, v in pairs(z) do
+					if v.vessel and instance:IsDescendantOf(v.vessel) then
+						return v
+					end
+				end
+			end
+		end
+		_container_1.findFirstEntityWithVesselThatContainsInstance = findFirstEntityWithVesselThatContainsInstance
 	end
 	_container.query = query
 end

@@ -7,10 +7,7 @@ namespace environment {
      * @returns it waits for the server to create the environment and then returns it
      */
      export function getSharedEnvironment() {
-        while (!both) {
-            task.wait();
-        }
-        return both;
+        return env;
     }
 
     let bothType = {
@@ -21,7 +18,8 @@ namespace environment {
             }
         }
     } as const;
-    export const both = RunService.IsServer()? tree.createTree(tree.createFolder('sharedEnvironment', ReplicatedStorage), bothType) :
+
+    export const env = RunService.IsServer()? tree.createTree(tree.createFolder('sharedEnvironment', ReplicatedStorage), bothType) :
         ReplicatedStorage.WaitForChild('sharedEnvironment') as castTree<Folder, typeof bothType>;
 }
 

@@ -176,8 +176,6 @@ do
 			md.Parent = sightmodel.PrimaryPart
 			viewmodel.aimpart.Position = sightmodel.focus.Position
 			print(viewmodel.aimpart.Position, "vs", sightmodel.focus.Position)
-			task.wait(1)
-			print(viewmodel.aimpart.Position, "vs", sightmodel.focus.Position)
 			newThread(function()
 				while true do
 					task.wait(.25)
@@ -187,7 +185,6 @@ do
 		end
 		utils.instanceUtils.unanchorAllDescendants(viewmodel)
 		utils.instanceUtils.nominalizeAllDescendants(viewmodel)
-		viewmodel.aimpart.Anchored = true
 		self.viewmodel.Parent = clientExposed:getCamera()
 	end
 	function gun:fire()

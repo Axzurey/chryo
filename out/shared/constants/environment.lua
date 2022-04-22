@@ -12,12 +12,9 @@ do
 		*
 		* @returns it waits for the server to create the environment and then returns it
 	]]
-	local both
+	local env
 	local function getSharedEnvironment()
-		while not both do
-			task.wait()
-		end
-		return both
+		return env
 	end
 	_container.getSharedEnvironment = getSharedEnvironment
 	local bothType = {
@@ -28,7 +25,7 @@ do
 			},
 		},
 	}
-	both = if RunService:IsServer() then tree:createTree(tree:createFolder("sharedEnvironment", ReplicatedStorage), bothType) else ReplicatedStorage:WaitForChild("sharedEnvironment")
-	_container.both = both
+	env = if RunService:IsServer() then tree:createTree(tree:createFolder("sharedEnvironment", ReplicatedStorage), bothType) else ReplicatedStorage:WaitForChild("sharedEnvironment")
+	_container.env = env
 end
 return environment

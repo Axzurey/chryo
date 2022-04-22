@@ -128,6 +128,19 @@ do
 			_arg0(_v, _k - 1, _exp)
 		end
 	end
+	function remoteProtocol:destroy()
+		if RunService:IsClient() then
+			error("this method may not be called from the client!")
+		end
+		local _listeners = self.listeners
+		local _arg0 = function(v)
+			v.disconnect()
+		end
+		for _k, _v in ipairs(_listeners) do
+			_arg0(_v, _k - 1, _listeners)
+		end
+		self.remote:Destroy()
+	end
 end
 return {
 	default = remoteProtocol,
