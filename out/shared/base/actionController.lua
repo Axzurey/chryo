@@ -71,6 +71,10 @@ do
 		}
 		if not Players.LocalPlayer.Character then
 			Players.LocalPlayer.CharacterAdded:Wait()
+			while not Players.LocalPlayer.Character.PrimaryPart do
+				task.wait()
+			end
+			print("done! starting...")
 		end
 		clientExposed:setCamera(Workspace.CurrentCamera)
 		clientExposed:setBaseWalkSpeed(12)

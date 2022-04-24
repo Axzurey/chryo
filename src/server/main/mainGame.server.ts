@@ -23,7 +23,7 @@ const dotenv = environment.getSharedEnvironment();
 let internalIdentification: {[key: string]: {
     owner?: Player,
     object: serverItem
-}}
+}} = {}
 
 Players.PlayerAdded.Connect((client) => {
     let mix = {

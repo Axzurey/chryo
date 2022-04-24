@@ -71,7 +71,11 @@ export default class actionController {
 	constructor() {
 
 		if (!Players.LocalPlayer.Character) {
-			Players.LocalPlayer.CharacterAdded.Wait()
+			Players.LocalPlayer.CharacterAdded.Wait();
+			while (!Players.LocalPlayer.Character!.PrimaryPart) {
+				task.wait();
+			}
+			print("done! starting...")
 		}
 
 		clientExposed.setCamera(Workspace.CurrentCamera as Camera);

@@ -14,6 +14,20 @@ do
 		task.spawn(callback)
 	end
 	_container.newThread = newThread
+	local dataTypeUtils = {}
+	do
+		local _container_1 = dataTypeUtils
+		--[[
+			*
+			* returns a cframe position and orientation
+		]]
+		local function cframeToCFrames(cframe)
+			local o = { cframe:ToOrientation() }
+			return { CFrame.new(cframe.Position), CFrame.fromOrientation(o[1], o[2], o[3]) }
+		end
+		_container_1.cframeToCFrames = cframeToCFrames
+	end
+	_container.dataTypeUtils = dataTypeUtils
 	local instanceUtils = {}
 	do
 		local _container_1 = instanceUtils

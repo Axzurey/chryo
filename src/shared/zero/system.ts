@@ -7,7 +7,7 @@ namespace system {
         export namespace server {
             export function on<T extends keyof typeof protocols>(protocol: T, callback: GetGenericOfClassServer<(typeof protocols[T])['protocol']>) {
                 if (RunService.IsServer()) {
-                    return protocols[protocol].protocol.listenServer(callback);
+                    return protocols[protocol].protocol.listenServer(callback as any);
                 }
                 else {
                     throw `this method can not be called from the client`
@@ -17,7 +17,7 @@ namespace system {
         export namespace client {
             export function on<T extends keyof typeof protocols>(protocol: T, callback: GetGenericOfClassClient<(typeof protocols[T])['protocol']>) {
                 if (RunService.IsClient()) {
-                    return protocols[protocol].protocol.listenClient(callback);
+                    return protocols[protocol].protocol.listenClient(callback as any);
                 }
                 else {
                     throw `this method can not be called from the server`

@@ -124,6 +124,7 @@ do
 		self.crouchTranitionTime = .25
 		self.proneTransitionTime = .5
 		self.character = Players.LocalPlayer.Character
+		self.lastPosition = self.character:GetPrimaryPartCFrame().Position
 		-- get the gun model from path
 		local gun = path:sure(pathToGun):Clone()
 		-- get the viewmodel from path
@@ -165,7 +166,6 @@ do
 		self.loadedAnimations = {
 			idle = viewmodel.controller.animator:LoadAnimation(idleanim),
 		}
-		self.viewmodel.Parent = nil
 		if attachments.sight then
 			local sightmodel = path:sure(attachments.sight.path):Clone()
 			sightmodel:SetPrimaryPartCFrame(viewmodel.sightNode.CFrame)
@@ -175,17 +175,10 @@ do
 			md.Part1 = sightmodel.PrimaryPart
 			md.Parent = sightmodel.PrimaryPart
 			viewmodel.aimpart.Position = sightmodel.focus.Position
-			print(viewmodel.aimpart.Position, "vs", sightmodel.focus.Position)
-			newThread(function()
-				while true do
-					task.wait(.25)
-					print(viewmodel.aimpart.Position, "vs", sightmodel.focus.Position)
-				end
-			end)
 		end
 		utils.instanceUtils.unanchorAllDescendants(viewmodel)
 		utils.instanceUtils.nominalizeAllDescendants(viewmodel)
-		self.viewmodel.Parent = clientExposed:getCamera()
+		self.viewmodel.Parent = nil
 	end
 	function gun:fire()
 		newThread(function()
@@ -260,35 +253,32 @@ do
 		local camera = clientExposed:getCamera()
 		local idleOffset = self.cframes.idle:Lerp(CFrame.new(0, 0, if self.attachments.sight then -self.attachments.sight.zOffset else 0), self.values.aimDelta.Value)
 		local cx, cy, cz = camera.CFrame:ToOrientation()
-		local function bobLemnBern(speed, intensity)
-			local t = tick() * speed
-			local scale = 2 / (3 - math.cos(2 * t))
-			return { scale * math.cos(t) * intensity, scale * math.sin(2 * t) / 2 * intensity }
-		end
-		local oscMVMT = bobLemnBern(self.character.Humanoid.WalkSpeed * .4, self.character.Humanoid.WalkSpeed * .005)
+		local t = tick()
+		local velocity = self.character.PrimaryPart.AssemblyLinearVelocity
+		local f = (t * math.round(Vector2.new(velocity.X, velocity.Z).Magnitude) / 1.5) + 1
+		print(f)
+		print(velocity.X, velocity.Z)
+		print("====")
+		local tx = math.cos(f) * .05
+		local ty = math.abs(math.sin(f)) * .05
 		local _fn = self.cframes.viewmodelBob
-		local _result
-		if movedirection.Magnitude == 0 then
-			_result = CFrame.new()
-		else
-			local _vector3 = Vector3.new(oscMVMT[2], oscMVMT[1], 0)
-			local _arg0 = if self.aiming then 0.1 else 1
-			_result = CFrame.new(_vector3 * _arg0)
-		end
-		self.cframes.viewmodelBob = _fn:Lerp(_result, .1)
+		local _vector3 = Vector3.new(tx, ty)
+		local _arg0 = 1 - self.values.aimDelta.Value
+		self.cframes.viewmodelBob = _fn:Lerp(CFrame.new(_vector3 * _arg0), .1)
 		local _fn_1 = self.viewmodel
 		local _cFrame = CFrame.new(camera.CFrame.Position)
 		local _value = self.values.stanceOffset.Value
-		local _arg0 = CFrame.fromOrientation(cx, cy, cz)
+		local _arg0_1 = CFrame.fromOrientation(cx, cy, cz)
 		local _idleOffset = idleOffset
 		local _value_1 = self.values.leanOffsetCamera.Value
 		local _value_2 = self.values.leanOffsetViewmodel.Value
-		_fn_1:SetPrimaryPartCFrame(_cFrame * _value * _arg0 * _idleOffset * _value_1 * _value_2)
+		local _viewmodelBob = self.cframes.viewmodelBob
+		_fn_1:SetPrimaryPartCFrame(_cFrame * _value * _arg0_1 * _idleOffset * _value_1 * _value_2 * _viewmodelBob)
 		local _cFrame_1 = CFrame.new(camera.CFrame.Position)
 		local _value_3 = self.values.stanceOffset.Value
-		local _arg0_1 = CFrame.fromOrientation(cx, cy, cz)
+		local _arg0_2 = CFrame.fromOrientation(cx, cy, cz)
 		local _value_4 = self.values.leanOffsetCamera.Value
-		camera.CFrame = _cFrame_1 * _value_3 * _arg0_1 * _value_4
+		camera.CFrame = _cFrame_1 * _value_3 * _arg0_2 * _value_4
 		self.viewmodel.Parent = camera
 		self.character.Humanoid.WalkSpeed = clientExposed:getBaseWalkSpeed() * (if self.stance == -1 then self.multipliers.speed.prone else (if self.stance == 0 then self.multipliers.speed.crouch else 1))
 		if not self.loadedAnimations.idle.IsPlaying then

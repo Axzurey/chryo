@@ -55,7 +55,7 @@ export default class gun extends item {
 		aimOffset: new CFrame(),
 		sprintOffset: new CFrame(),
 		cameraBob: new CFrame(),
-		viewmodelBob: new CFrame()
+		viewmodelBob: new CFrame(),
 	}
 
 	loadedAnimations: {idle: AnimationTrack}
@@ -82,6 +82,8 @@ export default class gun extends item {
 			crouch: .5,
 		}
 	}
+
+	lastPosition: Vector3
 
 	//config
 
@@ -175,6 +177,8 @@ export default class gun extends item {
 
 		this.character = Players.LocalPlayer.Character as gunwork.basicCharacter;
 
+		this.lastPosition = this.character.GetPrimaryPartCFrame().Position;
+
 		//get the gun model from path
 		let gun = path.sure(pathToGun).Clone();
 
@@ -227,8 +231,6 @@ export default class gun extends item {
 			idle: viewmodel.controller.animator.LoadAnimation(idleanim)
 		}
 
-		this.viewmodel.Parent = undefined;
-
 		if (attachments.sight) {
 			let sightmodel = path.sure(attachments.sight.path).Clone() as sightModel;
 			sightmodel.SetPrimaryPartCFrame(viewmodel.sightNode.CFrame)
@@ -240,19 +242,13 @@ export default class gun extends item {
 			md.Parent = sightmodel.PrimaryPart;
 
 			viewmodel.aimpart.Position = sightmodel.focus.Position;
-			print(viewmodel.aimpart.Position, 'vs', sightmodel.focus.Position);
-			newThread(() => {
-				while (true) {
-					task.wait(.25)
-					print(viewmodel.aimpart.Position, 'vs', sightmodel.focus.Position);
-				}
-			});
 		}
 
 		utils.instanceUtils.unanchorAllDescendants(viewmodel);
 		utils.instanceUtils.nominalizeAllDescendants(viewmodel);
 
-		this.viewmodel.Parent = clientExposed.getCamera()
+		this.viewmodel.Parent = undefined;
+
 	}
 	fire() {
 		newThread(() => {
@@ -343,19 +339,21 @@ export default class gun extends item {
 
 		let [cx, cy, cz] = camera.CFrame.ToOrientation();
 
-		function bobLemnBern(speed: number, intensity: number): [number, number] {
-			let t = tick() * speed;
-			let scale = 2 / (3 - math.cos(2 * t))
-			return [scale * math.cos(t) * intensity, scale * math.sin(2 * t) / 2 * intensity]
-		}
+		let t = tick();
 
-		const oscMVMT = bobLemnBern(
-			this.character.Humanoid.WalkSpeed * .4,
-			this.character.Humanoid.WalkSpeed * .005);
+		let velocity = this.character.PrimaryPart!.AssemblyLinearVelocity;
+
+		let f = (t * math.round(new Vector2(velocity.X, velocity.Z).Magnitude) / 1.5) + 1
+
+		print(f)
+		print(velocity.X, velocity.Z)
+		print('====')
+
+		let tx = math.cos(f) * .05;
+		let ty = math.abs(math.sin(f)) * .05;
 		
 		this.cframes.viewmodelBob = this.cframes.viewmodelBob.Lerp(
-			movedirection.Magnitude === 0? new CFrame(): 
-			new CFrame(new Vector3(oscMVMT[1], oscMVMT[0], 0).mul(this.aiming? 0.1: 1)),
+			new CFrame(new Vector3(tx, ty).mul(1 - this.values.aimDelta.Value)),
 			.1
 		)
 
@@ -366,7 +364,7 @@ export default class gun extends item {
 			.mul(idleOffset)
 			.mul(this.values.leanOffsetCamera.Value)
 			.mul(this.values.leanOffsetViewmodel.Value)
-			//.mul(this.cframes.viewmodelBob)
+			.mul(this.cframes.viewmodelBob)
 		);
 
 		camera.CFrame = new CFrame(camera.CFrame.Position)
@@ -378,8 +376,6 @@ export default class gun extends item {
 
 		this.character.Humanoid.WalkSpeed = clientExposed.getBaseWalkSpeed() 
 			* (this.stance === -1? this.multipliers.speed.prone: (this.stance === 0? this.multipliers.speed.crouch: 1))
-		
-
 
 		if (!this.loadedAnimations.idle.IsPlaying) {
 			this.loadedAnimations.idle.Play()

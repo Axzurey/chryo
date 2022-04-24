@@ -9,6 +9,16 @@ namespace utils {
         task.spawn(callback);
     }
 
+    export namespace dataTypeUtils {
+        /**
+         * returns a cframe position and orientation
+         */
+        export function cframeToCFrames(cframe: CFrame) {
+            let o = cframe.ToOrientation()
+            return [new CFrame(cframe.Position), CFrame.fromOrientation(o[0], o[1], o[2])];
+        }
+    }
+
     export namespace instanceUtils {
         /**
          * makes all children as if they aren't there(uninteractable)
