@@ -343,17 +343,15 @@ export default class gun extends item {
 
 		let velocity = this.character.PrimaryPart!.AssemblyLinearVelocity;
 
-		let f = (t * math.round(new Vector2(velocity.X, velocity.Z).Magnitude) / 1.5) + 1
+		let roundedMagXZ = math.round(new Vector2(velocity.X, velocity.Z).Magnitude)
 
-		print(f)
-		print(velocity.X, velocity.Z)
-		print('====')
+		let f = ((t * roundedMagXZ / 1.5 + tick()) * (roundedMagXZ === 0? 1 - this.values.aimDelta.Value: 1));
 
 		let tx = math.cos(f) * .05;
 		let ty = math.abs(math.sin(f)) * .05;
 		
 		this.cframes.viewmodelBob = this.cframes.viewmodelBob.Lerp(
-			new CFrame(new Vector3(tx, ty).mul(1 - this.values.aimDelta.Value)),
+			new CFrame(new Vector3(tx, ty).mul(1 - this.values.aimDelta.Value + .1)),
 			.1
 		)
 

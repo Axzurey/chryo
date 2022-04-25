@@ -255,15 +255,13 @@ do
 		local cx, cy, cz = camera.CFrame:ToOrientation()
 		local t = tick()
 		local velocity = self.character.PrimaryPart.AssemblyLinearVelocity
-		local f = (t * math.round(Vector2.new(velocity.X, velocity.Z).Magnitude) / 1.5) + 1
-		print(f)
-		print(velocity.X, velocity.Z)
-		print("====")
+		local roundedMagXZ = math.round(Vector2.new(velocity.X, velocity.Z).Magnitude)
+		local f = ((t * roundedMagXZ / 1.5 + tick()) * (if roundedMagXZ == 0 then 1 - self.values.aimDelta.Value else 1))
 		local tx = math.cos(f) * .05
 		local ty = math.abs(math.sin(f)) * .05
 		local _fn = self.cframes.viewmodelBob
 		local _vector3 = Vector3.new(tx, ty)
-		local _arg0 = 1 - self.values.aimDelta.Value
+		local _arg0 = 1 - self.values.aimDelta.Value + .1
 		self.cframes.viewmodelBob = _fn:Lerp(CFrame.new(_vector3 * _arg0), .1)
 		local _fn_1 = self.viewmodel
 		local _cFrame = CFrame.new(camera.CFrame.Position)
