@@ -41,7 +41,7 @@ Players.PlayerAdded.Connect((client) => {
     serverData.playerConfiguration[client.UserId] = mix
 })
 
-system.remote.server.on('equipItem', (player, itemId) => {
+system.remote.server.on('equipContext', (player, itemId) => {
     let fromMap = internalIdentification[itemId]
     if (!fromMap) {
         //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
@@ -59,6 +59,24 @@ system.remote.server.on('equipItem', (player, itemId) => {
     }
 })
 
-system.remote.server.on('updateMovement', () => {
+system.remote.server.on('reloadContext', (player, itemId) => {
+	let fromMap = internalIdentification[itemId]
+    if (!fromMap) {
+        //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
+    }
+    if (fromMap.owner && fromMap.owner === player) {
+        let obj = fromMap.object;
+        for (const [i, v] of pairs(serverData.playerConfiguration[player.UserId].items)) {
+            if (v.serverItemIdentification === itemId) {
+                v.equip();
+            }
+            else {
+                v.unequip();
+            }
+        }
+    }
+})
+
+system.remote.server.on('updateMovement', (player, newcframe) => {
     
 })
