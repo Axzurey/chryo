@@ -49,6 +49,9 @@ export default class serverGun extends serverItem {
 
         this.reloading = true;
     }
+    cancelReload() {
+        this.reloading = false;
+    }
     finishReload() {
         if (this.maxAmmo - (this.ammo + this.magazineOverload) <= 0) return; //magazine is already full
         if (!this.reloading) return;

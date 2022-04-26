@@ -59,19 +59,46 @@ system.remote.server.on('equipContext', (player, itemId) => {
     }
 })
 
-system.remote.server.on('reloadContext', (player, itemId) => {
+system.remote.server.on('reloadStartContext', (player, itemId) => {
 	let fromMap = internalIdentification[itemId]
     if (!fromMap) {
         //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
     }
     if (fromMap.owner && fromMap.owner === player) {
         let obj = fromMap.object;
-        for (const [i, v] of pairs(serverData.playerConfiguration[player.UserId].items)) {
-            if (v.serverItemIdentification === itemId) {
-                v.equip();
+        if (obj.typeIdentifier === itemTypeIdentifier.gun) {
+            if (obj.userEquipped) {
+                (obj as serverGun).startReload()
             }
-            else {
-                v.unequip();
+        }
+    }
+})
+
+system.remote.server.on('reloadEndContext', (player, itemId) => {
+	let fromMap = internalIdentification[itemId]
+    if (!fromMap) {
+        //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
+    }
+    if (fromMap.owner && fromMap.owner === player) {
+        let obj = fromMap.object;
+        if (obj.typeIdentifier === itemTypeIdentifier.gun) {
+            if (obj.userEquipped) {
+                (obj as serverGun).finishReload()
+            }
+        }
+    }
+})
+
+system.remote.server.on('reloadCancelContext', (player, itemId) => {
+	let fromMap = internalIdentification[itemId]
+    if (!fromMap) {
+        //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
+    }
+    if (fromMap.owner && fromMap.owner === player) {
+        let obj = fromMap.object;
+        if (obj.typeIdentifier === itemTypeIdentifier.gun) {
+            if (obj.userEquipped) {
+                (obj as serverGun).cancelReload()
             }
         }
     }
