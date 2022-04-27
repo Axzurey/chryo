@@ -6,6 +6,7 @@ import gunwork, { gunAnimationsConfig, gunAttachmentConfig, sightModel } from "s
 import utils, { newThread } from 'shared/athena/utils';
 import { Players, TweenService } from "@rbxts/services";
 import animationCompile from "shared/athena/animate";
+import system from "shared/zero/system";
 
 export default class gun extends item {
 
@@ -268,6 +269,7 @@ export default class gun extends item {
 
 			this.aiming = t;
 		})
+		
 	}
 	lean(t: 1 | 0 | -1) {
 		newThread(() => {

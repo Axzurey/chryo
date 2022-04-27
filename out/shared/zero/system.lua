@@ -11,6 +11,14 @@ do
 		local server = {}
 		do
 			local _container_2 = server
+			local function fireClient(protocol, client, args)
+				if RunService:IsServer() then
+					protocols[protocol].protocol:fireClient(client, args)
+				else
+					error("this method can not be called from the client")
+				end
+			end
+			_container_2.fireClient = fireClient
 			local function on(protocol, callback)
 				if RunService:IsServer() then
 					return protocols[protocol].protocol:listenServer(callback)
@@ -24,6 +32,14 @@ do
 		local client = {}
 		do
 			local _container_2 = client
+			local function fireServer(protocol, client, args)
+				if RunService:IsServer() then
+					protocols[protocol].protocol:fireClient(client, args)
+				else
+					error("this method can not be called from the client")
+				end
+			end
+			_container_2.fireServer = fireServer
 			local function on(protocol, callback)
 				if RunService:IsClient() then
 					return protocols[protocol].protocol:listenClient(callback)

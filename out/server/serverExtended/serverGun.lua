@@ -46,6 +46,9 @@ do
 		self.reloadStarted = tick()
 		self.reloading = true
 	end
+	function serverGun:cancelReload()
+		self.reloading = false
+	end
 	function serverGun:finishReload()
 		if self.maxAmmo - (self.ammo + self.magazineOverload) <= 0 then
 			return nil

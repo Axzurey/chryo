@@ -4,6 +4,7 @@ local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
 local Players = _services.Players
 local RunService = _services.RunService
 local getSharedEnvironment = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "environment").getSharedEnvironment
+local verifyRemoteArgs = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "helpers", "verifyRemoteArgs").default
 --[[
 	*
 	* the parameters of the generic are what the component recieves: FireServer would send Parameters<Server>
@@ -20,7 +21,7 @@ do
 		local self = setmetatable({}, remoteProtocol)
 		return self:constructor(...) or self
 	end
-	function remoteProtocol:constructor(uniqueAlias)
+	function remoteProtocol:constructor(uniqueAlias, expected)
 		self.listeners = {}
 		if RunService:IsServer() then
 			self.remote = Instance.new("RemoteEvent")
@@ -30,10 +31,19 @@ do
 				local args = { ... }
 				local _listeners = self.listeners
 				local _arg0 = function(v)
-					if v.callback then
-						local callback = v.callback
-						callback(client, unpack(args))
-					end
+					task.spawn(function()
+						if v.callback then
+							local _array = { client }
+							local _length = #_array
+							table.move(args, 1, #args, _length + 1, _array)
+							local t = verifyRemoteArgs(_array, expected)
+							if not t then
+								return nil
+							end
+							local callback = v.callback
+							callback(client, unpack(args))
+						end
+					end)
 				end
 				for _k, _v in ipairs(_listeners) do
 					_arg0(_v, _k - 1, _listeners)
@@ -45,10 +55,12 @@ do
 				local args = { ... }
 				local _listeners = self.listeners
 				local _arg0 = function(v)
-					if v.callback then
-						local callback = v.callback
-						callback(unpack(args))
-					end
+					task.spawn(function()
+						if v.callback then
+							local callback = v.callback
+							callback(unpack(args))
+						end
+					end)
 				end
 				for _k, _v in ipairs(_listeners) do
 					_arg0(_v, _k - 1, _listeners)
@@ -127,6 +139,12 @@ do
 		for _k, _v in ipairs(_exp) do
 			_arg0(_v, _k - 1, _exp)
 		end
+	end
+	function remoteProtocol:fireServer(args)
+		if RunService:IsServer() then
+			error("this method may not be called from the client!")
+		end
+		self.remote:FireServer(args)
 	end
 	function remoteProtocol:destroy()
 		if RunService:IsClient() then

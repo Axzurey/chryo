@@ -12,6 +12,8 @@ declare global {
 
     type pathLike = string;
 
+	type omitFirstValueOfArray<T> = T extends [infer _, ...infer U] ? [...U] : never;
+
 	interface TypedPropertyDescriptor<T> {
 		value: (self: InferThis<T>, ...parameters: Parameters2<T>) => ReturnType2<T>;
 	}

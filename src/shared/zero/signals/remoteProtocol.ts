@@ -4,7 +4,7 @@ import {t} from '@rbxts/t';
 import verifyRemoteArgs from 'shared/zero/helpers/verifyRemoteArgs'
 
 type anyFunctionVoid = (...args: any[]) => void
-type playerFuncVoid = (player: Player, ...args: unknown[]) => void
+type playerFuncVoid = (player: Player, ...args: any[]) => void
 
 interface protocolListener<T extends anyFunctionVoid> {
     callback?: T
@@ -21,7 +21,7 @@ export type GetGenericOfClassClient<T> = T extends remoteProtocol<infer A, infer
 /**
  * the parameters of the generic are what the component recieves: FireServer would send Parameters<Server>
  */
-export default class remoteProtocol<Server extends (player: Player, ...args: any[]) => void, Client extends anyFunctionVoid> {
+export default class remoteProtocol<Server extends playerFuncVoid, Client extends anyFunctionVoid> {
 	private listeners: protocolListener<Server | Client>[] = [];
     private remote: RemoteEvent
 
@@ -117,6 +117,11 @@ export default class remoteProtocol<Server extends (player: Player, ...args: any
             if (blacklist.indexOf(client) !== -1) return;
             this.remote.FireClient(client, ...args as unknown[]);
         })
+    }
+    public fireServer(args: Parameters<Server>) {
+        if (RunService.IsServer()) throw `this method may not be called from the client!`;
+
+        this.remote.FireServer(...args);
     }
 
     public destroy() {
