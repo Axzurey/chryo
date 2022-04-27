@@ -11,7 +11,7 @@ namespace system {
                     protocols[protocol].protocol.fireClient(client, args as any);
                 }
                 else {
-                    throw `this method can not be called from the client`
+                    throw `this method can not be called from the client`;
                 }
             }
             export function on<T extends keyof typeof protocols>(protocol: T, callback: GetGenericOfClassServer<(typeof protocols[T])['protocol']>) {
@@ -19,7 +19,7 @@ namespace system {
                     return protocols[protocol].protocol.listenServer(callback as any);
                 }
                 else {
-                    throw `this method can not be called from the client`
+                    throw `this method can not be called from the client`;
                 }
             }
         }
@@ -30,7 +30,7 @@ namespace system {
                     protocols[protocol].protocol.fireServer(args as any);
                 }
                 else {
-                    throw `this method can not be called from the server`
+                    throw `this method can not be called from the server`;
                 }
             }
             export function on<T extends keyof typeof protocols>(protocol: T, callback: GetGenericOfClassClient<(typeof protocols[T])['protocol']>) {
@@ -38,7 +38,7 @@ namespace system {
                     return protocols[protocol].protocol.listenClient(callback as any);
                 }
                 else {
-                    throw `this method can not be called from the server`
+                    throw `this method can not be called from the server`;
                 }
             }
         }
