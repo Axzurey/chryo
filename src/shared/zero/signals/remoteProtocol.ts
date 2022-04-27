@@ -118,7 +118,7 @@ export default class remoteProtocol<Server extends playerFuncVoid, Client extend
             this.remote.FireClient(client, ...args as unknown[]);
         })
     }
-    public fireServer(args: Parameters<Server>) {
+    public fireServer(args: omitFirstValueOfArray<Parameters<Server>>) {
         if (RunService.IsServer()) throw `this method may not be called from the client!`;
 
         this.remote.FireServer(...args);

@@ -8,7 +8,7 @@ namespace system {
             export function fireClient<T extends keyof typeof protocols>(protocol: T, client: Player, 
                 ...args: Parameters<GetGenericOfClassClient<(typeof protocols)[T]["protocol"]>>) {
                 if (RunService.IsServer()) {
-                    protocols[protocol].protocol.fireClient(client, args);
+                    protocols[protocol].protocol.fireClient(client, args as any);
                 }
                 else {
                     throw `this method can not be called from the client`
@@ -27,7 +27,7 @@ namespace system {
             export function fireServer<T extends keyof typeof protocols>(protocol: T, 
                 ...args: omitFirstValueOfArray<Parameters<GetGenericOfClassServer<(typeof protocols)[T]["protocol"]>>>) {
                 if (RunService.IsClient()) {
-                    //protocols[protocol].protocol.fireServer(args);
+                    protocols[protocol].protocol.fireServer(args as any);
                 }
                 else {
                     throw `this method can not be called from the server`
