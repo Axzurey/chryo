@@ -77,4 +77,17 @@ system.remote.server.on("reloadCancelContext", function(player, itemId)
 		end
 	end
 end)
+system.remote.server.on("fireContext", function(player, itemId, cframe)
+	local fromMap = internalIdentification[itemId]
+	if not fromMap then
+	end
+	if fromMap.owner and fromMap.owner == player then
+		local obj = fromMap.object
+		if obj.typeIdentifier == itemTypeIdentifier.gun then
+			if obj.userEquipped then
+				obj:fire(cframe)
+			end
+		end
+	end
+end)
 system.remote.server.on("updateMovement", function(player, newcframe) end)

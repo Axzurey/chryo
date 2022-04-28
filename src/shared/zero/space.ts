@@ -3,48 +3,49 @@ import component from "./basic/component";
 import entity from "./basic/entity";
 
 namespace space {
-    const entityMaps: Map<component[], entity[]> = new Map();
+    const entities: entity[] = [];
     export const ignoreInstances: Instance[] = [];
 
     export namespace query {
-        export function findAllWithComponents(components: component[]): entity[] {
-            let index = entityMaps.get(components);
-            if (index) return index;
-            return [];
-        }
-        /**
-         * 
-         * @param property 
-         * @param value 
-         * @param useComponents if this is not provided, it searches through every entity in the game
-         * @returns 
-         */
-        export function filterAllWithPropertyAs<V>(property: string, value: V, useComponents?: component[]) {
-            let selected: component[] = [];
-            if (useComponents) {
-                useComponents.forEach((v) => {
-                    if (propertyExistsInObject(v, property) && v[property] === value) {
-                        selected.push(v)
-                    }
-                })
-            }
-            else {
-                entityMaps.forEach((comparr) => {
-                    comparr.forEach((v) => {
-                        if (propertyExistsInObject(v, property) && v[property] === value) {
-                            selected.push(v)
-                        }
-                    })
-                })
-            }
+        export function getAllWithProperty<K extends string>(property: K): (entity & Record<K, unknown>)[] {
+            let selected: (entity & Record<K, any>)[] = [];
+            entities.forEach((v) => {
+                if (propertyExistsInObject(v, property)) {
+                    selected.push(v)
+                }
+            })
             return selected;
         }
+        /**
+         * note: for value(parameter 2) remember to throw in 'as const' to the end or else it will end up as a broad type
+         */
+        export function getAllWithPropertyAs<K extends string, V>(property: K, value: V): (entity & Record<K, V>)[] {
+            let selected: (entity & Record<K, V>)[] = [];
+            entities.forEach((v) => {
+                if (propertyExistsInObject(v, property) && v[property] === value) {
+                    selected.push(v as typeof v & Record<K, V>)
+                }
+            })
+            return selected;
+        }
+        export function entityHasPropertyOfType<E extends entity, K extends string, T extends keyof CheckableTypes>
+        (entity: E, property: K, propertyType: T): entity is E & Record<K, CheckableTypes[T]> {
+            if (propertyExistsInObject(entity, property) && typeOf(entity[property]) === propertyType) {
+                return true;
+            }
+            return false;
+        }
+        export function findFirstEntityWithVessel(vessel: Model) {
+            for (const [_, v] of pairs(entities)) {
+                if (v.vessel && vessel === v.vessel) {
+                    return v;
+                }
+            }
+        }
         export function findFirstEntityWithVesselThatContainsInstance(instance: Instance) {
-            for (let [_, z] of entityMaps) {
-                for (const [_, v] of pairs(z)) {
-                    if (v.vessel && instance.IsDescendantOf(v.vessel)) {
-                        return v;
-                    }
+            for (const [_, v] of pairs(entities)) {
+                if (v.vessel && instance.IsDescendantOf(v.vessel)) {
+                    return v;
                 }
             }
         }

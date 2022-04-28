@@ -3,6 +3,7 @@ local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_incl
 local serverItem = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverBase", "serverItem").default
 local rocaster = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "rocast").default
 local newThread = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils").newThread
+local space = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "space")
 local serverGun
 do
 	local super = serverItem
@@ -61,7 +62,7 @@ do
 			return nil
 		end
 	end
-	function serverGun:fire(from, direction)
+	function serverGun:fire(cameraCFrame)
 		if not self.userEquipped then
 			return nil
 		end
@@ -73,8 +74,8 @@ do
 		end
 		self.ammo -= 1
 		local caster = rocaster.new({
-			from = from,
-			direction = direction,
+			from = cameraCFrame.Position,
+			direction = cameraCFrame.LookVector,
 			maxDistance = 999,
 			ignore = {},
 		})
@@ -86,6 +87,12 @@ do
 				}
 			end,
 		})
+		if castResult then
+			local entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance)
+			if entity and space.query.entityHasPropertyOfType(entity, "health", "number") then
+				entity.health -= 2
+			end
+		end
 		if not castResult then
 			return nil
 		end

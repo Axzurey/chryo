@@ -1,6 +1,7 @@
 import serverItem from "../serverBase/serverItem";
 import rocaster from 'shared/zero/rocast';
 import { newThread } from "shared/athena/utils";
+import space from "shared/zero/space";
 
 export default class serverGun extends serverItem {
     //internal
@@ -60,15 +61,16 @@ export default class serverGun extends serverItem {
 
         if (diff > this.reloadSpeedMax || diff < this.reloadSpeedMin ) return //reload took too short or too long!
     }
-    fire(from: Vector3, direction: Vector3) {
+    fire(cameraCFrame: CFrame) {
         if (!this.userEquipped) return;
         if (this.reloading) return;
         if (this.ammo <= 0) return;
 
         this.ammo --;
+
         let caster = new rocaster({
-            from: from,
-            direction: direction,
+            from: cameraCFrame.Position,
+            direction: cameraCFrame.LookVector,
             maxDistance: 999,
             ignore: []
         });
@@ -80,7 +82,14 @@ export default class serverGun extends serverItem {
                     weight: 1
                 }
             }
-        })
+        });
+
+        if (castResult) {
+            let entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance);
+            if (entity && space.query.entityHasPropertyOfType(entity, 'health', 'number')) {
+                entity.health -= 2//change
+            }
+        }
 
         if (!castResult) return;
     }

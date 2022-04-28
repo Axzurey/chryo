@@ -254,7 +254,8 @@ export default class gun extends item {
 	fire() {
 		newThread(() => {
 			if (!this.firePoint && !this.camera) throw `fire can not be called without a character or camera`
-			const fireCFrame = this.camera? this.camera.CFrame: (this.firePoint as BasePart).CFrame;
+			const fireCFrame = this.camera!.CFrame;
+			system.remote.client.fireServer('fireContext', this.serverItemIdentification, fireCFrame)
 		})
 	}
 	aim(t: boolean) {

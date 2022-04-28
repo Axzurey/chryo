@@ -12,6 +12,7 @@ local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
 local Players = _services.Players
 local TweenService = _services.TweenService
 local animationCompile = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "animate").default
+local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
 local gun
 do
 	local super = item
@@ -185,7 +186,8 @@ do
 			if not self.firePoint and not self.camera then
 				error("fire can not be called without a character or camera")
 			end
-			local fireCFrame = if self.camera then self.camera.CFrame else (self.firePoint).CFrame
+			local fireCFrame = self.camera.CFrame
+			system.remote.client.fireServer("fireContext", self.serverItemIdentification, fireCFrame)
 		end)
 	end
 	function gun:aim(t)

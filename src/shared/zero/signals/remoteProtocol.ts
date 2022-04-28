@@ -3,8 +3,8 @@ import { getSharedEnvironment } from "shared/constants/environment"
 import {t} from '@rbxts/t';
 import verifyRemoteArgs from 'shared/zero/helpers/verifyRemoteArgs'
 
-type anyFunctionVoid = (...args: any[]) => void
-type playerFuncVoid = (player: Player, ...args: any[]) => void
+type anyFunctionVoid = (...args: never[]) => void
+type playerFuncVoid = (player: Player, ...args: never[]) => void
 
 interface protocolListener<T extends anyFunctionVoid> {
     callback?: T
@@ -38,7 +38,8 @@ export default class remoteProtocol<Server extends playerFuncVoid, Client extend
 							let t = verifyRemoteArgs([client, ...args], expected);
 							if (!t) return;
 	                        let callback = v.callback as Server;
-	                        callback(client, ...args)
+                            let a = args as never[]
+	                        callback(client, ...a)
 	                    }
 					})
                 })
@@ -51,7 +52,8 @@ export default class remoteProtocol<Server extends playerFuncVoid, Client extend
                     task.spawn(() => {
 						if (v.callback) {
 	                        let callback = v.callback as Client;
-	                        callback(...args as unknown[])
+                            let a = args as never[]
+	                        callback(...a)
 	                    }
 					})
                 })

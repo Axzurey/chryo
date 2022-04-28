@@ -4,63 +4,66 @@ local propertyExistsInObject = TS.import(script, game:GetService("ReplicatedStor
 local space = {}
 do
 	local _container = space
-	local entityMaps = {}
+	local entities = {}
 	local ignoreInstances = {}
 	_container.ignoreInstances = ignoreInstances
 	local query = {}
 	do
 		local _container_1 = query
-		local function findAllWithComponents(components)
-			local index = entityMaps[components]
-			if index then
-				return index
-			end
-			return {}
-		end
-		_container_1.findAllWithComponents = findAllWithComponents
-		--[[
-			*
-			*
-			* @param property
-			* @param value
-			* @param useComponents if this is not provided, it searches through every entity in the game
-			* @returns
-		]]
-		local function filterAllWithPropertyAs(property, value, useComponents)
+		local function getAllWithProperty(property)
 			local selected = {}
-			if useComponents then
-				local _arg0 = function(v)
-					if propertyExistsInObject(v, property) and v[property] == value then
-						table.insert(selected, v)
-					end
+			local _arg0 = function(v)
+				if propertyExistsInObject(v, property) then
+					table.insert(selected, v)
 				end
-				for _k, _v in ipairs(useComponents) do
-					_arg0(_v, _k - 1, useComponents)
-				end
-			else
-				local _arg0 = function(comparr)
-					local _arg0_1 = function(v)
-						if propertyExistsInObject(v, property) and v[property] == value then
-							table.insert(selected, v)
-						end
-					end
-					for _k, _v in ipairs(comparr) do
-						_arg0_1(_v, _k - 1, comparr)
-					end
-				end
-				for _k, _v in pairs(entityMaps) do
-					_arg0(_v, _k, entityMaps)
-				end
+			end
+			for _k, _v in ipairs(entities) do
+				_arg0(_v, _k - 1, entities)
 			end
 			return selected
 		end
-		_container_1.filterAllWithPropertyAs = filterAllWithPropertyAs
+		_container_1.getAllWithProperty = getAllWithProperty
+		--[[
+			*
+			* note: for value(parameter 2) remember to throw in 'as const' to the end or else it will end up as a broad type
+		]]
+		local function getAllWithPropertyAs(property, value)
+			local selected = {}
+			local _arg0 = function(v)
+				if propertyExistsInObject(v, property) and v[property] == value then
+					table.insert(selected, v)
+				end
+			end
+			for _k, _v in ipairs(entities) do
+				_arg0(_v, _k - 1, entities)
+			end
+			return selected
+		end
+		_container_1.getAllWithPropertyAs = getAllWithPropertyAs
+		local function entityHasPropertyOfType(entity, property, propertyType)
+			local _condition = propertyExistsInObject(entity, property)
+			if _condition then
+				local _arg0 = entity[property]
+				_condition = typeof(_arg0) == propertyType
+			end
+			if _condition then
+				return true
+			end
+			return false
+		end
+		_container_1.entityHasPropertyOfType = entityHasPropertyOfType
+		local function findFirstEntityWithVessel(vessel)
+			for _, v in pairs(entities) do
+				if v.vessel and vessel == v.vessel then
+					return v
+				end
+			end
+		end
+		_container_1.findFirstEntityWithVessel = findFirstEntityWithVessel
 		local function findFirstEntityWithVesselThatContainsInstance(instance)
-			for _, z in pairs(entityMaps) do
-				for _, v in pairs(z) do
-					if v.vessel and instance:IsDescendantOf(v.vessel) then
-						return v
-					end
+			for _, v in pairs(entities) do
+				if v.vessel and instance:IsDescendantOf(v.vessel) then
+					return v
 				end
 			end
 		end

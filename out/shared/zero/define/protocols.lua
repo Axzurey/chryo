@@ -18,5 +18,8 @@ local protocols = {
 	reloadCancelContext = {
 		protocol = remoteProtocol.new("item_reload_cancel_context", { t.Instance, t.string }),
 	},
+	fireContext = {
+		protocol = remoteProtocol.new("item_fire_context", { t.Instance, t.string, t.CFrame }),
+	},
 }
 return protocols

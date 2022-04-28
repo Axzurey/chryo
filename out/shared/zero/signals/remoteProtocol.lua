@@ -41,7 +41,8 @@ do
 								return nil
 							end
 							local callback = v.callback
-							callback(client, unpack(args))
+							local a = args
+							callback(client, unpack(a))
 						end
 					end)
 				end
@@ -58,7 +59,8 @@ do
 					task.spawn(function()
 						if v.callback then
 							local callback = v.callback
-							callback(unpack(args))
+							local a = args
+							callback(unpack(a))
 						end
 					end)
 				end
@@ -144,7 +146,7 @@ do
 		if RunService:IsServer() then
 			error("this method may not be called from the client!")
 		end
-		self.remote:FireServer(args)
+		self.remote:FireServer(unpack(args))
 	end
 	function remoteProtocol:destroy()
 		if RunService:IsClient() then

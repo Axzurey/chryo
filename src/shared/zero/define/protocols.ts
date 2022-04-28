@@ -16,6 +16,10 @@ const protocols = {
 	},
     reloadCancelContext: {
 		protocol: new remoteProtocol<(player: Player, itemId: string) => void, () => void>('item_reload_cancel_context', [t.Instance, t.string]),
+	},
+    fireContext: {
+		protocol: new remoteProtocol<(player: Player, itemId: string, cameraCFrame: CFrame) => void, () => void>('item_fire_context', 
+        [t.Instance, t.string, t.CFrame]),
 	}
 }
 
