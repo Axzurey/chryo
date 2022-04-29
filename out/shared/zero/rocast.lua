@@ -1,7 +1,7 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Workspace = TS.import(script, TS.getModule(script, "@rbxts", "services")).Workspace
-local space = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "space")
+local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
 local rocaster
 do
 	rocaster = setmetatable({}, {
@@ -25,21 +25,27 @@ do
 		local result = _fn:Raycast(from, direction * _arg0, i)
 		if result then
 			local distance = (result.Position - from).Magnitude
+			print(result)
 			local r = castParams.canPierce(result)
+			system.poly.drawLine(from, result.Position)
 			if r then
+				local _instance = result.Instance
+				table.insert(ignore, _instance)
 				return self:loopCast(result.Position, direction, distance + distancePassed, ignore, castParams)
 			else
 				return result
 			end
+		else
+			local _fn_1 = system.poly
+			local _arg0_1 = self.params.maxDistance - distancePassed
+			_fn_1.drawLine(from, direction * _arg0_1)
 		end
 		return nil
 	end
 	function rocaster:cast(params)
 		local result = self:loopCast(self.params.from, self.params.direction, 0, self.params.ignore, params)
 		if result then
-			local entity = space.query.findFirstEntityWithVesselThatContainsInstance(result.Instance)
 			return {
-				entity = entity,
 				instance = result.Instance,
 				normal = result.Normal,
 				position = result.Position,

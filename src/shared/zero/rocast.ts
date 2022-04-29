@@ -1,6 +1,7 @@
 import { Workspace } from "@rbxts/services";
 import entity from "./basic/entity";
 import space from "./space";
+import system from "./system";
 
 interface rocastParams {
     from: Vector3,
@@ -10,7 +11,6 @@ interface rocastParams {
 }
 
 interface castResult {
-    entity?: entity,
     position: Vector3,
     normal: Vector3,
     material: Enum.Material,
@@ -32,23 +32,27 @@ export default class rocaster {
         let result = Workspace.Raycast(from, direction.mul(this.params.maxDistance - distancePassed), i);
         if (result) {
             let distance = (result.Position.sub(from)).Magnitude;
+            print(result)
 
             let r = castParams.canPierce(result);
+            system.poly.drawLine(from, result.Position)
             if (r) {
+                ignore.push(result.Instance)
                 return this.loopCast(result.Position, direction, distance + distancePassed, ignore, castParams);
             }
             else {
                 return result;
             }
         }
+        else {
+            system.poly.drawLine(from, direction.mul(this.params.maxDistance - distancePassed))
+        }
         return undefined;
     }
     cast(params: castParams): castResult | undefined {
         let result = this.loopCast(this.params.from, this.params.direction, 0, this.params.ignore, params);
         if (result) {
-            let entity = space.query.findFirstEntityWithVesselThatContainsInstance(result.Instance);
             return {
-                entity: entity,
                 instance: result.Instance,
                 normal: result.Normal,
                 position: result.Position,

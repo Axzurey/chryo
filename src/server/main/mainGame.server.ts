@@ -28,12 +28,14 @@ let internalIdentification: {[key: string]: {
 Players.PlayerAdded.Connect((client) => {
     let mix = {
         items: {
-            primary: new serverGun('$serverGun1'), //ofc, we gonna generate those normally
+            primary: new serverGun('Gun1'), //ofc, we gonna generate those normally
         },
         currentEquipped: undefined
     }
 
-    internalIdentification['$serverGun1'] = {
+    mix.items.primary.setUser(client)
+
+    internalIdentification['Gun1'] = {
         owner: client,
         object: mix.items.primary
     };
@@ -105,14 +107,18 @@ system.remote.server.on('reloadCancelContext', (player, itemId) => {
 })
 
 system.remote.server.on('fireContext', (player, itemId, cframe) => {
+    print(itemId)
     let fromMap = internalIdentification[itemId]
     if (!fromMap) {
         //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
     }
     if (fromMap.owner && fromMap.owner === player) {
+        print("s1")
         let obj = fromMap.object;
         if (obj.typeIdentifier === itemTypeIdentifier.gun) {
+            print('s2')
             if (obj.userEquipped) {
+                print('s3');
                 (obj as serverGun).fire(cframe)
             }
         }

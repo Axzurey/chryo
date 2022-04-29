@@ -27,7 +27,10 @@ export default class actionController {
 			}
 		},
 		fire: (state) => {
-			return 'TODO'
+			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
+				let gun = this.equippedItem;
+				gun.fire()
+			}
 		},
         reload: (state) => {
             return 'TODO'
@@ -81,7 +84,7 @@ export default class actionController {
 		clientExposed.setCamera(Workspace.CurrentCamera as Camera);
 		clientExposed.setBaseWalkSpeed(12);
 
-		let item = new gun('$xoo', 'ReplicatedStorage//guns//hk416&class=Model', {
+		let item = new gun('Gun1', 'ReplicatedStorage//guns//hk416&class=Model', {
 			sight: {
 				name: 'holographic',
 				path: 'ReplicatedStorage//sights//holographic&class=Model',

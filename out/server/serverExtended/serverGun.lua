@@ -4,6 +4,10 @@ local serverItem = TS.import(script, game:GetService("ServerScriptService"), "TS
 local rocaster = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "rocast").default
 local newThread = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils").newThread
 local space = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "space")
+local _examine = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverBase", "examine")
+local examine = _examine
+local examineHitLocation = _examine.examineHitLocation
+local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier
 local serverGun
 do
 	local super = serverItem
@@ -34,6 +38,9 @@ do
 		self.reloadSpeedMax = 3
 		self.reloadStarted = tick()
 		self.reloading = false
+		self.ammo = 10
+		self.userEquipped = true
+		self.typeIdentifier = itemTypeIdentifier.gun
 	end
 	function serverGun:getRemotes()
 	end
@@ -73,28 +80,40 @@ do
 			return nil
 		end
 		self.ammo -= 1
+		print("start")
 		local caster = rocaster.new({
 			from = cameraCFrame.Position,
 			direction = cameraCFrame.LookVector,
 			maxDistance = 999,
-			ignore = {},
+			ignore = { self:getUser().Character },
 		})
 		local castResult = caster:cast({
 			canPierce = function(result)
-				return {
-					damageMultiplier = 1,
-					weight = 1,
-				}
+				return nil
+				--[[
+					return {
+					damageMultiplier: 1,
+					weight: 1
+					}
+				]]
 			end,
 		})
 		if castResult then
+			print("hit some")
 			local entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance)
 			if entity and space.query.entityHasPropertyOfType(entity, "health", "number") then
-				entity.health -= 2
+				local location = examineHitLocation(castResult.instance)
+				if location == examine.hitLocation.head then
+					entity.health -= self.damage.head
+				elseif location == examine.hitLocation.body then
+					entity.health -= self.damage.body
+				else
+					entity.health -= self.damage.limb
+				end
+				print(entity.health, "damaged!")
 			end
-		end
-		if not castResult then
-			return nil
+		else
+			print("hit none")
 		end
 	end
 	function serverGun:equip()

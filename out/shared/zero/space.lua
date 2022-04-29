@@ -7,6 +7,15 @@ do
 	local entities = {}
 	local ignoreInstances = {}
 	_container.ignoreInstances = ignoreInstances
+	local life = {}
+	do
+		local _container_1 = life
+		local function create(model, entityType)
+			return entityType.new(model)
+		end
+		_container_1.create = create
+	end
+	_container.life = life
 	local query = {}
 	do
 		local _container_1 = query

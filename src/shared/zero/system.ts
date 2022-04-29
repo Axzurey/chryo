@@ -1,8 +1,35 @@
-import { RunService } from '@rbxts/services';
+import { RunService, Workspace } from '@rbxts/services';
 import protocols from './define/protocols';
 import { GetGenericOfClassServer, GetGenericOfClassClient } from './signals/remoteProtocol';
 
 namespace system {
+    export namespace poly {
+        export function drawLine(p1: Vector3, p2: Vector3) {
+            let p = new Instance("Beam");
+            let a1 = new Instance("Attachment")
+            let a2 = new Instance("Attachment")
+
+            let a = new Instance("Part")
+            a.CanCollide = false;
+            a.Anchored = true;
+            a.CanTouch = false;
+            a.CanQuery = false;
+            a.Transparency = 1;
+            a.Parent = Workspace;
+
+            p.Width0 = .1
+            p.Width1 = .1
+            p.Attachment0 = a1;
+            p.Attachment1 = a2;
+
+            a1.WorldPosition = p1;
+            a2.WorldPosition = p2;
+
+            p.Parent = a;
+            a1.Parent = a;
+            a2.Parent = a;
+        }
+    }
     export namespace remote {
         export namespace server {
             export function fireClient<T extends keyof typeof protocols>(protocol: T, client: Player, 

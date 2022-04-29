@@ -2,6 +2,8 @@ import serverItem from "../serverBase/serverItem";
 import rocaster from 'shared/zero/rocast';
 import { newThread } from "shared/athena/utils";
 import space from "shared/zero/space";
+import examine, { examineHitLocation } from "server/serverBase/examine";
+import { itemTypeIdentifier } from "shared/types/gunwork";
 
 export default class serverGun extends serverItem {
     //internal
@@ -39,6 +41,9 @@ export default class serverGun extends serverItem {
 
     constructor(serverId: string) {
         super(serverId);
+        this.ammo = 10
+        this.userEquipped = true
+        this.typeIdentifier = itemTypeIdentifier.gun
     }
     getRemotes() {
         
@@ -68,30 +73,45 @@ export default class serverGun extends serverItem {
 
         this.ammo --;
 
+        print('start')
+
         let caster = new rocaster({
             from: cameraCFrame.Position,
             direction: cameraCFrame.LookVector,
             maxDistance: 999,
-            ignore: []
+            ignore: [this.getUser()!.Character as Model]
         });
 
         let castResult = caster.cast({
             canPierce: (result) => {
-                return {
+                return undefined
+                /*return {
                     damageMultiplier: 1,
                     weight: 1
-                }
+                }*/
             }
         });
 
         if (castResult) {
+            print('hit some')
             let entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance);
             if (entity && space.query.entityHasPropertyOfType(entity, 'health', 'number')) {
-                entity.health -= 2//change
+                let location = examineHitLocation(castResult.instance);
+                if (location === examine.hitLocation.head) {
+                    entity.health -= this.damage.head;
+                }
+                else if (location === examine.hitLocation.body) {
+                    entity.health -= this.damage.body;
+                }
+                else {
+                    entity.health -= this.damage.limb;
+                }
+                print(entity.health, 'damaged!')
             }
         }
-
-        if (!castResult) return;
+        else {
+            print('hit none')
+        }
     }
     equip() {
         newThread(() => {

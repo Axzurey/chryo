@@ -13,11 +13,12 @@ local internalIdentification = {}
 Players.PlayerAdded:Connect(function(client)
 	local mix = {
 		items = {
-			primary = serverGun.new("$serverGun1"),
+			primary = serverGun.new("Gun1"),
 		},
 		currentEquipped = nil,
 	}
-	internalIdentification["$serverGun1"] = {
+	mix.items.primary:setUser(client)
+	internalIdentification.Gun1 = {
 		owner = client,
 		object = mix.items.primary,
 	}
@@ -78,13 +79,17 @@ system.remote.server.on("reloadCancelContext", function(player, itemId)
 	end
 end)
 system.remote.server.on("fireContext", function(player, itemId, cframe)
+	print(itemId)
 	local fromMap = internalIdentification[itemId]
 	if not fromMap then
 	end
 	if fromMap.owner and fromMap.owner == player then
+		print("s1")
 		local obj = fromMap.object
 		if obj.typeIdentifier == itemTypeIdentifier.gun then
+			print("s2")
 			if obj.userEquipped then
+				print("s3")
 				obj:fire(cframe)
 			end
 		end

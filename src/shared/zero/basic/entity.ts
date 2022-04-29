@@ -1,3 +1,5 @@
-export default abstract class entity {
-    vessel?: Instance
+export default class entity {
+    constructor(public vessel?: Instance) {
+        
+    }
 }

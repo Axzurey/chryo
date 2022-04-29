@@ -39,7 +39,10 @@ do
 				end
 			end,
 			fire = function(state)
-				return "TODO"
+				if self:starting(state) and self:equippedIsAGun(self.equippedItem) then
+					local gun = self.equippedItem
+					gun:fire()
+				end
 			end,
 			reload = function(state)
 				return "TODO"
@@ -78,7 +81,7 @@ do
 		end
 		clientExposed:setCamera(Workspace.CurrentCamera)
 		clientExposed:setBaseWalkSpeed(12)
-		local item = gun.new("$xoo", "ReplicatedStorage//guns//hk416&class=Model", {
+		local item = gun.new("Gun1", "ReplicatedStorage//guns//hk416&class=Model", {
 			sight = {
 				name = "holographic",
 				path = "ReplicatedStorage//sights//holographic&class=Model",

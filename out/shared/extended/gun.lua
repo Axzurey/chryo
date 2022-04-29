@@ -183,6 +183,7 @@ do
 	end
 	function gun:fire()
 		newThread(function()
+			self.camera = clientExposed:getCamera()
 			if not self.firePoint and not self.camera then
 				error("fire can not be called without a character or camera")
 			end

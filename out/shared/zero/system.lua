@@ -1,10 +1,39 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local RunService = TS.import(script, TS.getModule(script, "@rbxts", "services")).RunService
+local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
+local RunService = _services.RunService
+local Workspace = _services.Workspace
 local protocols = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "define", "protocols")
 local system = {}
 do
 	local _container = system
+	local poly = {}
+	do
+		local _container_1 = poly
+		local function drawLine(p1, p2)
+			local p = Instance.new("Beam")
+			local a1 = Instance.new("Attachment")
+			local a2 = Instance.new("Attachment")
+			local a = Instance.new("Part")
+			a.CanCollide = false
+			a.Anchored = true
+			a.CanTouch = false
+			a.CanQuery = false
+			a.Transparency = 1
+			a.Parent = Workspace
+			p.Width0 = .1
+			p.Width1 = .1
+			p.Attachment0 = a1
+			p.Attachment1 = a2
+			a1.WorldPosition = p1
+			a2.WorldPosition = p2
+			p.Parent = a
+			a1.Parent = a
+			a2.Parent = a
+		end
+		_container_1.drawLine = drawLine
+	end
+	_container.poly = poly
 	local remote = {}
 	do
 		local _container_1 = remote

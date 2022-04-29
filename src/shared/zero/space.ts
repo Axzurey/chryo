@@ -1,10 +1,15 @@
 import { propertyExistsInObject } from "shared/athena/utils";
-import component from "./basic/component";
 import entity from "./basic/entity";
 
 namespace space {
     const entities: entity[] = [];
     export const ignoreInstances: Instance[] = [];
+
+    export namespace life {
+        export function create<T extends entity>(model: Model, entityType: new (vessel?: Instance) => T): T {
+            return new entityType(model);
+        }
+    }
 
     export namespace query {
         export function getAllWithProperty<K extends string>(property: K): (entity & Record<K, unknown>)[] {
