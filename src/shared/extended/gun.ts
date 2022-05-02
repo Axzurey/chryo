@@ -3,8 +3,8 @@ import item from "shared/base/item";
 import paths from "shared/constants/paths";
 import clientExposed from "shared/middleware/clientExposed";
 import gunwork, { fireMode, gunAnimationsConfig, gunAttachmentConfig, sightModel } from "shared/types/gunwork";
-import utils, { newThread } from 'shared/athena/utils';
-import { Players, TweenService } from "@rbxts/services";
+import utils, { newThread, stringify } from 'shared/athena/utils';
+import { HttpService, Players, TweenService } from "@rbxts/services";
 import animationCompile from "shared/athena/animate";
 import system from "shared/zero/system";
 
@@ -33,6 +33,8 @@ export default class gun extends item {
 
 	lastRecoil: number = 0;
 	currentRecoilIndex: number = 0;
+
+	currentReloadId?: string = undefined
 	
 	lastReload: number = 0;
 	/**
@@ -269,10 +271,14 @@ export default class gun extends item {
 	startReload() {
 		newThread(() => {
 			if (this.reloading) return;
+			let reloadId = stringify.randomString(64, true)
+			this.currentReloadId = reloadId;
 			this.reloading = true;
 			system.remote.client.fireServer('reloadStartContext', this.serverItemIdentification);
 			task.wait(this.reloadSpeed);
-			this.finishReload();
+			if (this.reloading && this.currentReloadId && this.currentReloadId === reloadId) {
+				this.finishReload();
+			}
 			//todo
 		})
 	}
@@ -283,6 +289,7 @@ export default class gun extends item {
 	}
 	cancelReload() {
 		this.reloading = false;
+		this.currentReloadId = undefined
 		system.remote.client.fireServer('reloadCancelContext', this.serverItemIdentification);
 	}
 	aim(t: boolean) {
