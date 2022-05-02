@@ -19,6 +19,12 @@ do
 	function clientExposed:setBaseWalkSpeed(speed)
 		self.baseWalkspeed = speed
 	end
+	function clientExposed:getActionController()
+		return self.actionController
+	end
+	function clientExposed:setActionController(actionController)
+		self.actionController = actionController
+	end
 end
 return {
 	default = clientExposed,

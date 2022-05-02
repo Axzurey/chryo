@@ -5,6 +5,13 @@ import { GetGenericOfClassServer, GetGenericOfClassClient } from './signals/remo
 namespace system {
     export namespace poly {
         export function drawLine(p1: Vector3, p2: Vector3) {
+            let bin = Workspace.FindFirstChild('debug_system')!;
+            if (!bin) {
+                bin = new Instance("Folder");
+                bin.Name = 'debug_system';
+                bin.Parent = Workspace;
+            }
+
             let p = new Instance("Beam");
             let a1 = new Instance("Attachment")
             let a2 = new Instance("Attachment")

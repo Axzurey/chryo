@@ -41,6 +41,11 @@ do
 		self.ammo = 10
 		self.userEquipped = true
 		self.typeIdentifier = itemTypeIdentifier.gun
+		self.damage = {
+			head = 1000,
+			body = 32,
+			limb = 20,
+		}
 	end
 	function serverGun:getRemotes()
 	end
@@ -86,6 +91,8 @@ do
 			direction = cameraCFrame.LookVector,
 			maxDistance = 999,
 			ignore = { self:getUser().Character },
+			ignoreNames = { "HumanoidRootPart" },
+			debug = true,
 		})
 		local castResult = caster:cast({
 			canPierce = function(result)
@@ -101,6 +108,7 @@ do
 		if castResult then
 			print("hit some")
 			local entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance)
+			print("entity is", entity)
 			if entity and space.query.entityHasPropertyOfType(entity, "health", "number") then
 				local location = examineHitLocation(castResult.instance)
 				if location == examine.hitLocation.head then

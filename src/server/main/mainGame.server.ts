@@ -45,9 +45,7 @@ Players.PlayerAdded.Connect((client) => {
 
 system.remote.server.on('equipContext', (player, itemId) => {
     let fromMap = internalIdentification[itemId]
-    if (!fromMap) {
-        //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
-    }
+    if (!fromMap) return
     if (fromMap.owner && fromMap.owner === player) {
         let obj = fromMap.object;
         for (const [i, v] of pairs(serverData.playerConfiguration[player.UserId].items)) {
@@ -78,9 +76,7 @@ system.remote.server.on('reloadStartContext', (player, itemId) => {
 
 system.remote.server.on('reloadEndContext', (player, itemId) => {
 	let fromMap = internalIdentification[itemId]
-    if (!fromMap) {
-        //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
-    }
+    if (!fromMap) return
     if (fromMap.owner && fromMap.owner === player) {
         let obj = fromMap.object;
         if (obj.typeIdentifier === itemTypeIdentifier.gun) {
@@ -93,9 +89,7 @@ system.remote.server.on('reloadEndContext', (player, itemId) => {
 
 system.remote.server.on('reloadCancelContext', (player, itemId) => {
 	let fromMap = internalIdentification[itemId]
-    if (!fromMap) {
-        //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
-    }
+    if (!fromMap) return
     if (fromMap.owner && fromMap.owner === player) {
         let obj = fromMap.object;
         if (obj.typeIdentifier === itemTypeIdentifier.gun) {
@@ -107,18 +101,12 @@ system.remote.server.on('reloadCancelContext', (player, itemId) => {
 })
 
 system.remote.server.on('fireContext', (player, itemId, cframe) => {
-    print(itemId)
     let fromMap = internalIdentification[itemId]
-    if (!fromMap) {
-        //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
-    }
+    if (!fromMap) return
     if (fromMap.owner && fromMap.owner === player) {
-        print("s1")
         let obj = fromMap.object;
         if (obj.typeIdentifier === itemTypeIdentifier.gun) {
-            print('s2')
             if (obj.userEquipped) {
-                print('s3');
                 (obj as serverGun).fire(cframe)
             }
         }

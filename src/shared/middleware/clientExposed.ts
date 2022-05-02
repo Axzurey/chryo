@@ -1,6 +1,9 @@
+import actionController from "shared/base/actionController";
+
 export default abstract class clientExposed {
     private static camera: Camera;
     private static baseWalkspeed: number;
+    private static actionController: actionController;
 
     static getCamera() {
         if (!this.camera) throw `camera has not been set!`
@@ -17,5 +20,13 @@ export default abstract class clientExposed {
 
     static setBaseWalkSpeed(speed: number) {
         this.baseWalkspeed = speed;
+    }
+
+    static getActionController() {
+        return this.actionController;
+    }
+    
+    static setActionController(actionController: actionController) {
+        this.actionController = actionController;
     }
 }

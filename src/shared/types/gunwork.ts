@@ -4,7 +4,7 @@ namespace gunwork {
     }
     
     export enum fireMode {
-        auto, semi, burst2, burst3, burst4, shotgun
+        auto="auto", semi="semi", burst2="burst2", burst3="burst3", burst4="burst4", shotgun="shotgun"
     }
     
     export type viewmodel = Model & {

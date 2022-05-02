@@ -44,6 +44,12 @@ export default class serverGun extends serverItem {
         this.ammo = 10
         this.userEquipped = true
         this.typeIdentifier = itemTypeIdentifier.gun
+
+        this.damage = {
+            head: 1000,
+            body: 32,
+            limb: 20
+        }
     }
     getRemotes() {
         
@@ -79,7 +85,9 @@ export default class serverGun extends serverItem {
             from: cameraCFrame.Position,
             direction: cameraCFrame.LookVector,
             maxDistance: 999,
-            ignore: [this.getUser()!.Character as Model]
+            ignore: [this.getUser()!.Character as Model],
+            ignoreNames: ['HumanoidRootPart'],
+            debug: true
         });
 
         let castResult = caster.cast({
@@ -95,6 +103,7 @@ export default class serverGun extends serverItem {
         if (castResult) {
             print('hit some')
             let entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance);
+            print('entity is', entity)
             if (entity && space.query.entityHasPropertyOfType(entity, 'health', 'number')) {
                 let location = examineHitLocation(castResult.instance);
                 if (location === examine.hitLocation.head) {

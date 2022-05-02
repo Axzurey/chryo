@@ -20,18 +20,18 @@ do
 		fireMode = setmetatable({}, {
 			__index = _inverse,
 		})
-		fireMode.auto = 0
-		_inverse[0] = "auto"
-		fireMode.semi = 1
-		_inverse[1] = "semi"
-		fireMode.burst2 = 2
-		_inverse[2] = "burst2"
-		fireMode.burst3 = 3
-		_inverse[3] = "burst3"
-		fireMode.burst4 = 4
-		_inverse[4] = "burst4"
-		fireMode.shotgun = 5
-		_inverse[5] = "shotgun"
+		fireMode.auto = "auto"
+		_inverse.auto = "auto"
+		fireMode.semi = "semi"
+		_inverse.semi = "semi"
+		fireMode.burst2 = "burst2"
+		_inverse.burst2 = "burst2"
+		fireMode.burst3 = "burst3"
+		_inverse.burst3 = "burst3"
+		fireMode.burst4 = "burst4"
+		_inverse.burst4 = "burst4"
+		fireMode.shotgun = "shotgun"
+		_inverse.shotgun = "shotgun"
 	end
 	_container.fireMode = fireMode
 end

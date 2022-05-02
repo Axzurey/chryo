@@ -7,7 +7,9 @@ namespace space {
 
     export namespace life {
         export function create<T extends entity>(model: Model, entityType: new (vessel?: Instance) => T): T {
-            return new entityType(model);
+            let e = new entityType(model);
+            entities.push(e);
+            return e;
         }
     }
 

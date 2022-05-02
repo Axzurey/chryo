@@ -27,6 +27,7 @@ end)
 system.remote.server.on("equipContext", function(player, itemId)
 	local fromMap = internalIdentification[itemId]
 	if not fromMap then
+		return nil
 	end
 	if fromMap.owner and fromMap.owner == player then
 		local obj = fromMap.object
@@ -55,6 +56,7 @@ end)
 system.remote.server.on("reloadEndContext", function(player, itemId)
 	local fromMap = internalIdentification[itemId]
 	if not fromMap then
+		return nil
 	end
 	if fromMap.owner and fromMap.owner == player then
 		local obj = fromMap.object
@@ -68,6 +70,7 @@ end)
 system.remote.server.on("reloadCancelContext", function(player, itemId)
 	local fromMap = internalIdentification[itemId]
 	if not fromMap then
+		return nil
 	end
 	if fromMap.owner and fromMap.owner == player then
 		local obj = fromMap.object
@@ -79,17 +82,14 @@ system.remote.server.on("reloadCancelContext", function(player, itemId)
 	end
 end)
 system.remote.server.on("fireContext", function(player, itemId, cframe)
-	print(itemId)
 	local fromMap = internalIdentification[itemId]
 	if not fromMap then
+		return nil
 	end
 	if fromMap.owner and fromMap.owner == player then
-		print("s1")
 		local obj = fromMap.object
 		if obj.typeIdentifier == itemTypeIdentifier.gun then
-			print("s2")
 			if obj.userEquipped then
-				print("s3")
 				obj:fire(cframe)
 			end
 		end

@@ -2,7 +2,7 @@ import { Players, RunService, UserInputService, Workspace } from "@rbxts/service
 import { newThread } from "shared/athena/utils";
 import gun from "shared/extended/gun";
 import clientExposed from "shared/middleware/clientExposed";
-import gunwork from "shared/types/gunwork";
+import gunwork, { fireMode } from "shared/types/gunwork";
 import item from "./item";
 
 export default class actionController {
@@ -29,7 +29,11 @@ export default class actionController {
 		fire: (state) => {
 			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
-				gun.fire()
+				gun.fireButtonDown = true;
+			}
+			else if (this.ending(state) && this.equippedIsAGun(this.equippedItem)) {
+				let gun = this.equippedItem;
+				gun.fireButtonDown = false;
 			}
 		},
         reload: (state) => {
@@ -81,6 +85,7 @@ export default class actionController {
 			print("done! starting...")
 		}
 
+		clientExposed.setActionController(this);
 		clientExposed.setCamera(Workspace.CurrentCamera as Camera);
 		clientExposed.setBaseWalkSpeed(12);
 
@@ -93,6 +98,19 @@ export default class actionController {
 		}, {
 			idle: 'rbxassetid://9335189959'
 		});
+
+		item.firerate = {
+			burst2: 600,
+			auto: 800,
+			burst3: 600,
+			burst4: 600,
+			shotgun: 1000,
+			semi: 800
+		}
+
+		item.togglableFireModes = [fireMode.auto, fireMode.semi]
+
+		item.reloadSpeed = 1.5;
 
 		this.equippedItem = item;
 

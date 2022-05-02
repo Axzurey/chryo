@@ -11,6 +11,12 @@ do
 	do
 		local _container_1 = poly
 		local function drawLine(p1, p2)
+			local bin = Workspace:FindFirstChild("debug_system")
+			if not bin then
+				bin = Instance.new("Folder")
+				bin.Name = "debug_system"
+				bin.Parent = Workspace
+			end
 			local p = Instance.new("Beam")
 			local a1 = Instance.new("Attachment")
 			local a2 = Instance.new("Attachment")

@@ -2,7 +2,7 @@ import path from "shared/athena/path";
 import item from "shared/base/item";
 import paths from "shared/constants/paths";
 import clientExposed from "shared/middleware/clientExposed";
-import gunwork, { gunAnimationsConfig, gunAttachmentConfig, sightModel } from "shared/types/gunwork";
+import gunwork, { fireMode, gunAnimationsConfig, gunAttachmentConfig, sightModel } from "shared/types/gunwork";
 import utils, { newThread } from 'shared/athena/utils';
 import { Players, TweenService } from "@rbxts/services";
 import animationCompile from "shared/athena/animate";
@@ -28,6 +28,8 @@ export default class gun extends item {
 
 	currentFiremode: number = 0;
 	lastFiremodeSwitch: number = 0;
+
+	fireButtonDown: boolean = false;
 
 	lastRecoil: number = 0;
 	currentRecoilIndex: number = 0;
@@ -253,11 +255,35 @@ export default class gun extends item {
 	}
 	fire() {
 		newThread(() => {
+			if (this.ammo <= 0) {
+				this.startReload();
+				return;
+			}
+			this.lastFired = tick()
 			this.camera = clientExposed.getCamera();
 			if (!this.firePoint && !this.camera) throw `fire can not be called without a character or camera`;
 			const fireCFrame = this.camera!.CFrame;
 			system.remote.client.fireServer('fireContext', this.serverItemIdentification, fireCFrame)
 		})
+	}
+	startReload() {
+		newThread(() => {
+			if (this.reloading) return;
+			this.reloading = true;
+			system.remote.client.fireServer('reloadStartContext', this.serverItemIdentification);
+			task.wait(this.reloadSpeed);
+			this.finishReload();
+			//todo
+		})
+	}
+	finishReload() {
+		if (this.reloading) {
+			system.remote.client.fireServer('reloadEndContext', this.serverItemIdentification);
+		}
+	}
+	cancelReload() {
+		this.reloading = false;
+		system.remote.client.fireServer('reloadCancelContext', this.serverItemIdentification);
 	}
 	aim(t: boolean) {
 		newThread(() => {
@@ -332,6 +358,44 @@ export default class gun extends item {
     update(dt: number) {
 		
 		if (!this.viewmodel.PrimaryPart) return;
+
+		let firemode = this.togglableFireModes[this.currentFiremode];
+		if (!firemode) {
+			firemode = this.togglableFireModes[0];
+		}
+
+		newThread(() => {
+			if (!this.fireButtonDown) return;
+			if (tick() - this.lastFired < 60 / this.firerate[firemode]) {print('too short'); return;};
+			switch (firemode) {
+				case fireMode.auto:
+					this.fire();
+					break;
+				case fireMode.burst2:
+					for (let i = 0; i < 2; i++) {
+						this.fire();
+						task.wait(this.firerate.burst4);
+					}
+					break;
+				case fireMode.burst3:
+					for (let i = 0; i < 3; i++) {
+						this.fire();
+						task.wait(this.firerate.burst4);
+					}
+					break;
+				case fireMode.burst4:
+					for (let i = 0; i < 4; i++) {
+						this.fire();
+						task.wait(this.firerate.burst4);
+					}
+					break;
+				case fireMode.semi:
+					this.fire();
+					break;
+				default:
+					break;
+			}
+		})
 
 		this.cframes.idle = this.viewmodel.offsets.idle.Value;
 

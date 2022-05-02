@@ -7,7 +7,9 @@ local UserInputService = _services.UserInputService
 local Workspace = _services.Workspace
 local gun = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "extended", "gun").default
 local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed").default
-local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
+local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
+local gunwork = _gunwork
+local fireMode = _gunwork.fireMode
 local actionController
 do
 	actionController = setmetatable({}, {
@@ -41,7 +43,10 @@ do
 			fire = function(state)
 				if self:starting(state) and self:equippedIsAGun(self.equippedItem) then
 					local gun = self.equippedItem
-					gun:fire()
+					gun.fireButtonDown = true
+				elseif self:ending(state) and self:equippedIsAGun(self.equippedItem) then
+					local gun = self.equippedItem
+					gun.fireButtonDown = false
 				end
 			end,
 			reload = function(state)
@@ -79,6 +84,7 @@ do
 			end
 			print("done! starting...")
 		end
+		clientExposed:setActionController(self)
 		clientExposed:setCamera(Workspace.CurrentCamera)
 		clientExposed:setBaseWalkSpeed(12)
 		local item = gun.new("Gun1", "ReplicatedStorage//guns//hk416&class=Model", {
@@ -90,6 +96,16 @@ do
 		}, {
 			idle = "rbxassetid://9335189959",
 		})
+		item.firerate = {
+			burst2 = 600,
+			auto = 800,
+			burst3 = 600,
+			burst4 = 600,
+			shotgun = 1000,
+			semi = 800,
+		}
+		item.togglableFireModes = { fireMode.auto, fireMode.semi }
+		item.reloadSpeed = 1.5
 		self.equippedItem = item
 		local mainRender = RunService.RenderStepped:Connect(function(dt)
 			local equipped = self.equippedItem

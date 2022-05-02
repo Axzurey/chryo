@@ -4,7 +4,9 @@ local path = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athe
 local item = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base", "item").default
 local paths = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "paths")
 local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed").default
-local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
+local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
+local gunwork = _gunwork
+local fireMode = _gunwork.fireMode
 local _utils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils")
 local utils = _utils
 local newThread = _utils.newThread
@@ -38,6 +40,7 @@ do
 		self.lastFired = 0
 		self.currentFiremode = 0
 		self.lastFiremodeSwitch = 0
+		self.fireButtonDown = false
 		self.lastRecoil = 0
 		self.currentRecoilIndex = 0
 		self.lastReload = 0
@@ -183,6 +186,11 @@ do
 	end
 	function gun:fire()
 		newThread(function()
+			if self.ammo <= 0 then
+				self:startReload()
+				return nil
+			end
+			self.lastFired = tick()
 			self.camera = clientExposed:getCamera()
 			if not self.firePoint and not self.camera then
 				error("fire can not be called without a character or camera")
@@ -190,6 +198,27 @@ do
 			local fireCFrame = self.camera.CFrame
 			system.remote.client.fireServer("fireContext", self.serverItemIdentification, fireCFrame)
 		end)
+	end
+	function gun:startReload()
+		newThread(function()
+			if self.reloading then
+				return nil
+			end
+			self.reloading = true
+			system.remote.client.fireServer("reloadStartContext", self.serverItemIdentification)
+			task.wait(self.reloadSpeed)
+			self:finishReload()
+			-- todo
+		end)
+	end
+	function gun:finishReload()
+		if self.reloading then
+			system.remote.client.fireServer("reloadEndContext", self.serverItemIdentification)
+		end
+	end
+	function gun:cancelReload()
+		self.reloading = false
+		system.remote.client.fireServer("reloadCancelContext", self.serverItemIdentification)
 	end
 	function gun:aim(t)
 		newThread(function()
@@ -251,6 +280,87 @@ do
 		if not self.viewmodel.PrimaryPart then
 			return nil
 		end
+		local firemode = self.togglableFireModes[self.currentFiremode + 1]
+		if not firemode then
+			firemode = self.togglableFireModes[1]
+		end
+		newThread(function()
+			if not self.fireButtonDown then
+				return nil
+			end
+			if tick() - self.lastFired < 60 / self.firerate[firemode] then
+				print("too short")
+				return nil
+			end
+			repeat
+				if firemode == (fireMode.auto) then
+					self:fire()
+					break
+				end
+				if firemode == (fireMode.burst2) then
+					do
+						local i = 0
+						local _shouldIncrement = false
+						while true do
+							if _shouldIncrement then
+								i += 1
+							else
+								_shouldIncrement = true
+							end
+							if not (i < 2) then
+								break
+							end
+							self:fire()
+							task.wait(self.firerate.burst4)
+						end
+					end
+					break
+				end
+				if firemode == (fireMode.burst3) then
+					do
+						local i = 0
+						local _shouldIncrement = false
+						while true do
+							if _shouldIncrement then
+								i += 1
+							else
+								_shouldIncrement = true
+							end
+							if not (i < 3) then
+								break
+							end
+							self:fire()
+							task.wait(self.firerate.burst4)
+						end
+					end
+					break
+				end
+				if firemode == (fireMode.burst4) then
+					do
+						local i = 0
+						local _shouldIncrement = false
+						while true do
+							if _shouldIncrement then
+								i += 1
+							else
+								_shouldIncrement = true
+							end
+							if not (i < 4) then
+								break
+							end
+							self:fire()
+							task.wait(self.firerate.burst4)
+						end
+					end
+					break
+				end
+				if firemode == (fireMode.semi) then
+					self:fire()
+					break
+				end
+				break
+			until true
+		end)
 		self.cframes.idle = self.viewmodel.offsets.idle.Value
 		local movedirection = self.character.Humanoid.MoveDirection
 		local camera = clientExposed:getCamera()

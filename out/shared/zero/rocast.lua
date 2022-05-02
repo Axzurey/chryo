@@ -25,9 +25,17 @@ do
 		local result = _fn:Raycast(from, direction * _arg0, i)
 		if result then
 			local distance = (result.Position - from).Magnitude
-			print(result)
+			local _ignoreNames = self.params.ignoreNames
+			local _name = result.Instance.Name
+			if (table.find(_ignoreNames, _name) or 0) - 1 ~= -1 then
+				local _instance = result.Instance
+				table.insert(ignore, _instance)
+				return self:loopCast(from, direction, distancePassed, ignore, castParams)
+			end
 			local r = castParams.canPierce(result)
-			system.poly.drawLine(from, result.Position)
+			if self.params.debug then
+				system.poly.drawLine(from, result.Position)
+			end
 			if r then
 				local _instance = result.Instance
 				table.insert(ignore, _instance)
@@ -36,9 +44,11 @@ do
 				return result
 			end
 		else
-			local _fn_1 = system.poly
-			local _arg0_1 = self.params.maxDistance - distancePassed
-			_fn_1.drawLine(from, direction * _arg0_1)
+			if self.params.debug then
+				local _fn_1 = system.poly
+				local _arg0_1 = self.params.maxDistance - distancePassed
+				_fn_1.drawLine(from, direction * _arg0_1)
+			end
 		end
 		return nil
 	end

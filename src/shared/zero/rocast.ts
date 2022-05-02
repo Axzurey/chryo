@@ -7,7 +7,9 @@ interface rocastParams {
     from: Vector3,
     direction: Vector3,
     ignore: Instance[],
-    maxDistance: number
+    maxDistance: number,
+    ignoreNames: string[],
+    debug: boolean
 }
 
 interface castResult {
@@ -32,10 +34,16 @@ export default class rocaster {
         let result = Workspace.Raycast(from, direction.mul(this.params.maxDistance - distancePassed), i);
         if (result) {
             let distance = (result.Position.sub(from)).Magnitude;
-            print(result)
+
+            if (this.params.ignoreNames.indexOf(result.Instance.Name) !== -1) {
+                ignore.push(result.Instance);
+                return this.loopCast(from, direction, distancePassed, ignore, castParams);
+            }
 
             let r = castParams.canPierce(result);
-            system.poly.drawLine(from, result.Position)
+            if (this.params.debug) {
+                system.poly.drawLine(from, result.Position)
+            }
             if (r) {
                 ignore.push(result.Instance)
                 return this.loopCast(result.Position, direction, distance + distancePassed, ignore, castParams);
@@ -45,7 +53,9 @@ export default class rocaster {
             }
         }
         else {
-            system.poly.drawLine(from, direction.mul(this.params.maxDistance - distancePassed))
+            if (this.params.debug) {
+                system.poly.drawLine(from, direction.mul(this.params.maxDistance - distancePassed))
+            }
         }
         return undefined;
     }

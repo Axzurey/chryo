@@ -11,7 +11,10 @@ do
 	do
 		local _container_1 = life
 		local function create(model, entityType)
-			return entityType.new(model)
+			local e = entityType.new(model)
+			local _e = e
+			table.insert(entities, _e)
+			return e
 		end
 		_container_1.create = create
 	end
