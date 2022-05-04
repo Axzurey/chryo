@@ -10,11 +10,13 @@ local fireMode = _gunwork.fireMode
 local _utils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils")
 local utils = _utils
 local newThread = _utils.newThread
+local stringify = _utils.stringify
 local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
 local Players = _services.Players
 local TweenService = _services.TweenService
 local animationCompile = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "animate").default
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
+local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
 local gun
 do
 	local super = item
@@ -43,6 +45,7 @@ do
 		self.fireButtonDown = false
 		self.lastRecoil = 0
 		self.currentRecoilIndex = 0
+		self.currentReloadId = nil
 		self.lastReload = 0
 		self.spreadDelta = 0
 		self.sprinting = false
@@ -190,11 +193,12 @@ do
 				self:startReload()
 				return nil
 			end
-			self.lastFired = tick()
 			self.camera = clientExposed:getCamera()
 			if not self.firePoint and not self.camera then
 				error("fire can not be called without a character or camera")
 			end
+			self.ammo -= 1
+			self.lastFired = tick()
 			local fireCFrame = self.camera.CFrame
 			system.remote.client.fireServer("fireContext", self.serverItemIdentification, fireCFrame)
 		end)
@@ -204,11 +208,21 @@ do
 			if self.reloading then
 				return nil
 			end
+			local reloadId = stringify.randomString(64, true)
+			self.currentReloadId = reloadId
 			self.reloading = true
 			system.remote.client.fireServer("reloadStartContext", self.serverItemIdentification)
 			task.wait(self.reloadSpeed)
-			self:finishReload()
-			-- todo
+			local _condition = self.reloading
+			if _condition then
+				_condition = self.currentReloadId
+				if _condition ~= "" and _condition then
+					_condition = self.currentReloadId == reloadId
+				end
+			end
+			if _condition ~= "" and _condition then
+				self:finishReload()
+			end
 		end)
 	end
 	function gun:finishReload()
@@ -217,16 +231,21 @@ do
 		end
 	end
 	function gun:cancelReload()
+		if not self.reloading then
+			return nil
+		end
 		self.reloading = false
+		self.currentReloadId = nil
 		system.remote.client.fireServer("reloadCancelContext", self.serverItemIdentification)
 	end
 	function gun:aim(t)
 		newThread(function()
-			local info = TweenInfo.new(self.adsLength, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+			local diff = if t then self.adsLength - mathf.lerp(0, self.adsLength, self.values.aimDelta.Value) else self.adsLength
+			local info = TweenInfo.new(diff, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 			TweenService:Create(self.values.aimDelta, info, {
 				Value = if t then 1 else 0,
 			}):Play()
-			task.wait(self.adsLength)
+			task.wait(diff)
 			self.aiming = t
 		end)
 	end
@@ -289,7 +308,6 @@ do
 				return nil
 			end
 			if tick() - self.lastFired < 60 / self.firerate[firemode] then
-				print("too short")
 				return nil
 			end
 			repeat
@@ -369,12 +387,12 @@ do
 		local t = tick()
 		local velocity = self.character.PrimaryPart.AssemblyLinearVelocity
 		local roundedMagXZ = math.round(Vector2.new(velocity.X, velocity.Z).Magnitude)
-		local f = ((t * roundedMagXZ / 1.5 + tick()) * (if roundedMagXZ == 0 then 1 - self.values.aimDelta.Value else 1))
+		local f = t * roundedMagXZ / 1.5 + tick()
 		local tx = math.cos(f) * .05
 		local ty = math.abs(math.sin(f)) * .05
 		local _fn = self.cframes.viewmodelBob
 		local _vector3 = Vector3.new(tx, ty)
-		local _arg0 = 1 - self.values.aimDelta.Value + .1
+		local _arg0 = 1 - self.values.aimDelta.Value + roundedMagXZ / 50
 		self.cframes.viewmodelBob = _fn:Lerp(CFrame.new(_vector3 * _arg0), .1)
 		local _fn_1 = self.viewmodel
 		local _cFrame = CFrame.new(camera.CFrame.Position)

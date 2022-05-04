@@ -9,6 +9,19 @@ namespace utils {
         task.spawn(callback);
     }
 
+    export namespace ease {
+        export function repeatThis(callback: (iteration: number) => void, times: number) {
+            for (let i = 0; i < times; i++) {
+                callback(times);
+            }
+        }
+        export function repeatThisThreadEach(callback: (iteration: number) => void, times: number) {
+            for (let i = 0; i < times; i++) {
+                task.spawn(callback, i);
+            }
+        }
+    }
+
 	export namespace stringify {
 		export function randomString(length: number, includeNumbers?: boolean) {
 			let s = ''

@@ -14,6 +14,72 @@ do
 		task.spawn(callback)
 	end
 	_container.newThread = newThread
+	local ease = {}
+	do
+		local _container_1 = ease
+		local function repeatThis(callback, times)
+			do
+				local i = 0
+				local _shouldIncrement = false
+				while true do
+					if _shouldIncrement then
+						i += 1
+					else
+						_shouldIncrement = true
+					end
+					if not (i < times) then
+						break
+					end
+					callback(times)
+				end
+			end
+		end
+		_container_1.repeatThis = repeatThis
+		local function repeatThisThreadEach(callback, times)
+			do
+				local i = 0
+				local _shouldIncrement = false
+				while true do
+					if _shouldIncrement then
+						i += 1
+					else
+						_shouldIncrement = true
+					end
+					if not (i < times) then
+						break
+					end
+					task.spawn(callback, i)
+				end
+			end
+		end
+		_container_1.repeatThisThreadEach = repeatThisThreadEach
+	end
+	_container.ease = ease
+	local stringify = {}
+	do
+		local _container_1 = stringify
+		local function randomString(length, includeNumbers)
+			local s = ""
+			do
+				local i = 0
+				local _shouldIncrement = false
+				while true do
+					if _shouldIncrement then
+						i += 1
+					else
+						_shouldIncrement = true
+					end
+					if not (i < length) then
+						break
+					end
+					s ..= tostring(if includeNumbers and math.random() == 0 then math.random(0, 9) else string.char(math.random(97, 122)))
+				end
+			end
+			return s
+		end
+		_container_1.randomString = randomString
+	end
+	_container.stringify = stringify
 	local dataTypeUtils = {}
 	do
 		local _container_1 = dataTypeUtils

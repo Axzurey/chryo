@@ -1,6 +1,7 @@
 import { Players, RunService, UserInputService, Workspace } from "@rbxts/services";
 import { newThread } from "shared/athena/utils";
 import gun from "shared/extended/gun";
+import hk416_definition from "shared/gunDefinitions/hk416";
 import clientExposed from "shared/middleware/clientExposed";
 import gunwork, { fireMode } from "shared/types/gunwork";
 import item from "./item";
@@ -23,44 +24,51 @@ export default class actionController {
 			if (this.equippedIsAGun(this.equippedItem)) {
 				print('aim switch!')
 				let gun = this.equippedItem;
+				gun.cancelReload()
 				gun.aim(state === Enum.UserInputState.Begin? true: false);
 			}
 		},
 		fire: (state) => {
 			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
+				gun.cancelReload()
 				gun.fireButtonDown = true;
 			}
 			else if (this.ending(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
+				gun.cancelReload()
 				gun.fireButtonDown = false;
 			}
 		},
         reload: (state) => {
+			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
+				let gun = this.equippedItem;
+				gun.startReload();
+			}
             return 'TODO'
         },
 		leanLeft: (state) => {
 			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
-				gun.lean(-1)
+				gun.lean(-1);
 			}
 		},
 		leanRight: (state) => {
 			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
-				gun.lean(1)
+				gun.lean(1);
 			}
 		},
 		crouch: (state) => {
 			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
-				gun.changeStance(0)
+				gun.changeStance(0);
 			}
 		},
 		prone: (state) => {
 			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
-				gun.changeStance(-1)
+				gun.changeStance(-1);
 			}
 		}
 	}
@@ -89,28 +97,7 @@ export default class actionController {
 		clientExposed.setCamera(Workspace.CurrentCamera as Camera);
 		clientExposed.setBaseWalkSpeed(12);
 
-		let item = new gun('Gun1', 'ReplicatedStorage//guns//hk416&class=Model', {
-			sight: {
-				name: 'holographic',
-				path: 'ReplicatedStorage//sights//holographic&class=Model',
-				zOffset: .13
-			}
-		}, {
-			idle: 'rbxassetid://9335189959'
-		});
-
-		item.firerate = {
-			burst2: 600,
-			auto: 800,
-			burst3: 600,
-			burst4: 600,
-			shotgun: 1000,
-			semi: 800
-		}
-
-		item.togglableFireModes = [fireMode.auto, fireMode.semi]
-
-		item.reloadSpeed = 1.5;
+		let item = hk416_definition('Gun1')
 
 		this.equippedItem = item;
 

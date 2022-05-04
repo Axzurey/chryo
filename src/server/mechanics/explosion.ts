@@ -1,5 +1,5 @@
 import { Workspace } from "@rbxts/services";
-import mathf from "shared/athena/math";
+import mathf from "shared/athena/mathf";
 import { newThread } from "shared/athena/utils";
 import { ignoreInstances } from "shared/zero/space";
 

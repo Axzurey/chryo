@@ -7,6 +7,7 @@ import utils, { newThread, stringify } from 'shared/athena/utils';
 import { HttpService, Players, TweenService } from "@rbxts/services";
 import animationCompile from "shared/athena/animate";
 import system from "shared/zero/system";
+import mathf from "shared/athena/mathf";
 
 export default class gun extends item {
 
@@ -257,13 +258,14 @@ export default class gun extends item {
 	}
 	fire() {
 		newThread(() => {
-			if (this.ammo <= 0) {
-				this.startReload();
-				return;
-			}
-			this.lastFired = tick()
+			if (this.ammo <= 0) {this.startReload(); return;}
+
 			this.camera = clientExposed.getCamera();
 			if (!this.firePoint && !this.camera) throw `fire can not be called without a character or camera`;
+
+			this.ammo --;
+			this.lastFired = tick()
+
 			const fireCFrame = this.camera!.CFrame;
 			system.remote.client.fireServer('fireContext', this.serverItemIdentification, fireCFrame)
 		})
@@ -271,7 +273,7 @@ export default class gun extends item {
 	startReload() {
 		newThread(() => {
 			if (this.reloading) return;
-			let reloadId = stringify.randomString(64, true)
+			let reloadId = stringify.randomString(64, true);
 			this.currentReloadId = reloadId;
 			this.reloading = true;
 			system.remote.client.fireServer('reloadStartContext', this.serverItemIdentification);
@@ -279,7 +281,6 @@ export default class gun extends item {
 			if (this.reloading && this.currentReloadId && this.currentReloadId === reloadId) {
 				this.finishReload();
 			}
-			//todo
 		})
 	}
 	finishReload() {
@@ -288,19 +289,22 @@ export default class gun extends item {
 		}
 	}
 	cancelReload() {
+		if (!this.reloading) return;
 		this.reloading = false;
-		this.currentReloadId = undefined
+		this.currentReloadId = undefined;
 		system.remote.client.fireServer('reloadCancelContext', this.serverItemIdentification);
 	}
 	aim(t: boolean) {
 		newThread(() => {
-			let info = new TweenInfo(this.adsLength, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
+			let diff = t? this.adsLength - mathf.lerp(0, this.adsLength, this.values.aimDelta.Value): this.adsLength;
+
+			let info = new TweenInfo(diff, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
 
 			TweenService.Create(this.values.aimDelta, info, {
 				Value: t? 1: 0
 			}).Play();
 
-			task.wait(this.adsLength);
+			task.wait(diff);
 
 			this.aiming = t;
 		})
@@ -373,7 +377,7 @@ export default class gun extends item {
 
 		newThread(() => {
 			if (!this.fireButtonDown) return;
-			if (tick() - this.lastFired < 60 / this.firerate[firemode]) {print('too short'); return;};
+			if (tick() - this.lastFired < 60 / this.firerate[firemode]) return;
 			switch (firemode) {
 				case fireMode.auto:
 					this.fire();
@@ -420,13 +424,13 @@ export default class gun extends item {
 
 		let roundedMagXZ = math.round(new Vector2(velocity.X, velocity.Z).Magnitude)
 
-		let f = ((t * roundedMagXZ / 1.5 + tick()) * (roundedMagXZ === 0? 1 - this.values.aimDelta.Value: 1));
+		let f = t * roundedMagXZ / 1.5 + tick();
 
 		let tx = math.cos(f) * .05;
 		let ty = math.abs(math.sin(f)) * .05;
 		
 		this.cframes.viewmodelBob = this.cframes.viewmodelBob.Lerp(
-			new CFrame(new Vector3(tx, ty).mul(1 - this.values.aimDelta.Value + .1)),
+			new CFrame(new Vector3(tx, ty).mul(1 - this.values.aimDelta.Value + roundedMagXZ / 50)),
 			.1
 		)
 
