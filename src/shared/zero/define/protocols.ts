@@ -20,7 +20,15 @@ const protocols = {
     fireContext: {
 		protocol: new remoteProtocol<(player: Player, itemId: string, cameraCFrame: CFrame) => void, () => void>('item_fire_context', 
         [t.Instance, t.string, t.CFrame]),
-	}
+	},
+	nextFireModeContext: {
+		protocol: new remoteProtocol<(player: Player, itemId: string) => void, () => void>('next_fire_mode_context', 
+        [t.Instance, t.string]),
+	},
+	changeStanceContext: {
+		protocol: new remoteProtocol<(player: Player, itemId: string, stance: 1 | 0 | -1) => void, () => void>('change_stance_context', 
+        [t.Instance, t.string, t.literal(-1, 0, 1)]),
+	},
 }
 
 export = protocols;

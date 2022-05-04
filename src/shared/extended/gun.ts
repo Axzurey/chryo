@@ -377,6 +377,9 @@ export default class gun extends item {
 
 		newThread(() => {
 			if (!this.fireButtonDown) return;
+			this.fire()
+			//the server will verify firemode separately. fire needs only be called once
+			/**
 			if (tick() - this.lastFired < 60 / this.firerate[firemode]) return;
 			switch (firemode) {
 				case fireMode.auto:
@@ -406,7 +409,7 @@ export default class gun extends item {
 				default:
 					break;
 			}
-		})
+		})*/
 
 		this.cframes.idle = this.viewmodel.offsets.idle.Value;
 
