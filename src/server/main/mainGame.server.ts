@@ -1,4 +1,5 @@
 import { Players } from "@rbxts/services";
+import positionTracker from "server/mechanics/positionTracker";
 import serverItem from "server/serverBase/serverItem";
 import serverGun from "server/serverExtended/serverGun"
 import environment from "shared/constants/environment"
@@ -26,6 +27,8 @@ let internalIdentification: {[key: string]: {
 }} = {}
 
 Players.PlayerAdded.Connect((client) => {
+    positionTracker.addPlayer(client);
+
     let mix = {
         items: {
             primary: new serverGun('Gun1'), //ofc, we gonna generate those normally
@@ -114,5 +117,5 @@ system.remote.server.on('fireContext', (player, itemId, cframe) => {
 })
 
 system.remote.server.on('updateMovement', (player, newcframe) => {
-    
+    let result = positionTracker.setPosition(player, newcframe);
 })

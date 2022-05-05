@@ -408,8 +408,8 @@ export default class gun extends item {
 					break;
 				default:
 					break;
-			}
-		})*/
+			}*/
+		})
 
 		this.cframes.idle = this.viewmodel.offsets.idle.Value;
 
