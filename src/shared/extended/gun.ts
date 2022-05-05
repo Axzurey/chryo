@@ -8,6 +8,7 @@ import { HttpService, Players, TweenService } from "@rbxts/services";
 import animationCompile from "shared/athena/animate";
 import system from "shared/zero/system";
 import mathf from "shared/athena/mathf";
+import spring from "shared/base/spring";
 
 export default class gun extends item {
 
@@ -75,6 +76,10 @@ export default class gun extends item {
 		proneOffset: new CFrame(0, -3, 0),
 	}
 
+	springs = {
+		recoil: spring.create(5, 15, 2, 15)
+	}
+
 	values = {
         aimDelta: new Instance("NumberValue"),
 		leanOffsetViewmodel: new Instance("CFrameValue"),
@@ -118,7 +123,7 @@ export default class gun extends item {
 	togglableFireModes: gunwork.fireMode[] = [gunwork.fireMode.auto, gunwork.fireMode.semi];
 	firemodeSwitchCooldown: number = .75;
 
-	recoilPattern: {x: number, y: number}[] = [];
+	recoilPattern: {[key: NumberRange]: Vector2} = {};
 	recoilRegroupTime: number = 1;
 
 	/**objects can have different penetration difficulty. this a multiplier to that, which gets subtracted from damage */
@@ -267,7 +272,21 @@ export default class gun extends item {
 			this.lastFired = tick()
 
 			const fireCFrame = this.camera!.CFrame;
-			system.remote.client.fireServer('fireContext', this.serverItemIdentification, fireCFrame)
+			system.remote.client.fireServer('fireContext', this.serverItemIdentification, fireCFrame);
+
+			let distance = math.round(tick() - this.lastRecoil) //this will serve as the damping over time of not shooting for the recoil
+
+			if (distance > this.recoilRegroupTime) {
+				distance = this.recoilRegroupTime;
+			}
+
+			this.lastRecoil = tick()
+
+			let recoilIndex = this.currentRecoilIndex >= this.recoilPattern.size()? this.recoilPattern.size() - 1: this.currentRecoilIndex;
+
+			let add = this.recoilPattern[recoilIndex - distance];
+
+			this.springs.recoil.shove(new Vector3(add.x, add.y, 0))
 		})
 	}
 	startReload() {
