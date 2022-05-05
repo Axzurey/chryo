@@ -85,6 +85,10 @@ namespace utils {
 
     export namespace tableUtils {
 
+		export function firstNumberRangeContainingNumber<T>(ranges: {[key: NumberRange]: T}) {
+			
+		}
+
         export function fillDefaults<T extends Record<any, any>>(passed: Partial<T>, fill: T): T {
             for (const [i, v] of pairs(fill)) {
                 if (passed[i as keyof typeof passed]) {

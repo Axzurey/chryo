@@ -25,5 +25,29 @@ export default function hk416_definition(id: string) {
 
     g.reloadSpeed = 1.5;
 
+	g.recoilPattern = [
+		{
+			x: 1,
+			y: 2
+		},
+		{
+			x: 1,
+			y: 2
+		},
+		{
+			x: 1,
+			y: 2
+		},
+		{
+			x: 1,
+			y: 2
+		},
+		{
+			x: 1,
+			y: 2
+		},
+		
+	]
+
     return g;
 }
