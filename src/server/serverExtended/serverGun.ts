@@ -101,9 +101,7 @@ export default class serverGun extends serverItem {
         });
 
         if (castResult) {
-            print('hit some')
             let entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance);
-            print('entity is', entity)
             if (entity && space.query.entityHasPropertyOfType(entity, 'health', 'number')) {
                 let location = examineHitLocation(castResult.instance);
                 if (location === examine.hitLocation.head) {
@@ -115,11 +113,7 @@ export default class serverGun extends serverItem {
                 else {
                     entity.health -= this.damage.limb;
                 }
-                print(entity.health, 'damaged!')
             }
-        }
-        else {
-            print('hit none')
         }
     }
     equip() {

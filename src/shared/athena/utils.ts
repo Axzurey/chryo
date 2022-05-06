@@ -85,9 +85,32 @@ namespace utils {
 
     export namespace tableUtils {
 
-		export function firstNumberRangeContainingNumber<T>(ranges: {[key: NumberRange]: T}) {
-			
+		export function firstNumberRangeContainingNumber<T>(ranges: Map<NumberRange, T>, numberValue: number) {
+            for (let [i, v] of ranges) {
+                if (numberValue >= i.Min && numberValue <= i.Max) {
+                    return v;
+                }
+            }
+            return undefined;
 		}
+
+        export function rangeUpperClamp<T>(ranges: Map<NumberRange, T>) {
+            let max: number | undefined = undefined;
+            for (let [i, v] of ranges) {
+                if (!max || i.Max >= max) {
+                    max = i.Max;
+                }
+            }
+            return max;
+		}
+
+        export function toMap<K, V>(keys: K[], values: V[]): Map<K, V> {
+            let map: Map<K, V> = new Map();
+            for (let i = 0; i < keys.size(); i++) {
+                map.set(keys[i], values[i])
+            };
+            return map;
+        }
 
         export function fillDefaults<T extends Record<any, any>>(passed: Partial<T>, fill: T): T {
             for (const [i, v] of pairs(fill)) {

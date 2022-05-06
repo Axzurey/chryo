@@ -106,9 +106,7 @@ do
 			end,
 		})
 		if castResult then
-			print("hit some")
 			local entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance)
-			print("entity is", entity)
 			if entity and space.query.entityHasPropertyOfType(entity, "health", "number") then
 				local location = examineHitLocation(castResult.instance)
 				if location == examine.hitLocation.head then
@@ -118,10 +116,7 @@ do
 				else
 					entity.health -= self.damage.limb
 				end
-				print(entity.health, "damaged!")
 			end
-		else
-			print("hit none")
 		end
 	end
 	function serverGun:equip()

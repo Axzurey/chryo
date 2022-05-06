@@ -52,7 +52,14 @@ namespace gunwork {
         offsets: Folder & {
             idle: CFrameValue
         },
-        sightNode: BasePart
+        sightNode: BasePart,
+        audio: Folder & {
+            boltback: Sound,
+            boldforward: Sound,
+            fire: Sound,
+            magin: Sound,
+            magout: Sound
+        }
     }
 }
 

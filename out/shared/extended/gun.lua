@@ -4,19 +4,19 @@ local path = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athe
 local item = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base", "item").default
 local paths = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "paths")
 local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed").default
-local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
-local gunwork = _gunwork
-local fireMode = _gunwork.fireMode
+local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local _utils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils")
 local utils = _utils
 local newThread = _utils.newThread
 local stringify = _utils.stringify
+local tableUtils = _utils.tableUtils
 local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
 local Players = _services.Players
 local TweenService = _services.TweenService
 local animationCompile = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "animate").default
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
 local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
+local spring = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base", "spring")
 local gun
 do
 	local super = item
@@ -81,6 +81,10 @@ do
 		_object.crouchOffset = CFrame.new(0, -1, 0)
 		_object.proneOffset = CFrame.new(0, -3, 0)
 		self.staticOffsets = _object
+		self.springs = {
+			recoil = spring:create(5, 75, 3, 4),
+			viewmodelRecoil = spring:create(5, 85, 3, 10),
+		}
 		self.values = {
 			aimDelta = Instance.new("NumberValue"),
 			leanOffsetViewmodel = Instance.new("CFrameValue"),
@@ -199,8 +203,24 @@ do
 			end
 			self.ammo -= 1
 			self.lastFired = tick()
+			self.viewmodel.audio.fire:Play()
 			local fireCFrame = self.camera.CFrame
 			system.remote.client.fireServer("fireContext", self.serverItemIdentification, fireCFrame)
+			local distance = math.round(tick() - self.lastRecoil)
+			if distance > self.recoilRegroupTime then
+				distance = self.recoilRegroupTime
+			end
+			self.lastRecoil = tick()
+			local max = tableUtils.rangeUpperClamp(self.recoilPattern)
+			local recoilIndex = if self.currentRecoilIndex >= max then max else self.currentRecoilIndex
+			self.currentRecoilIndex += 1
+			print(recoilIndex, recoilIndex - distance, distance, self.currentRecoilIndex)
+			local add = utils.tableUtils.firstNumberRangeContainingNumber(self.recoilPattern, recoilIndex - distance)
+			print(add)
+			local random = Random.new()
+			local pickX = random:NextNumber(math.min(add[1].X, add[2].X), math.max(add[1].X, add[2].X)) * 10
+			local pickY = random:NextNumber(math.min(add[1].Y, add[2].Y), math.max(add[1].Y, add[2].Y)) * 10
+			self.springs.recoil:shove(Vector3.new(-pickX, pickY, 0))
 		end)
 	end
 	function gun:startReload()
@@ -310,74 +330,39 @@ do
 			if tick() - self.lastFired < 60 / self.firerate[firemode] then
 				return nil
 			end
-			repeat
-				if firemode == (fireMode.auto) then
-					self:fire()
-					break
-				end
-				if firemode == (fireMode.burst2) then
-					do
-						local i = 0
-						local _shouldIncrement = false
-						while true do
-							if _shouldIncrement then
-								i += 1
-							else
-								_shouldIncrement = true
-							end
-							if not (i < 2) then
-								break
-							end
-							self:fire()
-							task.wait(self.firerate.burst4)
-						end
-					end
-					break
-				end
-				if firemode == (fireMode.burst3) then
-					do
-						local i = 0
-						local _shouldIncrement = false
-						while true do
-							if _shouldIncrement then
-								i += 1
-							else
-								_shouldIncrement = true
-							end
-							if not (i < 3) then
-								break
-							end
-							self:fire()
-							task.wait(self.firerate.burst4)
-						end
-					end
-					break
-				end
-				if firemode == (fireMode.burst4) then
-					do
-						local i = 0
-						local _shouldIncrement = false
-						while true do
-							if _shouldIncrement then
-								i += 1
-							else
-								_shouldIncrement = true
-							end
-							if not (i < 4) then
-								break
-							end
-							self:fire()
-							task.wait(self.firerate.burst4)
-						end
-					end
-					break
-				end
-				if firemode == (fireMode.semi) then
-					self:fire()
-					break
-				end
-				break
-			until true
+			self:fire()
+			-- the server will verify firemode separately. fire needs only be called once
+			--[[
+				*
+				switch (firemode) {
+				case fireMode.auto:
+				this.fire();
+				break;
+				case fireMode.burst2:
+				for (let i = 0; i < 2; i++) {
+				this.fire();
+				task.wait(this.firerate.burst4);
+				}
+				break;
+				case fireMode.burst3:
+				for (let i = 0; i < 3; i++) {
+				this.fire();
+				task.wait(this.firerate.burst4);
+				}
+				break;
+				case fireMode.burst4:
+				for (let i = 0; i < 4; i++) {
+				this.fire();
+				task.wait(this.firerate.burst4);
+				}
+				break;
+				case fireMode.semi:
+				this.fire();
+				break;
+				default:
+				break;
+				}
+			]]
 		end)
 		self.cframes.idle = self.viewmodel.offsets.idle.Value
 		local movedirection = self.character.Humanoid.MoveDirection
@@ -394,6 +379,7 @@ do
 		local _vector3 = Vector3.new(tx, ty)
 		local _arg0 = 1 - self.values.aimDelta.Value + roundedMagXZ / 50
 		self.cframes.viewmodelBob = _fn:Lerp(CFrame.new(_vector3 * _arg0), .1)
+		local recoilUpdated = self.springs.recoil:update(dt)
 		local _fn_1 = self.viewmodel
 		local _cFrame = CFrame.new(camera.CFrame.Position)
 		local _value = self.values.stanceOffset.Value
@@ -407,7 +393,8 @@ do
 		local _value_3 = self.values.stanceOffset.Value
 		local _arg0_2 = CFrame.fromOrientation(cx, cy, cz)
 		local _value_4 = self.values.leanOffsetCamera.Value
-		camera.CFrame = _cFrame_1 * _value_3 * _arg0_2 * _value_4
+		local _arg0_3 = CFrame.Angles(math.rad(recoilUpdated.Y), math.rad(recoilUpdated.X), 0)
+		camera.CFrame = _cFrame_1 * _value_3 * _arg0_2 * _value_4 * _arg0_3
 		self.viewmodel.Parent = camera
 		self.character.Humanoid.WalkSpeed = clientExposed:getBaseWalkSpeed() * (if self.stance == -1 then self.multipliers.speed.prone else (if self.stance == 0 then self.multipliers.speed.crouch else 1))
 		if not self.loadedAnimations.idle.IsPlaying then

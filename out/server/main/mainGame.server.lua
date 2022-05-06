@@ -1,6 +1,7 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Players = TS.import(script, TS.getModule(script, "@rbxts", "services")).Players
+local positionTracker = TS.import(script, game:GetService("ServerScriptService"), "TS", "mechanics", "positionTracker")
 local serverGun = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverExtended", "serverGun").default
 local environment = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "environment")
 local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier
@@ -11,6 +12,7 @@ local serverData = {
 local dotenv = environment.getSharedEnvironment()
 local internalIdentification = {}
 Players.PlayerAdded:Connect(function(client)
+	positionTracker.addPlayer(client)
 	local mix = {
 		items = {
 			primary = serverGun.new("Gun1"),
@@ -95,4 +97,6 @@ system.remote.server.on("fireContext", function(player, itemId, cframe)
 		end
 	end
 end)
-system.remote.server.on("updateMovement", function(player, newcframe) end)
+system.remote.server.on("updateMovement", function(player, newcframe)
+	local result = positionTracker.setPosition(player, newcframe)
+end)

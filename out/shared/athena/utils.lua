@@ -158,6 +158,48 @@ do
 	local tableUtils = {}
 	do
 		local _container_1 = tableUtils
+		local function firstNumberRangeContainingNumber(ranges, numberValue)
+			for i, v in pairs(ranges) do
+				if numberValue >= i.Min and numberValue <= i.Max then
+					return v
+				end
+			end
+			return nil
+		end
+		_container_1.firstNumberRangeContainingNumber = firstNumberRangeContainingNumber
+		local function rangeUpperClamp(ranges)
+			local max = nil
+			for i, v in pairs(ranges) do
+				if not (max ~= 0 and (max == max and max)) or i.Max >= max then
+					max = i.Max
+				end
+			end
+			return max
+		end
+		_container_1.rangeUpperClamp = rangeUpperClamp
+		local function toMap(keys, values)
+			local map = {}
+			do
+				local i = 0
+				local _shouldIncrement = false
+				while true do
+					if _shouldIncrement then
+						i += 1
+					else
+						_shouldIncrement = true
+					end
+					if not (i < #keys) then
+						break
+					end
+					local _map = map
+					local _arg0 = keys[i + 1]
+					local _arg1 = values[i + 1]
+					_map[_arg0] = _arg1
+				end
+			end
+			return map
+		end
+		_container_1.toMap = toMap
 		local function fillDefaults(passed, fill)
 			for i, v in pairs(fill) do
 				local _value = passed[i]

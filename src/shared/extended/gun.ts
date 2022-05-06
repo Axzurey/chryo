@@ -3,7 +3,7 @@ import item from "shared/base/item";
 import paths from "shared/constants/paths";
 import clientExposed from "shared/middleware/clientExposed";
 import gunwork, { fireMode, gunAnimationsConfig, gunAttachmentConfig, sightModel } from "shared/types/gunwork";
-import utils, { newThread, stringify } from 'shared/athena/utils';
+import utils, { newThread, stringify, tableUtils } from 'shared/athena/utils';
 import { HttpService, Players, TweenService } from "@rbxts/services";
 import animationCompile from "shared/athena/animate";
 import system from "shared/zero/system";
@@ -77,7 +77,8 @@ export default class gun extends item {
 	}
 
 	springs = {
-		recoil: spring.create(5, 15, 2, 15)
+		recoil: spring.create(5, 75, 3, 4),
+		viewmodelRecoil: spring.create(5, 85, 3, 10)
 	}
 
 	values = {
@@ -123,7 +124,7 @@ export default class gun extends item {
 	togglableFireModes: gunwork.fireMode[] = [gunwork.fireMode.auto, gunwork.fireMode.semi];
 	firemodeSwitchCooldown: number = .75;
 
-	recoilPattern: {[key: NumberRange]: Vector2} = {};
+	recoilPattern: Map<NumberRange, [Vector2, Vector2]> = new Map();
 	recoilRegroupTime: number = 1;
 
 	/**objects can have different penetration difficulty. this a multiplier to that, which gets subtracted from damage */
@@ -269,7 +270,9 @@ export default class gun extends item {
 			if (!this.firePoint && !this.camera) throw `fire can not be called without a character or camera`;
 
 			this.ammo --;
-			this.lastFired = tick()
+			this.lastFired = tick();
+
+			this.viewmodel.audio.fire.Play()
 
 			const fireCFrame = this.camera!.CFrame;
 			system.remote.client.fireServer('fireContext', this.serverItemIdentification, fireCFrame);
@@ -282,11 +285,24 @@ export default class gun extends item {
 
 			this.lastRecoil = tick()
 
-			let recoilIndex = this.currentRecoilIndex >= this.recoilPattern.size()? this.recoilPattern.size() - 1: this.currentRecoilIndex;
+			let max = tableUtils.rangeUpperClamp(this.recoilPattern)!
 
-			let add = this.recoilPattern[recoilIndex - distance];
+			let recoilIndex = this.currentRecoilIndex >= 
+			max? max: this.currentRecoilIndex;
 
-			this.springs.recoil.shove(new Vector3(add.x, add.y, 0))
+			this.currentRecoilIndex ++
+
+			print(recoilIndex, recoilIndex - distance, distance, this.currentRecoilIndex)
+
+			let add = utils.tableUtils.firstNumberRangeContainingNumber(this.recoilPattern, recoilIndex - distance)!;
+			print(add)
+
+			let random = new Random();
+
+			let pickX = random.NextNumber(math.min(add[0].X, add[1].X), math.max(add[0].X, add[1].X)) * 10;
+			let pickY = random.NextNumber(math.min(add[0].Y, add[1].Y), math.max(add[0].Y, add[1].Y)) * 10;
+
+			this.springs.recoil.shove(new Vector3(-pickX, pickY, 0))
 		})
 	}
 	startReload() {
@@ -396,10 +412,10 @@ export default class gun extends item {
 
 		newThread(() => {
 			if (!this.fireButtonDown) return;
+			if (tick() - this.lastFired < 60 / this.firerate[firemode]) return;
 			this.fire()
 			//the server will verify firemode separately. fire needs only be called once
 			/**
-			if (tick() - this.lastFired < 60 / this.firerate[firemode]) return;
 			switch (firemode) {
 				case fireMode.auto:
 					this.fire();
@@ -456,6 +472,8 @@ export default class gun extends item {
 			.1
 		)
 
+		let recoilUpdated = this.springs.recoil.update(dt);
+
 		this.viewmodel.SetPrimaryPartCFrame(
 			new CFrame(camera.CFrame.Position)
 			.mul(this.values.stanceOffset.Value)
@@ -470,6 +488,7 @@ export default class gun extends item {
 			.mul(this.values.stanceOffset.Value)
 			.mul(CFrame.fromOrientation(cx, cy, cz))
 			.mul(this.values.leanOffsetCamera.Value)
+			.mul(CFrame.Angles(math.rad(recoilUpdated.Y), math.rad(recoilUpdated.X), 0))
 
 		this.viewmodel.Parent = camera;
 
