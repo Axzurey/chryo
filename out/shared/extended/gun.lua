@@ -7,10 +7,12 @@ local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "T
 local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local _utils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils")
 local utils = _utils
+local later = _utils.later
 local newThread = _utils.newThread
-local stringify = _utils.stringify
+local random = _utils.random
 local tableUtils = _utils.tableUtils
 local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
+local HttpService = _services.HttpService
 local Players = _services.Players
 local TweenService = _services.TweenService
 local animationCompile = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "animate").default
@@ -39,6 +41,7 @@ do
 		self.animationIDS = animationIDS
 		self.typeIdentifier = gunwork.itemTypeIdentifier.gun
 		self.connections = {}
+		self.cameraCFrame = CFrame.new()
 		self.lastFired = 0
 		self.currentFiremode = 0
 		self.lastFiremodeSwitch = 0
@@ -97,7 +100,6 @@ do
 				crouch = .5,
 			},
 		}
-		self.spread = 0
 		self.firerate = {
 			auto = 0,
 			semi = 0,
@@ -204,23 +206,30 @@ do
 			self.ammo -= 1
 			self.lastFired = tick()
 			self.viewmodel.audio.fire:Play()
-			local fireCFrame = self.camera.CFrame
-			system.remote.client.fireServer("fireContext", self.serverItemIdentification, fireCFrame)
-			local distance = math.round(tick() - self.lastRecoil)
-			if distance > self.recoilRegroupTime then
-				distance = self.recoilRegroupTime
-			end
+			self.spreadDelta += self.spreadUpPerShot
+			local spread = self.spreadDelta * (1 - self.values.aimDelta.Value * self.spreadHipfirePenalty) * (self.spreadMovementHipfirePenalty * self.character.Humanoid.MoveDirection.Magnitude + 1)
+			spread = math.clamp(spread, 0, self.maxAllowedSpread)
+			later(self.spreadPopTime, function()
+				self.spreadDelta -= self.spreadUpPerShot
+			end)
+			print(spread)
+			local fireCFrame = self.cameraCFrame
+			local _exp = CFrame.Angles(0, math.rad(random:NextNumber(-spread, spread)), 0)
+			local _arg0 = CFrame.Angles(math.rad(random:NextNumber(-spread, spread)), 0, 0)
+			local newFireCFrame = fireCFrame * (_exp * _arg0)
+			system.remote.client.fireServer("fireContext", self.serverItemIdentification, newFireCFrame)
 			self.lastRecoil = tick()
 			local max = tableUtils.rangeUpperClamp(self.recoilPattern)
 			local recoilIndex = if self.currentRecoilIndex >= max then max else self.currentRecoilIndex
 			self.currentRecoilIndex += 1
-			print(recoilIndex, recoilIndex - distance, distance, self.currentRecoilIndex)
-			local add = utils.tableUtils.firstNumberRangeContainingNumber(self.recoilPattern, recoilIndex - distance)
-			print(add)
-			local random = Random.new()
-			local pickX = random:NextNumber(math.min(add[1].X, add[2].X), math.max(add[1].X, add[2].X)) * 10
-			local pickY = random:NextNumber(math.min(add[1].Y, add[2].Y), math.max(add[1].Y, add[2].Y)) * 10
-			self.springs.recoil:shove(Vector3.new(-pickX, pickY, 0))
+			local add = utils.tableUtils.firstNumberRangeContainingNumber(self.recoilPattern, recoilIndex)
+			local pickX = random:NextNumber(math.min(add[1].X, add[2].X), math.max(add[1].X, add[2].X)) * 2
+			local pickY = random:NextNumber(math.min(add[1].Y, add[2].Y), math.max(add[1].Y, add[2].Y)) * 2
+			local pickZ = random:NextNumber(math.min(add[1].Z, add[2].Z), math.max(add[1].Z, add[2].Z)) / 2
+			self.springs.recoil:shove(Vector3.new(-pickX, pickY, pickZ))
+			later(self.recoilRegroupTime, function()
+				self.currentRecoilIndex -= 1
+			end)
 		end)
 	end
 	function gun:startReload()
@@ -228,7 +237,7 @@ do
 			if self.reloading then
 				return nil
 			end
-			local reloadId = stringify.randomString(64, true)
+			local reloadId = HttpService:GenerateGUID()
 			self.currentReloadId = reloadId
 			self.reloading = true
 			system.remote.client.fireServer("reloadStartContext", self.serverItemIdentification)
@@ -388,13 +397,15 @@ do
 		local _value_1 = self.values.leanOffsetCamera.Value
 		local _value_2 = self.values.leanOffsetViewmodel.Value
 		local _viewmodelBob = self.cframes.viewmodelBob
-		_fn_1:SetPrimaryPartCFrame(_cFrame * _value * _arg0_1 * _idleOffset * _value_1 * _value_2 * _viewmodelBob)
-		local _cFrame_1 = CFrame.new(camera.CFrame.Position)
+		local _cFrame_1 = CFrame.new(0, 0, recoilUpdated.Z)
+		_fn_1:SetPrimaryPartCFrame(_cFrame * _value * _arg0_1 * _idleOffset * _value_1 * _value_2 * _viewmodelBob * _cFrame_1)
+		local _cFrame_2 = CFrame.new(camera.CFrame.Position)
 		local _value_3 = self.values.stanceOffset.Value
 		local _arg0_2 = CFrame.fromOrientation(cx, cy, cz)
 		local _value_4 = self.values.leanOffsetCamera.Value
 		local _arg0_3 = CFrame.Angles(math.rad(recoilUpdated.Y), math.rad(recoilUpdated.X), 0)
-		camera.CFrame = _cFrame_1 * _value_3 * _arg0_2 * _value_4 * _arg0_3
+		camera.CFrame = _cFrame_2 * _value_3 * _arg0_2 * _value_4 * _arg0_3
+		self.cameraCFrame = camera.CFrame
 		self.viewmodel.Parent = camera
 		self.character.Humanoid.WalkSpeed = clientExposed:getBaseWalkSpeed() * (if self.stance == -1 then self.multipliers.speed.prone else (if self.stance == 0 then self.multipliers.speed.crouch else 1))
 		if not self.loadedAnimations.idle.IsPlaying then

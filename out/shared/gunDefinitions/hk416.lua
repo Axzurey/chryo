@@ -26,7 +26,14 @@ local function hk416_definition(id)
 	g.reserveAmmo = 120
 	g.togglableFireModes = { fireMode.auto, fireMode.semi }
 	g.reloadSpeed = 1.5
-	g.recoilPattern = tableUtils.toMap({ NumberRange.new(0, 10), NumberRange.new(10, 20), NumberRange.new(20, 31) }, { { Vector2.new(.2, .3), Vector2.new(.7, 1) }, { Vector2.new(.2, .7), Vector2.new(.6, .8) }, { Vector2.new(.7, .9), Vector2.new(.5, .5) } })
+	g.recoilRegroupTime = 1.5
+	g.spreadHipfirePenalty = 1.5
+	g.spreadMovementHipfirePenalty = 2
+	g.spreadDelta = 5
+	g.spreadPopTime = 1.5
+	g.spreadUpPerShot = 2
+	g.maxAllowedSpread = 45
+	g.recoilPattern = tableUtils.toMap({ NumberRange.new(0, 10), NumberRange.new(10, 20), NumberRange.new(20, 31) }, { { Vector3.new(.2, .3, .2), Vector3.new(.7, 1, .2) }, { Vector3.new(.2, .7, .3), Vector3.new(.6, .8, .3) }, { Vector3.new(.7, .9, .2), Vector3.new(.5, .5, .4) } })
 	return g
 end
 return {

@@ -2,6 +2,7 @@ import { Players } from "@rbxts/services";
 import positionTracker from "server/mechanics/positionTracker";
 import serverItem from "server/serverBase/serverItem";
 import serverGun from "server/serverExtended/serverGun"
+import hk416_server_definition from "server/serverGunDefinitions/hk416";
 import environment from "shared/constants/environment"
 import { itemTypeIdentifier } from "shared/types/gunwork";
 import system from "shared/zero/system";
@@ -31,7 +32,7 @@ Players.PlayerAdded.Connect((client) => {
 
     let mix = {
         items: {
-            primary: new serverGun('Gun1'), //ofc, we gonna generate those normally
+            primary: hk416_server_definition('Gun1'), //ofc, we gonna generate those normally
         },
         currentEquipped: undefined
     }

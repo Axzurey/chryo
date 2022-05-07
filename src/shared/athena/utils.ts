@@ -9,6 +9,15 @@ namespace utils {
         task.spawn(callback);
     }
 
+    export function later(when: number, callback: () => void) {
+        task.spawn(() => {
+            task.wait(when);
+            callback();
+        })
+    }
+
+    export const random = new Random();
+
     export namespace ease {
         export function repeatThis(callback: (iteration: number) => void, times: number) {
             for (let i = 0; i < times; i++) {
@@ -23,13 +32,7 @@ namespace utils {
     }
 
 	export namespace stringify {
-		export function randomString(length: number, includeNumbers?: boolean) {
-			let s = ''
-			for (let i = 0; i < length; i++) {
-				s += includeNumbers && math.random() === 0? math.random(0, 9): string.char(math.random(97, 122))
-			}
-			return s;
- 		}
+		
 	}
 
     export namespace dataTypeUtils {

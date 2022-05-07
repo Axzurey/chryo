@@ -4,6 +4,8 @@ import { newThread } from "shared/athena/utils";
 import space from "shared/zero/space";
 import examine, { examineHitLocation } from "server/serverBase/examine";
 import { itemTypeIdentifier } from "shared/types/gunwork";
+import { entityType } from "shared/zero/define/zeroDefinitions";
+import human from "shared/zero/entities/human";
 
 export default class serverGun extends serverItem {
     //internal
@@ -79,8 +81,6 @@ export default class serverGun extends serverItem {
 
         this.ammo --;
 
-        print('start')
-
         let caster = new rocaster({
             from: cameraCFrame.Position,
             direction: cameraCFrame.LookVector,
@@ -102,16 +102,16 @@ export default class serverGun extends serverItem {
 
         if (castResult) {
             let entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance);
-            if (entity && space.query.entityHasPropertyOfType(entity, 'health', 'number')) {
+            if (entity && space.query.entityIsThatIfOfType<human>(entity, entityType.human) ) {
                 let location = examineHitLocation(castResult.instance);
                 if (location === examine.hitLocation.head) {
-                    entity.health -= this.damage.head;
+                    entity.takeDamage(this.damage.head);
                 }
                 else if (location === examine.hitLocation.body) {
-                    entity.health -= this.damage.body;
+                    entity.takeDamage(this.damage.body);
                 }
                 else {
-                    entity.health -= this.damage.limb;
+                    entity.takeDamage(this.damage.limb);
                 }
             }
         }

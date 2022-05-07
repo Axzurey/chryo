@@ -22,6 +22,13 @@ do
 	local query = {}
 	do
 		local _container_1 = query
+		local function entityIsThatIfOfType(entity, entityType)
+			if entityType == entity.entityType then
+				return true
+			end
+			return false
+		end
+		_container_1.entityIsThatIfOfType = entityIsThatIfOfType
 		local function getAllWithProperty(property)
 			local selected = {}
 			local _arg0 = function(v)

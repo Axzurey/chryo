@@ -8,6 +8,7 @@ local _examine = TS.import(script, game:GetService("ServerScriptService"), "TS",
 local examine = _examine
 local examineHitLocation = _examine.examineHitLocation
 local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier
+local entityType = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "define", "zeroDefinitions").entityType
 local serverGun
 do
 	local super = serverItem
@@ -85,7 +86,6 @@ do
 			return nil
 		end
 		self.ammo -= 1
-		print("start")
 		local caster = rocaster.new({
 			from = cameraCFrame.Position,
 			direction = cameraCFrame.LookVector,
@@ -107,14 +107,14 @@ do
 		})
 		if castResult then
 			local entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance)
-			if entity and space.query.entityHasPropertyOfType(entity, "health", "number") then
+			if entity and space.query.entityIsThatIfOfType(entity, entityType.human) then
 				local location = examineHitLocation(castResult.instance)
 				if location == examine.hitLocation.head then
-					entity.health -= self.damage.head
+					entity:takeDamage(self.damage.head)
 				elseif location == examine.hitLocation.body then
-					entity.health -= self.damage.body
+					entity:takeDamage(self.damage.body)
 				else
-					entity.health -= self.damage.limb
+					entity:takeDamage(self.damage.limb)
 				end
 			end
 		end

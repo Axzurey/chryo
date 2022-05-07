@@ -2,7 +2,7 @@
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Players = TS.import(script, TS.getModule(script, "@rbxts", "services")).Players
 local positionTracker = TS.import(script, game:GetService("ServerScriptService"), "TS", "mechanics", "positionTracker")
-local serverGun = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverExtended", "serverGun").default
+local hk416_server_definition = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverGunDefinitions", "hk416").default
 local environment = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "environment")
 local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
@@ -15,7 +15,7 @@ Players.PlayerAdded:Connect(function(client)
 	positionTracker.addPlayer(client)
 	local mix = {
 		items = {
-			primary = serverGun.new("Gun1"),
+			primary = hk416_server_definition("Gun1"),
 		},
 		currentEquipped = nil,
 	}

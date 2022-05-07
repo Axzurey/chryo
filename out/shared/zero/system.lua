@@ -27,8 +27,10 @@ do
 			a.CanQuery = false
 			a.Transparency = 1
 			a.Parent = Workspace
-			p.Width0 = .1
-			p.Width1 = .1
+			p.Width0 = .005
+			p.Width1 = .005
+			p.Color = ColorSequence.new(Color3.new(1, 0, 0))
+			p.Brightness = 60
 			p.Attachment0 = a1
 			p.Attachment1 = a2
 			a1.WorldPosition = p1

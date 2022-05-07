@@ -3,7 +3,7 @@ import item from "shared/base/item";
 import paths from "shared/constants/paths";
 import clientExposed from "shared/middleware/clientExposed";
 import gunwork, { fireMode, gunAnimationsConfig, gunAttachmentConfig, sightModel } from "shared/types/gunwork";
-import utils, { newThread, stringify, tableUtils } from 'shared/athena/utils';
+import utils, { later, newThread, random, stringify, tableUtils } from 'shared/athena/utils';
 import { HttpService, Players, TweenService } from "@rbxts/services";
 import animationCompile from "shared/athena/animate";
 import system from "shared/zero/system";
@@ -18,6 +18,8 @@ export default class gun extends item {
 	//internal
 
 	connections: Record<string, RBXScriptConnection> = {}
+
+	cameraCFrame: CFrame = new CFrame()
 
 	viewmodel: gunwork.gunViewmodel
 
@@ -97,10 +99,6 @@ export default class gun extends item {
 
 	lastPosition: Vector3
 
-	//config
-
-	spread: number = 0;
-
 	firerate = {
 		auto: 0,
 		semi: 0,
@@ -124,7 +122,7 @@ export default class gun extends item {
 	togglableFireModes: gunwork.fireMode[] = [gunwork.fireMode.auto, gunwork.fireMode.semi];
 	firemodeSwitchCooldown: number = .75;
 
-	recoilPattern: Map<NumberRange, [Vector2, Vector2]> = new Map();
+	recoilPattern: Map<NumberRange, [Vector3, Vector3]> = new Map();
 	recoilRegroupTime: number = 1;
 
 	/**objects can have different penetration difficulty. this a multiplier to that, which gets subtracted from damage */
@@ -274,14 +272,29 @@ export default class gun extends item {
 
 			this.viewmodel.audio.fire.Play()
 
-			const fireCFrame = this.camera!.CFrame;
-			system.remote.client.fireServer('fireContext', this.serverItemIdentification, fireCFrame);
 
-			let distance = math.round(tick() - this.lastRecoil) //this will serve as the damping over time of not shooting for the recoil
+			this.spreadDelta += this.spreadUpPerShot;
 
-			if (distance > this.recoilRegroupTime) {
-				distance = this.recoilRegroupTime;
-			}
+			let spread = this.spreadDelta
+			* (1 - this.values.aimDelta.Value * this.spreadHipfirePenalty)
+			* (this.spreadMovementHipfirePenalty * this.character.Humanoid.MoveDirection.Magnitude + 1);
+			;
+
+			spread = math.clamp(spread, 0, this.maxAllowedSpread);
+
+			later(this.spreadPopTime, () => {
+				this.spreadDelta -= this.spreadUpPerShot;
+			})
+
+			print(spread)
+
+			const fireCFrame = this.cameraCFrame;
+
+			let newFireCFrame = fireCFrame.mul(
+				CFrame.Angles(0, math.rad(random.NextNumber(-spread, spread)), 0).mul(CFrame.Angles(math.rad(random.NextNumber(-spread, spread)), 0, 0))
+			)
+
+			system.remote.client.fireServer('fireContext', this.serverItemIdentification, newFireCFrame);
 
 			this.lastRecoil = tick()
 
@@ -292,23 +305,23 @@ export default class gun extends item {
 
 			this.currentRecoilIndex ++
 
-			print(recoilIndex, recoilIndex - distance, distance, this.currentRecoilIndex)
+			let add = utils.tableUtils.firstNumberRangeContainingNumber(this.recoilPattern, recoilIndex)!;
 
-			let add = utils.tableUtils.firstNumberRangeContainingNumber(this.recoilPattern, recoilIndex - distance)!;
-			print(add)
+			let pickX = random.NextNumber(math.min(add[0].X, add[1].X), math.max(add[0].X, add[1].X)) * 2;
+			let pickY = random.NextNumber(math.min(add[0].Y, add[1].Y), math.max(add[0].Y, add[1].Y)) * 2;
+			let pickZ = random.NextNumber(math.min(add[0].Z, add[1].Z), math.max(add[0].Z, add[1].Z)) / 2;
 
-			let random = new Random();
+			this.springs.recoil.shove(new Vector3(-pickX, pickY, pickZ));
 
-			let pickX = random.NextNumber(math.min(add[0].X, add[1].X), math.max(add[0].X, add[1].X)) * 10;
-			let pickY = random.NextNumber(math.min(add[0].Y, add[1].Y), math.max(add[0].Y, add[1].Y)) * 10;
-
-			this.springs.recoil.shove(new Vector3(-pickX, pickY, 0))
+			later(this.recoilRegroupTime, () => {
+				this.currentRecoilIndex --;
+			})
 		})
 	}
 	startReload() {
 		newThread(() => {
 			if (this.reloading) return;
-			let reloadId = stringify.randomString(64, true);
+			let reloadId = HttpService.GenerateGUID();
 			this.currentReloadId = reloadId;
 			this.reloading = true;
 			system.remote.client.fireServer('reloadStartContext', this.serverItemIdentification);
@@ -482,13 +495,16 @@ export default class gun extends item {
 			.mul(this.values.leanOffsetCamera.Value)
 			.mul(this.values.leanOffsetViewmodel.Value)
 			.mul(this.cframes.viewmodelBob)
+			.mul(new CFrame(0, 0, recoilUpdated.Z))
 		);
 
 		camera.CFrame = new CFrame(camera.CFrame.Position)
 			.mul(this.values.stanceOffset.Value)
 			.mul(CFrame.fromOrientation(cx, cy, cz))
 			.mul(this.values.leanOffsetCamera.Value)
-			.mul(CFrame.Angles(math.rad(recoilUpdated.Y), math.rad(recoilUpdated.X), 0))
+			.mul(CFrame.Angles(math.rad(recoilUpdated.Y), math.rad(recoilUpdated.X), 0));
+
+		this.cameraCFrame = camera.CFrame;
 
 		this.viewmodel.Parent = camera;
 

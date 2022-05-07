@@ -1,5 +1,6 @@
 import { propertyExistsInObject } from "shared/athena/utils";
 import entity from "./basic/entity";
+import { entityType } from "./define/zeroDefinitions";
 
 namespace space {
     const entities: entity[] = [];
@@ -14,6 +15,13 @@ namespace space {
     }
 
     export namespace query {
+        export function entityIsThatIfOfType<E extends entity>(entity: entity, entityType: entityType): entity is E {
+            if (entityType === entity.entityType) {
+                return true;
+            }
+            return false;
+        }
+
         export function getAllWithProperty<K extends string>(property: K): (entity & Record<K, unknown>)[] {
             let selected: (entity & Record<K, any>)[] = [];
             entities.forEach((v) => {
@@ -35,6 +43,7 @@ namespace space {
             })
             return selected;
         }
+
         export function entityHasPropertyOfType<E extends entity, K extends string, T extends keyof CheckableTypes>
         (entity: E, property: K, propertyType: T): entity is E & Record<K, CheckableTypes[T]> {
             if (propertyExistsInObject(entity, property) && typeOf(entity[property]) === propertyType) {

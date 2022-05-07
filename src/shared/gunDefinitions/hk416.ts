@@ -30,10 +30,28 @@ export default function hk416_definition(id: string) {
 
     g.reloadSpeed = 1.5;
 
+    g.recoilRegroupTime = 1.5;
+
+    g.spreadHipfirePenalty = 1.5;
+
+    g.spreadMovementHipfirePenalty = 2;
+
+    g.spreadDelta = 5;
+
+    g.spreadPopTime = 1.5;
+
+    g.spreadUpPerShot = 2;
+
+    g.maxAllowedSpread = 45;
+
 	g.recoilPattern = tableUtils.toMap([
-		new NumberRange(0, 10), new NumberRange(10, 20), new NumberRange(20, 31)
+		new NumberRange(0, 10),
+        new NumberRange(10, 20),
+        new NumberRange(20, 31)
 	], [
-		[new Vector2(.2, .3), new Vector2(.7, 1)], [new Vector2(.2, .7), new Vector2(.6, .8)], [new Vector2(.7, .9), new Vector2(.5, .5)]
+		[new Vector3(.2, .3, .2), new Vector3(.7, 1, .2)],
+        [new Vector3(.2, .7, .3), new Vector3(.6, .8, .3)],
+        [new Vector3(.7, .9, .2), new Vector3(.5, .5, .4)]
 	])
 
     return g;
