@@ -223,10 +223,12 @@ do
 			local recoilIndex = if self.currentRecoilIndex >= max then max else self.currentRecoilIndex
 			self.currentRecoilIndex += 1
 			local add = utils.tableUtils.firstNumberRangeContainingNumber(self.recoilPattern, recoilIndex)
-			local pickX = random:NextNumber(math.min(add[1].X, add[2].X), math.max(add[1].X, add[2].X)) * 2
-			local pickY = random:NextNumber(math.min(add[1].Y, add[2].Y), math.max(add[1].Y, add[2].Y)) * 2
+			local pickX = random:NextNumber(math.min(add[1].X, add[2].X), math.max(add[1].X, add[2].X)) * 0
+			local pickY = random:NextNumber(math.min(add[1].Y, add[2].Y), math.max(add[1].Y, add[2].Y)) * 0
 			local pickZ = random:NextNumber(math.min(add[1].Z, add[2].Z), math.max(add[1].Z, add[2].Z)) / 2
 			self.springs.recoil:shove(Vector3.new(-pickX, pickY, pickZ))
+			local controller = clientExposed.getActionController()
+			controller.crosshairController:pushRecoil(spread, self.recoilRegroupTime)
 			later(self.recoilRegroupTime, function()
 				self.currentRecoilIndex -= 1
 			end)

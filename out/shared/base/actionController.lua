@@ -5,6 +5,7 @@ local Players = _services.Players
 local RunService = _services.RunService
 local UserInputService = _services.UserInputService
 local Workspace = _services.Workspace
+local crosshairController = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "classes", "crosshairController").default
 local hk416_definition = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunDefinitions", "hk416").default
 local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
 local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
@@ -30,6 +31,7 @@ do
 			prone = Enum.KeyCode.Z,
 			crouch = Enum.KeyCode.C,
 		}
+		self.crosshairController = crosshairController.new()
 		self.actionMap = {
 			aim = function(state)
 				if self:equippedIsAGun(self.equippedItem) then

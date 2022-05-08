@@ -1,5 +1,7 @@
 import { Players, RunService, UserInputService, Workspace } from "@rbxts/services";
+import path from "shared/athena/path";
 import { newThread } from "shared/athena/utils";
+import crosshairController from "shared/classes/crosshairController";
 import gun from "shared/extended/gun";
 import hk416_definition from "shared/gunDefinitions/hk416";
 import clientExposed from "shared/middleware/clientExposed";
@@ -9,7 +11,7 @@ import item from "./item";
 export default class actionController {
 	private equippedItem: item | undefined;
 
-	private keybinds = {
+	public keybinds = {
 		aim: Enum.UserInputType.MouseButton2,
 		fire: Enum.UserInputType.MouseButton1,
         reload: Enum.KeyCode.R,
@@ -18,6 +20,8 @@ export default class actionController {
 		prone: Enum.KeyCode.Z,
 		crouch: Enum.KeyCode.C
 	}
+
+	public crosshairController = new crosshairController()
 
 	private actionMap: Record<keyof typeof this.keybinds, (state: Enum.UserInputState) => void> = {
 		aim: (state) => {

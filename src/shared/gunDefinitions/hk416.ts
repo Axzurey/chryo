@@ -32,17 +32,17 @@ export default function hk416_definition(id: string) {
 
     g.recoilRegroupTime = 1.5;
 
-    g.spreadHipfirePenalty = 1.5;
+    g.spreadHipfirePenalty = 1.1;
 
-    g.spreadMovementHipfirePenalty = 2;
+    g.spreadMovementHipfirePenalty = 1.2;
 
-    g.spreadDelta = 5;
+    g.spreadDelta = 1.15;
 
     g.spreadPopTime = 1.5;
 
-    g.spreadUpPerShot = 2;
+    g.spreadUpPerShot = 1.05;
 
-    g.maxAllowedSpread = 45;
+    g.maxAllowedSpread = 35;
 
 	g.recoilPattern = tableUtils.toMap([
 		new NumberRange(0, 10),

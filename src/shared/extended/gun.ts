@@ -307,11 +307,15 @@ export default class gun extends item {
 
 			let add = utils.tableUtils.firstNumberRangeContainingNumber(this.recoilPattern, recoilIndex)!;
 
-			let pickX = random.NextNumber(math.min(add[0].X, add[1].X), math.max(add[0].X, add[1].X)) * 2;
-			let pickY = random.NextNumber(math.min(add[0].Y, add[1].Y), math.max(add[0].Y, add[1].Y)) * 2;
+			let pickX = random.NextNumber(math.min(add[0].X, add[1].X), math.max(add[0].X, add[1].X)) * 0;
+			let pickY = random.NextNumber(math.min(add[0].Y, add[1].Y), math.max(add[0].Y, add[1].Y)) * 0;
 			let pickZ = random.NextNumber(math.min(add[0].Z, add[1].Z), math.max(add[0].Z, add[1].Z)) / 2;
 
 			this.springs.recoil.shove(new Vector3(-pickX, pickY, pickZ));
+
+			let controller = clientExposed.getActionController();
+
+			controller.crosshairController.pushRecoil(spread, this.recoilRegroupTime);
 
 			later(this.recoilRegroupTime, () => {
 				this.currentRecoilIndex --;
