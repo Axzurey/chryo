@@ -38,6 +38,35 @@ export default abstract class path {
         return i
     }
 
+    static createIfMissing<T extends keyof CreatableInstances>(pathlike: string, classType: T): CreatableInstances[T] {
+        pathlike = pathlike.split('&')[0];
+
+        let paths = pathlike.split('//');
+        let inst: Instance = game;
+        
+        for (const [i, v] of pairs(paths)) {
+            let t = inst.FindFirstChild(v)
+            if (t) {
+                inst = t;
+            }
+            else {
+                print(i, paths)
+                if (i === paths.size()) {
+                    print('last one!')
+                    let n = new Instance(classType);
+                    n.Name = v;
+                    n.Parent = inst;
+                    inst = n;
+                }
+                else {
+                    throw `unable to create path ${pathlike}. ${paths[paths.size() - 1]} is too deeply nested in non-existing instances`;
+                }
+                break;
+            }
+        }
+        return inst as CreatableInstances[T];
+    }
+
     static join(...pathlike: string[]): string {
         let l = ''
         pathlike.forEach((v, i) => {

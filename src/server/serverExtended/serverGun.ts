@@ -3,9 +3,10 @@ import rocaster from 'shared/zero/rocast';
 import { newThread } from "shared/athena/utils";
 import space from "shared/zero/space";
 import examine, { examineHitLocation } from "server/serverBase/examine";
-import { itemTypeIdentifier } from "shared/types/gunwork";
+import { bulletHoleLocation, itemTypeIdentifier } from "shared/types/gunwork";
 import { entityType } from "shared/zero/define/zeroDefinitions";
 import human from "shared/zero/entities/human";
+import image from "shared/classes/image";
 
 export default class serverGun extends serverItem {
     //internal
@@ -14,6 +15,10 @@ export default class serverGun extends serverItem {
     maxAmmo: number = 0;
     reserveAmmo: number = 0;
     magazineOverload: number = 0;
+
+    source: {
+        images?: Record<bulletHoleLocation, image>
+    } = {};
 
     damage: {
         body: number,
@@ -79,6 +84,8 @@ export default class serverGun extends serverItem {
         if (this.reloading) return;
         if (this.ammo <= 0) return;
 
+        if (!this.source.images) return;
+
         this.ammo --;
 
         let caster = new rocaster({
@@ -113,6 +120,9 @@ export default class serverGun extends serverItem {
                 else {
                     entity.takeDamage(this.damage.limb);
                 }
+            }
+            else {
+                this.source.images.normal.spawn(castResult.position, castResult.normal, 1);
             }
         }
     }

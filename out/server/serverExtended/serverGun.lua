@@ -29,6 +29,7 @@ do
 		self.maxAmmo = 0
 		self.reserveAmmo = 0
 		self.magazineOverload = 0
+		self.source = {}
 		self.damage = {
 			body = 0,
 			head = 0,
@@ -85,6 +86,9 @@ do
 		if self.ammo <= 0 then
 			return nil
 		end
+		if not self.source.images then
+			return nil
+		end
 		self.ammo -= 1
 		local caster = rocaster.new({
 			from = cameraCFrame.Position,
@@ -116,6 +120,8 @@ do
 				else
 					entity:takeDamage(self.damage.limb)
 				end
+			else
+				self.source.images.normal:spawn(castResult.position, castResult.normal, 1)
 			end
 		end
 	end

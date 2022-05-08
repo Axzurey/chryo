@@ -40,6 +40,30 @@ do
 		end
 		return i
 	end
+	function path:createIfMissing(pathlike, classType)
+		pathlike = string.split(pathlike, "&")[1]
+		local paths = string.split(pathlike, "//")
+		local inst = game
+		for i, v in pairs(paths) do
+			local t = inst:FindFirstChild(v)
+			if t then
+				inst = t
+			else
+				print(i, paths)
+				if i == #paths then
+					print("last one!")
+					local n = Instance.new(classType)
+					n.Name = v
+					n.Parent = inst
+					inst = n
+				else
+					error("unable to create path " .. (pathlike .. (". " .. (paths[#paths - 1 + 1] .. " is too deeply nested in non-existing instances"))))
+				end
+				break
+			end
+		end
+		return inst
+	end
 	function path:join(...)
 		local pathlike = { ... }
 		local l = ""

@@ -1,32 +1,34 @@
 import actionController from "shared/base/actionController";
 
-export default abstract class clientExposed {
-    private static camera: Camera;
-    private static baseWalkspeed: number;
-    private static actionController: actionController;
+namespace clientExposed {
+    let camera: Camera;
+    let baseWalkspeed: number;
+    let actionController: actionController;
 
-    static getCamera() {
-        if (!this.camera) throw `camera has not been set!`
-        return this.camera;
+    export function getCamera() {
+        if (!camera) throw `camera has not been set!`
+        return camera;
     }
 
-    static setCamera(camera: Camera) {
-        this.camera = camera;
+    export function setCamera(_camera: Camera) {
+        camera = _camera;
     }
 
-    static getBaseWalkSpeed() {
-        return this.baseWalkspeed;
+    export function getBaseWalkSpeed() {
+        return baseWalkspeed;
     }
 
-    static setBaseWalkSpeed(speed: number) {
-        this.baseWalkspeed = speed;
+    export function setBaseWalkSpeed(speed: number) {
+        baseWalkspeed = speed;
     }
 
-    static getActionController() {
-        return this.actionController;
+    export function getActionController() {
+        return actionController;
     }
     
-    static setActionController(actionController: actionController) {
-        this.actionController = actionController;
+    export function setActionController(_actionController: actionController) {
+        actionController = _actionController;
     }
 }
+
+export = clientExposed;

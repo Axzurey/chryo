@@ -1,4 +1,15 @@
 namespace gunwork {
+    export enum bulletHoleLocation {
+        normal = 'normal',
+        metal = 'metal',
+        glass = 'glass'
+    }
+
+    export interface imageItem {
+        colorModifier?: Color3
+        imageId: string
+    }
+
     export enum itemTypeIdentifier {
         none, gun
     }

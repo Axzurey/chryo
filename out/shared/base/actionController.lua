@@ -6,7 +6,7 @@ local RunService = _services.RunService
 local UserInputService = _services.UserInputService
 local Workspace = _services.Workspace
 local hk416_definition = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunDefinitions", "hk416").default
-local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed").default
+local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
 local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local actionController
 do
@@ -89,9 +89,9 @@ do
 			end
 			print("done! starting...")
 		end
-		clientExposed:setActionController(self)
-		clientExposed:setCamera(Workspace.CurrentCamera)
-		clientExposed:setBaseWalkSpeed(12)
+		clientExposed.setActionController(self)
+		clientExposed.setCamera(Workspace.CurrentCamera)
+		clientExposed.setBaseWalkSpeed(12)
 		local item = hk416_definition("Gun1")
 		self.equippedItem = item
 		local mainRender = RunService.RenderStepped:Connect(function(dt)

@@ -27,7 +27,7 @@ namespace system {
             p.Width0 = .005
             p.Width1 = .005
             p.Color = new ColorSequence(new Color3(1, 0, 0));
-            p.Brightness = 60
+            p.Brightness = 60;
             p.Attachment0 = a1;
             p.Attachment1 = a2;
 

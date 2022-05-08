@@ -1,31 +1,36 @@
 -- Compiled with roblox-ts v1.3.3
-local clientExposed
+local clientExposed = {}
 do
-	clientExposed = {}
-	function clientExposed:constructor()
-	end
-	function clientExposed:getCamera()
-		if not self.camera then
+	local _container = clientExposed
+	local camera
+	local baseWalkspeed
+	local actionController
+	local function getCamera()
+		if not camera then
 			error("camera has not been set!")
 		end
-		return self.camera
+		return camera
 	end
-	function clientExposed:setCamera(camera)
-		self.camera = camera
+	_container.getCamera = getCamera
+	local function setCamera(_camera)
+		camera = _camera
 	end
-	function clientExposed:getBaseWalkSpeed()
-		return self.baseWalkspeed
+	_container.setCamera = setCamera
+	local function getBaseWalkSpeed()
+		return baseWalkspeed
 	end
-	function clientExposed:setBaseWalkSpeed(speed)
-		self.baseWalkspeed = speed
+	_container.getBaseWalkSpeed = getBaseWalkSpeed
+	local function setBaseWalkSpeed(speed)
+		baseWalkspeed = speed
 	end
-	function clientExposed:getActionController()
-		return self.actionController
+	_container.setBaseWalkSpeed = setBaseWalkSpeed
+	local function getActionController()
+		return actionController
 	end
-	function clientExposed:setActionController(actionController)
-		self.actionController = actionController
+	_container.getActionController = getActionController
+	local function setActionController(_actionController)
+		actionController = _actionController
 	end
+	_container.setActionController = setActionController
 end
-return {
-	default = clientExposed,
-}
+return clientExposed

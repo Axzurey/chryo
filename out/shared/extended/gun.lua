@@ -3,7 +3,7 @@ local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_incl
 local path = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "path").default
 local item = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base", "item").default
 local paths = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "paths")
-local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed").default
+local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
 local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local _utils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils")
 local utils = _utils
@@ -173,9 +173,9 @@ do
 		-- setup attachments if possible
 		-- load animations!
 		self.viewmodel = viewmodel
-		self.viewmodel:SetPrimaryPartCFrame(clientExposed:getCamera().CFrame)
+		self.viewmodel:SetPrimaryPartCFrame(clientExposed.getCamera().CFrame)
 		local idleanim = animationCompile:create(animationIDS.idle):final()
-		self.viewmodel.Parent = clientExposed:getCamera()
+		self.viewmodel.Parent = clientExposed.getCamera()
 		self.loadedAnimations = {
 			idle = viewmodel.controller.animator:LoadAnimation(idleanim),
 		}
@@ -199,7 +199,7 @@ do
 				self:startReload()
 				return nil
 			end
-			self.camera = clientExposed:getCamera()
+			self.camera = clientExposed.getCamera()
 			if not self.firePoint and not self.camera then
 				error("fire can not be called without a character or camera")
 			end
@@ -375,7 +375,7 @@ do
 		end)
 		self.cframes.idle = self.viewmodel.offsets.idle.Value
 		local movedirection = self.character.Humanoid.MoveDirection
-		local camera = clientExposed:getCamera()
+		local camera = clientExposed.getCamera()
 		local idleOffset = self.cframes.idle:Lerp(CFrame.new(0, 0, if self.attachments.sight then -self.attachments.sight.zOffset else 0), self.values.aimDelta.Value)
 		local cx, cy, cz = camera.CFrame:ToOrientation()
 		local t = tick()
@@ -407,7 +407,7 @@ do
 		camera.CFrame = _cFrame_2 * _value_3 * _arg0_2 * _value_4 * _arg0_3
 		self.cameraCFrame = camera.CFrame
 		self.viewmodel.Parent = camera
-		self.character.Humanoid.WalkSpeed = clientExposed:getBaseWalkSpeed() * (if self.stance == -1 then self.multipliers.speed.prone else (if self.stance == 0 then self.multipliers.speed.crouch else 1))
+		self.character.Humanoid.WalkSpeed = clientExposed.getBaseWalkSpeed() * (if self.stance == -1 then self.multipliers.speed.prone else (if self.stance == 0 then self.multipliers.speed.crouch else 1))
 		if not self.loadedAnimations.idle.IsPlaying then
 			self.loadedAnimations.idle:Play()
 		end

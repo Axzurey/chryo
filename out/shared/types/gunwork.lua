@@ -2,6 +2,20 @@
 local gunwork = {}
 do
 	local _container = gunwork
+	local bulletHoleLocation
+	do
+		local _inverse = {}
+		bulletHoleLocation = setmetatable({}, {
+			__index = _inverse,
+		})
+		bulletHoleLocation.normal = "normal"
+		_inverse.normal = "normal"
+		bulletHoleLocation.metal = "metal"
+		_inverse.metal = "metal"
+		bulletHoleLocation.glass = "glass"
+		_inverse.glass = "glass"
+	end
+	_container.bulletHoleLocation = bulletHoleLocation
 	local itemTypeIdentifier
 	do
 		local _inverse = {}
