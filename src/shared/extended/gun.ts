@@ -350,7 +350,7 @@ export default class gun extends item {
 		newThread(() => {
 			let diff = t? this.adsLength - mathf.lerp(0, this.adsLength, this.values.aimDelta.Value): this.adsLength;
 
-			let info = new TweenInfo(diff, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
+			let info = new TweenInfo(diff, Enum.EasingStyle.Quart, Enum.EasingDirection.Out);
 
 			TweenService.Create(this.values.aimDelta, info, {
 				Value: t? 1: 0
