@@ -100,7 +100,6 @@ export default class crosshairController {
         return t;
     }
     calculateOffset() {
-
         let offset = (math.clamp(this.elastic.p, 0, this.upperClamp)) + 1;
         offset = mathf.lerp(0, offset, 1 - this.coil.Value);
         
