@@ -23,6 +23,9 @@ export default class actionController {
 		vault: Enum.KeyCode.Space
 	}
 
+	vaulting: boolean = false;
+	rappelling: boolean = false;
+
 	public crosshairController = new crosshairController()
 
 	private actionMap: Record<keyof typeof this.keybinds, (state: Enum.UserInputState) => void> = {
@@ -96,15 +99,11 @@ export default class actionController {
 		return false;
 	}
 
+	character = Players.LocalPlayer.Character || Players.LocalPlayer.CharacterAdded.Wait()[0]
+
 	constructor() {
 
-		if (!Players.LocalPlayer.Character) {
-			Players.LocalPlayer.CharacterAdded.Wait();
-			while (!Players.LocalPlayer.Character!.PrimaryPart) {
-				task.wait();
-			}
-			print("done! starting...")
-		}
+		while (!this.character.PrimaryPart) task.wait()
 
 		clientExposed.setActionController(this);
 		clientExposed.setCamera(Workspace.CurrentCamera as Camera);
@@ -116,6 +115,16 @@ export default class actionController {
 
 		let mainRender = RunService.RenderStepped.Connect((dt) => {
 			let equipped = this.equippedItem;
+
+			if (this.character.PrimaryPart) {
+				if (this.vaulting || this.rappelling) {
+					this.character.PrimaryPart.Anchored = true;
+				}
+				else {
+					this.character.PrimaryPart.Anchored = false;
+				}
+			}
+
 			if (this.equippedIsAGun(equipped)) {
 				equipped.update(dt);
 			}

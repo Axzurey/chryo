@@ -4,14 +4,18 @@ local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
 local Players = _services.Players
 local RunService = _services.RunService
 local Workspace = _services.Workspace
+local interpolate = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "interpolations").interpolate
 local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
-local getCamera = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed").getCamera
+local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
+local getActionController = _clientExposed.getActionController
+local getCamera = _clientExposed.getCamera
 local vault = {}
 do
 	local _container = vault
 	local vaultDistance = 4
 	local characterHeight = 10
 	local normalUp = Vector3.new(0, 1, 0)
+	local inset = 2
 	local function Vault(ignore)
 		local character = Players.LocalPlayer.Character
 		local cframe = character:GetPivot()
@@ -21,27 +25,35 @@ do
 		local pos = cframe.Position
 		local maxL = look * vaultDistance
 		local cast = Workspace:Raycast(pos, maxL, ignore)
+		local controller = getActionController()
 		if cast then
 			-- next check how tall the object is and if it is at a vaultable height!
 			local _filterDescendantsInstances = ignore.FilterDescendantsInstances
 			local _instance = cast.Instance
 			table.insert(_filterDescendantsInstances, _instance)
+			controller.vaulting = true
+			local _pos = pos
+			local _position = cast.Position
+			local distance = (_pos - _position).Magnitude
 			local _fn = mathf
 			local _exp = cast.Instance
-			local _position = cast.Position
+			local _position_1 = cast.Position
 			local _vector3 = Vector3.new(0, 100, 0)
-			local top = _fn.closestPointOnPart(_exp, _position + _vector3)
+			local top = _fn.closestPointOnPart(_exp, _position_1 + _vector3)
 			local up = Workspace:Raycast(top, normalUp * characterHeight, ignore)
 			if up then
 				print("too small a gap to vault!")
 				return nil
 			end
+			local changed = {}
 			local _exp_1 = character:GetChildren()
 			local _arg0 = function(v)
 				if not v:IsA("BasePart") then
 					return nil
 				end
-				v.Anchored = true
+				local _changed = changed
+				local _canCollide = v.CanCollide
+				_changed[v] = _canCollide
 				v.CanCollide = false
 			end
 			for _k, _v in ipairs(_exp_1) do
@@ -49,10 +61,11 @@ do
 			end
 			local p0 = pos
 			local _top = top
-			local _arg0_1 = camera.CFrame.LookVector * 5
-			local _vector3_1 = Vector3.new(0, bounding.Y / 2, 0)
-			local p2 = _top + _arg0_1 + _vector3_1
-			local _exp_2 = mathf.lerpV3(p0, p2, .75)
+			local _look = look
+			local _arg0_1 = inset + distance
+			local _vector3_1 = Vector3.new(0, bounding.Y / 2 + 1, 0)
+			local p2 = _top + (_look * _arg0_1) + _vector3_1
+			local _exp_2 = mathf.lerpV3(p0, p2, .25)
 			local _vector3_2 = Vector3.new(0, 2, 0)
 			local p1 = _exp_2 + _vector3_2
 			local t = 0
@@ -61,21 +74,22 @@ do
 				t = math.clamp(t + 2 * dt, 0, 1)
 				if t == 1 then
 					c:Disconnect()
-					local _exp_3 = character:GetChildren()
-					local _arg0_2 = function(v)
-						if not v:IsA("BasePart") then
-							return nil
-						end
-						v.Anchored = false
-						v.CanCollide = true
+					local _changed = changed
+					local _arg0_2 = function(v, k)
+						k.CanCollide = v
 					end
-					for _k, _v in ipairs(_exp_3) do
-						_arg0_2(_v, _k - 1, _exp_3)
+					for _k, _v in pairs(_changed) do
+						_arg0_2(_v, _k, _changed)
 					end
+					local z = interpolate(t, 0, 1, "quadInOut")
+					local bez = mathf.bezierQuadraticV3(z, p0, p1, p2)
+					controller.vaulting = false
 					return nil
 				end
-				local bez = mathf.bezierQuadraticV3(t, p0, p1, p2)
-				character:SetPrimaryPartCFrame(CFrame.lookAt(bez, character:GetPivot().Position))
+				local z = interpolate(t, 0, 1, "quadInOut")
+				local bez = mathf.bezierQuadraticV3(z, p0, p1, p2)
+				local p = character:GetPivot()
+				character:SetPrimaryPartCFrame(CFrame.lookAt(bez, Vector3.new()))
 			end)
 		else
 			print("no cast!")

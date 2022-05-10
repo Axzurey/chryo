@@ -33,6 +33,8 @@ do
 			crouch = Enum.KeyCode.C,
 			vault = Enum.KeyCode.Space,
 		}
+		self.vaulting = false
+		self.rappelling = false
 		self.crosshairController = crosshairController.new()
 		self.actionMap = {
 			aim = function(state)
@@ -93,12 +95,9 @@ do
 				end
 			end,
 		}
-		if not Players.LocalPlayer.Character then
-			Players.LocalPlayer.CharacterAdded:Wait()
-			while not Players.LocalPlayer.Character.PrimaryPart do
-				task.wait()
-			end
-			print("done! starting...")
+		self.character = Players.LocalPlayer.Character or (Players.LocalPlayer.CharacterAdded:Wait())
+		while not self.character.PrimaryPart do
+			task.wait()
 		end
 		clientExposed.setActionController(self)
 		clientExposed.setCamera(Workspace.CurrentCamera)
@@ -107,6 +106,13 @@ do
 		self.equippedItem = item
 		local mainRender = RunService.RenderStepped:Connect(function(dt)
 			local equipped = self.equippedItem
+			if self.character.PrimaryPart then
+				if self.vaulting or self.rappelling then
+					self.character.PrimaryPart.Anchored = true
+				else
+					self.character.PrimaryPart.Anchored = false
+				end
+			end
 			if self:equippedIsAGun(equipped) then
 				equipped:update(dt)
 			end
