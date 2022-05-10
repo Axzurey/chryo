@@ -4,6 +4,7 @@ import { newThread } from "shared/athena/utils";
 import crosshairController from "shared/classes/crosshairController";
 import gun from "shared/extended/gun";
 import hk416_definition from "shared/gunDefinitions/hk416";
+import vault from "shared/mechanics/vault";
 import clientExposed from "shared/middleware/clientExposed";
 import gunwork, { fireMode } from "shared/types/gunwork";
 import item from "./item";
@@ -18,7 +19,8 @@ export default class actionController {
 		leanRight: Enum.KeyCode.E,
 		leanLeft: Enum.KeyCode.Q,
 		prone: Enum.KeyCode.Z,
-		crouch: Enum.KeyCode.C
+		crouch: Enum.KeyCode.C,
+		vault: Enum.KeyCode.Space
 	}
 
 	public crosshairController = new crosshairController()
@@ -73,6 +75,13 @@ export default class actionController {
 			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
 				gun.changeStance(-1);
+			}
+		},
+		vault: (state) => {
+			if (this.starting(state)) {
+				let ignore = new RaycastParams();
+				ignore.FilterDescendantsInstances = [clientExposed.getCamera(), Players.LocalPlayer.Character!];
+				vault.Vault(ignore)
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Players = TS.import(script, TS.getModule(script, "@rbxts", "services")).Players
-local positionTracker = TS.import(script, game:GetService("ServerScriptService"), "TS", "mechanics", "positionTracker")
+local positionTracker = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverMechanics", "positionTracker")
 local hk416_server_definition = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverGunDefinitions", "hk416").default
 local environment = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "environment")
 local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier

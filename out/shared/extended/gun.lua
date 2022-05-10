@@ -272,7 +272,7 @@ do
 	function gun:aim(t)
 		newThread(function()
 			local diff = if t then self.adsLength - mathf.lerp(0, self.adsLength, self.values.aimDelta.Value) else self.adsLength
-			local info = TweenInfo.new(diff, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+			local info = TweenInfo.new(diff, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 			TweenService:Create(self.values.aimDelta, info, {
 				Value = if t then 1 else 0,
 			}):Play()

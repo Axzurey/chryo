@@ -1,5 +1,5 @@
 import { Players } from "@rbxts/services";
-import positionTracker from "server/mechanics/positionTracker";
+import positionTracker from "server/serverMechanics/positionTracker";
 import serverItem from "server/serverBase/serverItem";
 import serverGun from "server/serverExtended/serverGun"
 import hk416_server_definition from "server/serverGunDefinitions/hk416";

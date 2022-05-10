@@ -7,6 +7,7 @@ local UserInputService = _services.UserInputService
 local Workspace = _services.Workspace
 local crosshairController = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "classes", "crosshairController").default
 local hk416_definition = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunDefinitions", "hk416").default
+local vault = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "mechanics", "vault")
 local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
 local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local actionController
@@ -30,6 +31,7 @@ do
 			leanLeft = Enum.KeyCode.Q,
 			prone = Enum.KeyCode.Z,
 			crouch = Enum.KeyCode.C,
+			vault = Enum.KeyCode.Space,
 		}
 		self.crosshairController = crosshairController.new()
 		self.actionMap = {
@@ -81,6 +83,13 @@ do
 				if self:starting(state) and self:equippedIsAGun(self.equippedItem) then
 					local gun = self.equippedItem
 					gun:changeStance(-1)
+				end
+			end,
+			vault = function(state)
+				if self:starting(state) then
+					local ignore = RaycastParams.new()
+					ignore.FilterDescendantsInstances = { clientExposed.getCamera(), Players.LocalPlayer.Character }
+					vault.Vault(ignore)
 				end
 			end,
 		}
