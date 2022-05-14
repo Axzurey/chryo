@@ -61,6 +61,8 @@ namespace vault {
 
 			let t = 0;
 
+			controller.actionMap.crouch(controller.start);
+
 			let c = RunService.RenderStepped.Connect((dt) => {
 
 				t = math.clamp(t + 2 * dt, 0, 1);
@@ -71,10 +73,10 @@ namespace vault {
 						k['CanCollide'] = v;
 					})
 
-					let z = interpolate(t, 0, 1, 'quadInOut');
-					let bez = mathf.bezierQuadraticV3(z, p0, p1, p2);
-
 					controller.vaulting = false;
+
+					controller.actionMap.crouch(controller.start);
+					task.wait(1)
 
 					return;
 				}

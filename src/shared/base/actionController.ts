@@ -4,6 +4,7 @@ import { newThread } from "shared/athena/utils";
 import crosshairController from "shared/classes/crosshairController";
 import gun from "shared/extended/gun";
 import hk416_definition from "shared/gunDefinitions/hk416";
+import rappel from "shared/mechanics/rappel";
 import vault from "shared/mechanics/vault";
 import clientExposed from "shared/middleware/clientExposed";
 import gunwork, { fireMode } from "shared/types/gunwork";
@@ -20,15 +21,19 @@ export default class actionController {
 		leanLeft: Enum.KeyCode.Q,
 		prone: Enum.KeyCode.Z,
 		crouch: Enum.KeyCode.C,
-		vault: Enum.KeyCode.Space
+		vault: Enum.KeyCode.Space,
+		rappel: Enum.KeyCode.N
 	}
 
 	vaulting: boolean = false;
 	rappelling: boolean = false;
 
-	public crosshairController = new crosshairController()
+	public crosshairController = new crosshairController();
 
-	private actionMap: Record<keyof typeof this.keybinds, (state: Enum.UserInputState) => void> = {
+	start = Enum.UserInputState.Begin;
+	end = Enum.UserInputState.End;
+
+	actionMap: Record<keyof typeof this.keybinds, (state: Enum.UserInputState) => void> = {
 		aim: (state) => {
 			if (this.equippedIsAGun(this.equippedItem)) {
 				print('aim switch!')
@@ -86,6 +91,13 @@ export default class actionController {
 				ignore.FilterDescendantsInstances = [clientExposed.getCamera(), Players.LocalPlayer.Character!];
 				vault.Vault(ignore)
 			}
+		},
+		rappel: (state) => {
+			if (this.starting(state)) {
+				let ignore = new RaycastParams();
+				ignore.FilterDescendantsInstances = [clientExposed.getCamera(), Players.LocalPlayer.Character!];
+				rappel.Rappel(ignore);
+			}
 		}
 	}
 
@@ -103,7 +115,9 @@ export default class actionController {
 
 	constructor() {
 
-		while (!this.character.PrimaryPart) task.wait()
+		if (!this.character.PrimaryPart) {
+			this.character.GetPropertyChangedSignal('PrimaryPart').Wait();
+		}
 
 		clientExposed.setActionController(this);
 		clientExposed.setCamera(Workspace.CurrentCamera as Camera);

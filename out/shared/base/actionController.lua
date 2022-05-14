@@ -7,6 +7,7 @@ local UserInputService = _services.UserInputService
 local Workspace = _services.Workspace
 local crosshairController = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "classes", "crosshairController").default
 local hk416_definition = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunDefinitions", "hk416").default
+local rappel = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "mechanics", "rappel")
 local vault = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "mechanics", "vault")
 local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
 local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
@@ -32,10 +33,13 @@ do
 			prone = Enum.KeyCode.Z,
 			crouch = Enum.KeyCode.C,
 			vault = Enum.KeyCode.Space,
+			rappel = Enum.KeyCode.N,
 		}
 		self.vaulting = false
 		self.rappelling = false
 		self.crosshairController = crosshairController.new()
+		self.start = Enum.UserInputState.Begin
+		self["end"] = Enum.UserInputState.End
 		self.actionMap = {
 			aim = function(state)
 				if self:equippedIsAGun(self.equippedItem) then
@@ -94,10 +98,17 @@ do
 					vault.Vault(ignore)
 				end
 			end,
+			rappel = function(state)
+				if self:starting(state) then
+					local ignore = RaycastParams.new()
+					ignore.FilterDescendantsInstances = { clientExposed.getCamera(), Players.LocalPlayer.Character }
+					rappel.Rappel(ignore)
+				end
+			end,
 		}
 		self.character = Players.LocalPlayer.Character or (Players.LocalPlayer.CharacterAdded:Wait())
-		while not self.character.PrimaryPart do
-			task.wait()
+		if not self.character.PrimaryPart then
+			self.character:GetPropertyChangedSignal("PrimaryPart"):Wait()
 		end
 		clientExposed.setActionController(self)
 		clientExposed.setCamera(Workspace.CurrentCamera)

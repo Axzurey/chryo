@@ -69,6 +69,7 @@ do
 			local _vector3_2 = Vector3.new(0, 2, 0)
 			local p1 = _exp_2 + _vector3_2
 			local t = 0
+			controller.actionMap.crouch(controller.start)
 			local c
 			c = RunService.RenderStepped:Connect(function(dt)
 				t = math.clamp(t + 2 * dt, 0, 1)
@@ -81,9 +82,9 @@ do
 					for _k, _v in pairs(_changed) do
 						_arg0_2(_v, _k, _changed)
 					end
-					local z = interpolate(t, 0, 1, "quadInOut")
-					local bez = mathf.bezierQuadraticV3(z, p0, p1, p2)
 					controller.vaulting = false
+					controller.actionMap.crouch(controller.start)
+					task.wait(1)
 					return nil
 				end
 				local z = interpolate(t, 0, 1, "quadInOut")
