@@ -57,8 +57,8 @@ namespace gunwork {
     }
     
     export type gunViewmodel = viewmodel & {
-        muzzle: BasePart & {
-            point: Attachment
+        barrel: BasePart & {
+            muzzle: Attachment
         }
         offsets: Folder & {
             idle: CFrameValue

@@ -1,7 +1,7 @@
 import path from "shared/athena/path";
 import item from "shared/base/item";
 import paths from "shared/constants/paths";
-import clientExposed from "shared/middleware/clientExposed";
+import clientExposed, { getActionController } from "shared/middleware/clientExposed";
 import gunwork, { fireMode, gunAnimationsConfig, gunAttachmentConfig, sightModel } from "shared/types/gunwork";
 import utils, { later, newThread, random, stringify, tableUtils } from 'shared/athena/utils';
 import { HttpService, Players, TweenService } from "@rbxts/services";
@@ -9,6 +9,7 @@ import animationCompile from "shared/athena/animate";
 import system from "shared/zero/system";
 import mathf from "shared/athena/mathf";
 import spring from "shared/base/spring";
+import tracer from "shared/classes/tracer";
 
 export default class gun extends item {
 
@@ -35,7 +36,6 @@ export default class gun extends item {
 
 	fireButtonDown: boolean = false;
 
-	lastRecoil: number = 0;
 	currentRecoilIndex: number = 0;
 
 	currentReloadId?: string = undefined
@@ -127,6 +127,11 @@ export default class gun extends item {
 
 	/**objects can have different penetration difficulty. this a multiplier to that, which gets subtracted from damage */
 	penetrationDamageFalloff: number = 0;
+
+	/**
+	 * the color of the tracer
+	 */
+	tracerColor: Color3 = new Color3(0, 1, 1)
 
 	ammo: number = 0;
 	maxAmmo: number = 0;
@@ -272,13 +277,14 @@ export default class gun extends item {
 
 			this.viewmodel.audio.fire.Play()
 
+			let controller = clientExposed.getActionController();
 
 			this.spreadDelta += this.spreadUpPerShot;
-
+			
 			let spread = this.spreadDelta
 			* (1 - this.values.aimDelta.Value * this.spreadHipfirePenalty)
 			* (this.spreadMovementHipfirePenalty * this.character.Humanoid.MoveDirection.Magnitude + 1);
-			;
+			
 
 			spread = math.clamp(spread, 0, this.maxAllowedSpread);
 
@@ -286,17 +292,21 @@ export default class gun extends item {
 				this.spreadDelta -= this.spreadUpPerShot;
 			})
 
-			print(spread)
-
 			const fireCFrame = this.cameraCFrame;
 
-			let newFireCFrame = fireCFrame.mul(
-				CFrame.Angles(0, math.rad(random.NextNumber(-spread, spread)), 0).mul(CFrame.Angles(math.rad(random.NextNumber(-spread, spread)), 0, 0))
-			)
+			const spreadDirection = controller.crosshairController.getSpreadDirection(this.camera);
+
+			let newFireCFrame = CFrame.lookAt(fireCFrame.Position, 
+				fireCFrame.Position.add(spreadDirection));
+				
+
+			controller.crosshairController.pushRecoil(spread, this.recoilRegroupTime);
 
 			system.remote.client.fireServer('fireContext', this.serverItemIdentification, newFireCFrame);
 
-			this.lastRecoil = tick()
+			let t = tick()
+
+			this.lastFired = t;
 
 			let max = tableUtils.rangeUpperClamp(this.recoilPattern)!
 
@@ -307,19 +317,22 @@ export default class gun extends item {
 
 			let add = utils.tableUtils.firstNumberRangeContainingNumber(this.recoilPattern, recoilIndex)!;
 
-			let pickX = random.NextNumber(math.min(add[0].X, add[1].X), math.max(add[0].X, add[1].X)) * 0;
-			let pickY = random.NextNumber(math.min(add[0].Y, add[1].Y), math.max(add[0].Y, add[1].Y)) * 0;
+			let pickX = random.NextNumber(math.min(add[0].X, add[1].X), math.max(add[0].X, add[1].X)) * 1;
+			let pickY = random.NextNumber(math.min(add[0].Y, add[1].Y), math.max(add[0].Y, add[1].Y)) * 1;
 			let pickZ = random.NextNumber(math.min(add[0].Z, add[1].Z), math.max(add[0].Z, add[1].Z)) / 2;
 
 			this.springs.recoil.shove(new Vector3(-pickX, pickY, pickZ));
 
-			let controller = clientExposed.getActionController();
-
-			controller.crosshairController.pushRecoil(spread, this.recoilRegroupTime);
-
 			later(this.recoilRegroupTime, () => {
+				if (this.lastFired !== t) return;
 				this.currentRecoilIndex --;
-			})
+			});
+
+			let effectOrigin = this.viewmodel.barrel.muzzle.WorldPosition;
+
+			new tracer(effectOrigin, spreadDirection, 1.5, this.tracerColor);
+
+			print(effectOrigin, '<---')
 		})
 	}
 	startReload() {
@@ -485,9 +498,12 @@ export default class gun extends item {
 		let ty = math.abs(math.sin(f)) * .05;
 		
 		this.cframes.viewmodelBob = this.cframes.viewmodelBob.Lerp(
-			new CFrame(new Vector3(tx, ty).mul(1 - this.values.aimDelta.Value + roundedMagXZ / 50)),
+			new CFrame(new Vector3(tx, ty).mul(1 - this.values.aimDelta.Value + (roundedMagXZ / 50 * (1 - this.values.aimDelta.Value)))),
 			.1
 		)
+
+		//!ISSUE, PARTS SLOWLY FALLING DOWN EVEN THOUGH THEIR CFRAME IS BEING SET EVERY FRAME. MAYBE TRY ANCHORING?(MAY BREAK ANIMATIONS THO)
+		//OR SET MASS TO 0 IF POSSIBLE
 
 		let recoilUpdated = this.springs.recoil.update(dt);
 

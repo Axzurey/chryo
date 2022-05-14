@@ -96,7 +96,7 @@ do
 			maxDistance = 999,
 			ignore = { self:getUser().Character },
 			ignoreNames = { "HumanoidRootPart" },
-			debug = true,
+			debug = false,
 		})
 		local castResult = caster:cast({
 			canPierce = function(result)

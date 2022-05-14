@@ -115,7 +115,7 @@ do
 		clientExposed.setBaseWalkSpeed(12)
 		local item = hk416_definition("Gun1")
 		self.equippedItem = item
-		local mainRender = RunService.RenderStepped:Connect(function(dt)
+		RunService:BindToRenderStep("main_render", Enum.RenderPriority.Last.Value, function(dt)
 			local equipped = self.equippedItem
 			if self.character.PrimaryPart then
 				if self.vaulting or self.rappelling then

@@ -19,6 +19,7 @@ local animationCompile = TS.import(script, game:GetService("ReplicatedStorage"),
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
 local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
 local spring = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base", "spring")
+local tracer = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "classes", "tracer").default
 local gun
 do
 	local super = item
@@ -46,7 +47,6 @@ do
 		self.currentFiremode = 0
 		self.lastFiremodeSwitch = 0
 		self.fireButtonDown = false
-		self.lastRecoil = 0
 		self.currentRecoilIndex = 0
 		self.currentReloadId = nil
 		self.lastReload = 0
@@ -121,6 +121,7 @@ do
 		self.recoilPattern = {}
 		self.recoilRegroupTime = 1
 		self.penetrationDamageFalloff = 0
+		self.tracerColor = Color3.new(0, 1, 1)
 		self.ammo = 0
 		self.maxAmmo = 0
 		self.initialAmmo = 0
@@ -206,32 +207,37 @@ do
 			self.ammo -= 1
 			self.lastFired = tick()
 			self.viewmodel.audio.fire:Play()
+			local controller = clientExposed.getActionController()
 			self.spreadDelta += self.spreadUpPerShot
 			local spread = self.spreadDelta * (1 - self.values.aimDelta.Value * self.spreadHipfirePenalty) * (self.spreadMovementHipfirePenalty * self.character.Humanoid.MoveDirection.Magnitude + 1)
 			spread = math.clamp(spread, 0, self.maxAllowedSpread)
 			later(self.spreadPopTime, function()
 				self.spreadDelta -= self.spreadUpPerShot
 			end)
-			print(spread)
 			local fireCFrame = self.cameraCFrame
-			local _exp = CFrame.Angles(0, math.rad(random:NextNumber(-spread, spread)), 0)
-			local _arg0 = CFrame.Angles(math.rad(random:NextNumber(-spread, spread)), 0, 0)
-			local newFireCFrame = fireCFrame * (_exp * _arg0)
+			local spreadDirection = controller.crosshairController:getSpreadDirection(self.camera)
+			local newFireCFrame = CFrame.lookAt(fireCFrame.Position, fireCFrame.Position + spreadDirection)
+			controller.crosshairController:pushRecoil(spread, self.recoilRegroupTime)
 			system.remote.client.fireServer("fireContext", self.serverItemIdentification, newFireCFrame)
-			self.lastRecoil = tick()
+			local t = tick()
+			self.lastFired = t
 			local max = tableUtils.rangeUpperClamp(self.recoilPattern)
 			local recoilIndex = if self.currentRecoilIndex >= max then max else self.currentRecoilIndex
 			self.currentRecoilIndex += 1
 			local add = utils.tableUtils.firstNumberRangeContainingNumber(self.recoilPattern, recoilIndex)
-			local pickX = random:NextNumber(math.min(add[1].X, add[2].X), math.max(add[1].X, add[2].X)) * 0
-			local pickY = random:NextNumber(math.min(add[1].Y, add[2].Y), math.max(add[1].Y, add[2].Y)) * 0
+			local pickX = random:NextNumber(math.min(add[1].X, add[2].X), math.max(add[1].X, add[2].X)) * 1
+			local pickY = random:NextNumber(math.min(add[1].Y, add[2].Y), math.max(add[1].Y, add[2].Y)) * 1
 			local pickZ = random:NextNumber(math.min(add[1].Z, add[2].Z), math.max(add[1].Z, add[2].Z)) / 2
 			self.springs.recoil:shove(Vector3.new(-pickX, pickY, pickZ))
-			local controller = clientExposed.getActionController()
-			controller.crosshairController:pushRecoil(spread, self.recoilRegroupTime)
 			later(self.recoilRegroupTime, function()
+				if self.lastFired ~= t then
+					return nil
+				end
 				self.currentRecoilIndex -= 1
 			end)
+			local effectOrigin = self.viewmodel.barrel.muzzle.WorldPosition
+			tracer.new(effectOrigin, spreadDirection, 1.5, self.tracerColor)
+			print(effectOrigin, "<---")
 		end)
 	end
 	function gun:startReload()
@@ -388,8 +394,10 @@ do
 		local ty = math.abs(math.sin(f)) * .05
 		local _fn = self.cframes.viewmodelBob
 		local _vector3 = Vector3.new(tx, ty)
-		local _arg0 = 1 - self.values.aimDelta.Value + roundedMagXZ / 50
+		local _arg0 = 1 - self.values.aimDelta.Value + (roundedMagXZ / 50 * (1 - self.values.aimDelta.Value))
 		self.cframes.viewmodelBob = _fn:Lerp(CFrame.new(_vector3 * _arg0), .1)
+		-- !ISSUE, PARTS SLOWLY FALLING DOWN EVEN THOUGH THEIR CFRAME IS BEING SET EVERY FRAME. MAYBE TRY ANCHORING?(MAY BREAK ANIMATIONS THO)
+		-- OR SET MASS TO 0 IF POSSIBLE
 		local recoilUpdated = self.springs.recoil:update(dt)
 		local _fn_1 = self.viewmodel
 		local _cFrame = CFrame.new(camera.CFrame.Position)

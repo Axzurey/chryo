@@ -94,7 +94,7 @@ export default class serverGun extends serverItem {
             maxDistance: 999,
             ignore: [this.getUser()!.Character as Model],
             ignoreNames: ['HumanoidRootPart'],
-            debug: true
+            debug: false
         });
 
         let castResult = caster.cast({

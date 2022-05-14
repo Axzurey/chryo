@@ -5,7 +5,6 @@ local RunService = _services.RunService
 local TweenService = _services.TweenService
 local Players = _services.Players
 local Workspace = _services.Workspace
-local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
 local elastic = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base", "elastic")
 local client = Players.LocalPlayer
 local c = Workspace.CurrentCamera
@@ -106,8 +105,7 @@ do
 		return t
 	end
 	function crosshairController:calculateOffset()
-		local offset = (math.clamp(self.elastic.p, 0, self.upperClamp)) + 1
-		offset = mathf.lerp(0, offset, 1 - self.coil.Value)
+		local offset = math.clamp(self.elastic.p, 0, self.upperClamp) + 1
 		local multiplier = 1
 		local _multiplierCallbacks = self.multiplierCallbacks
 		local _arg0 = function(v)
@@ -124,7 +122,7 @@ do
 		local _vector2 = Vector2.new(0, 36 * 2)
 		local screenSizeMid = (_viewportSize - _vector2) / 2
 		local random = Random.new()
-		local offset = self:calculateOffset()
+		local offset = self:calculateOffset() * 2 - 1
 		local sens = 10
 		local up = random:NextNumber(-offset * sens, offset * sens)
 		local right = random:NextNumber(-offset * sens, offset * sens)

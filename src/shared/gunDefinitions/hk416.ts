@@ -40,7 +40,7 @@ export default function hk416_definition(id: string) {
 
     g.spreadPopTime = 1.5;
 
-    g.spreadUpPerShot = 1.05;
+    g.spreadUpPerShot = .25;
 
     g.maxAllowedSpread = 35;
 

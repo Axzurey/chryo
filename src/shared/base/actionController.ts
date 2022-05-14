@@ -127,7 +127,7 @@ export default class actionController {
 
 		this.equippedItem = item;
 
-		let mainRender = RunService.RenderStepped.Connect((dt) => {
+		RunService.BindToRenderStep('main_render', Enum.RenderPriority.Last.Value, (dt) => {
 			let equipped = this.equippedItem;
 
 			if (this.character.PrimaryPart) {

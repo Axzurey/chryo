@@ -100,8 +100,7 @@ export default class crosshairController {
         return t;
     }
     calculateOffset() {
-        let offset = (math.clamp(this.elastic.p, 0, this.upperClamp)) + 1;
-        offset = mathf.lerp(0, offset, 1 - this.coil.Value);
+        let offset = math.clamp(this.elastic.p, 0, this.upperClamp) + 1;
         
         let multiplier = 1;
         this.multiplierCallbacks.forEach((v) => {
@@ -114,7 +113,7 @@ export default class crosshairController {
         let screenSizeMid = camera.ViewportSize.sub(new Vector2(0, 36*2)).div(2);
         let random = new Random();
 
-        let offset = this.calculateOffset();
+        let offset = this.calculateOffset() * 2 - 1 //10 is the size of the crosshair's frame. 10 / 10 = 1, therefore 1;
 
         let sens = 10;
 
