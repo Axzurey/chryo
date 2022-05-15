@@ -15,7 +15,7 @@ do
 		return self:constructor(...) or self
 	end
 	function tracer:constructor(origin, direction, lifeTime, color)
-		local t = 5
+		local t = 1
 		local velocity = 1000
 		local bin = Instance.new("Part")
 		bin.Anchored = true
@@ -35,13 +35,13 @@ do
 		a2.Position = Vector3.new(0, 0, -2)
 		a2.Parent = bin
 		local b = Instance.new("Trail")
-		b.Brightness = 10
+		b.Brightness = 100
 		b.Color = ColorSequence.new(color)
-		b.Lifetime = .25
+		b.Lifetime = 1
 		b.LightInfluence = 0
 		b.FaceCamera = true
-		b.WidthScale = NumberSequence.new(1)
-		b.MaxLength = 1000
+		b.WidthScale = NumberSequence.new(.01)
+		b.MaxLength = 100
 		b.Attachment0 = a1
 		b.Attachment1 = a2
 		b.Parent = bin

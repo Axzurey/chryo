@@ -331,8 +331,6 @@ export default class gun extends item {
 			let effectOrigin = this.viewmodel.barrel.muzzle.WorldPosition;
 
 			new tracer(effectOrigin, spreadDirection, 1.5, this.tracerColor);
-
-			print(effectOrigin, '<---')
 		})
 	}
 	startReload() {
@@ -435,6 +433,8 @@ export default class gun extends item {
 		
 		if (!this.viewmodel.PrimaryPart) return;
 
+		this.viewmodel.aimpart.Anchored = true;
+
 		let firemode = this.togglableFireModes[this.currentFiremode];
 		if (!firemode) {
 			firemode = this.togglableFireModes[0];
@@ -501,9 +501,6 @@ export default class gun extends item {
 			new CFrame(new Vector3(tx, ty).mul(1 - this.values.aimDelta.Value + (roundedMagXZ / 50 * (1 - this.values.aimDelta.Value)))),
 			.1
 		)
-
-		//!ISSUE, PARTS SLOWLY FALLING DOWN EVEN THOUGH THEIR CFRAME IS BEING SET EVERY FRAME. MAYBE TRY ANCHORING?(MAY BREAK ANIMATIONS THO)
-		//OR SET MASS TO 0 IF POSSIBLE
 
 		let recoilUpdated = this.springs.recoil.update(dt);
 

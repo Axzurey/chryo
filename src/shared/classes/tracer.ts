@@ -1,10 +1,9 @@
-import { RunService, Workspace } from "@rbxts/services";
+import { RunService } from "@rbxts/services";
 import path from "shared/athena/path";
-
 export default class tracer {
     constructor(origin: Vector3, direction: Vector3, lifeTime: number, color: Color3) {
 
-        let t = 5;
+        let t = 1;
         let velocity = 1000;
 
         let bin = new Instance('Part');
@@ -15,7 +14,7 @@ export default class tracer {
         bin.Size = new Vector3();
         bin.Position = origin.add(direction.mul(t));
         bin.Transparency = 1;
-        bin.Parent = path.createIfMissing('Workspace//ignore', 'Folder');
+        bin.Parent = path.createIfMissing('Workspace//ignore', 'Folder');;
 
         let a1 = new Instance('Attachment');
         a1.Position = new Vector3(0, 0, 2);
@@ -25,14 +24,13 @@ export default class tracer {
         a2.Parent = bin;
 
         let b = new Instance('Trail');
-        b.Brightness = 10;
+        b.Brightness = 100;
         b.Color = new ColorSequence(color);
-        b.Lifetime = .25;
+        b.Lifetime = 1;
         b.LightInfluence = 0;
         b.FaceCamera = true;
-        b.WidthScale = new NumberSequence(1);
-        b.MaxLength = 1000;
-
+        b.WidthScale = new NumberSequence(.01);
+        b.MaxLength = 100;
 
         b.Attachment0 = a1;
         b.Attachment1 = a2;

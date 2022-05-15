@@ -237,7 +237,6 @@ do
 			end)
 			local effectOrigin = self.viewmodel.barrel.muzzle.WorldPosition
 			tracer.new(effectOrigin, spreadDirection, 1.5, self.tracerColor)
-			print(effectOrigin, "<---")
 		end)
 	end
 	function gun:startReload()
@@ -336,6 +335,7 @@ do
 		if not self.viewmodel.PrimaryPart then
 			return nil
 		end
+		self.viewmodel.aimpart.Anchored = true
 		local firemode = self.togglableFireModes[self.currentFiremode + 1]
 		if not firemode then
 			firemode = self.togglableFireModes[1]
@@ -396,8 +396,6 @@ do
 		local _vector3 = Vector3.new(tx, ty)
 		local _arg0 = 1 - self.values.aimDelta.Value + (roundedMagXZ / 50 * (1 - self.values.aimDelta.Value))
 		self.cframes.viewmodelBob = _fn:Lerp(CFrame.new(_vector3 * _arg0), .1)
-		-- !ISSUE, PARTS SLOWLY FALLING DOWN EVEN THOUGH THEIR CFRAME IS BEING SET EVERY FRAME. MAYBE TRY ANCHORING?(MAY BREAK ANIMATIONS THO)
-		-- OR SET MASS TO 0 IF POSSIBLE
 		local recoilUpdated = self.springs.recoil:update(dt)
 		local _fn_1 = self.viewmodel
 		local _cFrame = CFrame.new(camera.CFrame.Position)
