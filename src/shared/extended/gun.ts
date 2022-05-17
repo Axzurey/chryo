@@ -1,10 +1,10 @@
 import path from "shared/athena/path";
 import item from "shared/base/item";
 import paths from "shared/constants/paths";
-import clientExposed, { getActionController } from "shared/middleware/clientExposed";
+import clientExposed, { getActionController, getClientConfig } from "shared/middleware/clientExposed";
 import gunwork, { fireMode, gunAnimationsConfig, gunAttachmentConfig, sightModel } from "shared/types/gunwork";
 import utils, { later, newThread, random, stringify, tableUtils } from 'shared/athena/utils';
-import { HttpService, Players, TweenService } from "@rbxts/services";
+import { HttpService, Players, TweenService, UserInputService } from "@rbxts/services";
 import animationCompile from "shared/athena/animate";
 import system from "shared/zero/system";
 import mathf from "shared/athena/mathf";
@@ -527,6 +527,11 @@ export default class gun extends item {
 
 		this.character.Humanoid.WalkSpeed = clientExposed.getBaseWalkSpeed() 
 			* (this.stance === -1? this.multipliers.speed.prone: (this.stance === 0? this.multipliers.speed.crouch: 1))
+
+		let generalSettings = getClientConfig().settings.general
+		let lerpedADS = mathf.lerp(generalSettings.sensitivity, generalSettings.adsSensitivity, this.values.aimDelta.Value);
+
+		UserInputService.MouseDeltaSensitivity = lerpedADS;
 
 		if (!this.loadedAnimations.idle.IsPlaying) {
 			this.loadedAnimations.idle.Play()

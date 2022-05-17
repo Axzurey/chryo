@@ -4,6 +4,7 @@ import { newThread } from "shared/athena/utils";
 import crosshairController from "shared/classes/crosshairController";
 import gun from "shared/extended/gun";
 import hk416_definition from "shared/gunDefinitions/hk416";
+import clientConfig from "shared/local/clientConfig";
 import rappel from "shared/mechanics/rappel";
 import vault from "shared/mechanics/vault";
 import clientExposed from "shared/middleware/clientExposed";
@@ -19,7 +20,7 @@ export default class actionController {
         reload: Enum.KeyCode.R,
 		leanRight: Enum.KeyCode.E,
 		leanLeft: Enum.KeyCode.Q,
-		prone: Enum.KeyCode.Z,
+		prone: Enum.KeyCode.LeftControl,
 		crouch: Enum.KeyCode.C,
 		vault: Enum.KeyCode.Space,
 		rappel: Enum.KeyCode.N
@@ -119,9 +120,13 @@ export default class actionController {
 			this.character.GetPropertyChangedSignal('PrimaryPart').Wait();
 		}
 
+		const clientSettings = new clientConfig({});
+
 		clientExposed.setActionController(this);
 		clientExposed.setCamera(Workspace.CurrentCamera as Camera);
 		clientExposed.setBaseWalkSpeed(12);
+
+		clientExposed.setClientConfig(clientSettings);
 
 		let item = hk416_definition('Gun1')
 

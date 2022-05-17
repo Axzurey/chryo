@@ -5,6 +5,7 @@ do
 	local camera
 	local baseWalkspeed
 	local actionController
+	local clientConfig
 	local function getCamera()
 		if not camera then
 			error("camera has not been set!")
@@ -32,5 +33,15 @@ do
 		actionController = _actionController
 	end
 	_container.setActionController = setActionController
+	local function getClientConfig()
+		local _clientConfig = clientConfig
+		assert(_clientConfig, "clientConfig has not been set!")
+		return clientConfig
+	end
+	_container.getClientConfig = getClientConfig
+	local function setClientConfig(_clientConfig)
+		clientConfig = _clientConfig
+	end
+	_container.setClientConfig = setClientConfig
 end
 return clientExposed

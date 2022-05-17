@@ -3,7 +3,9 @@ local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_incl
 local path = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "path").default
 local item = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base", "item").default
 local paths = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "paths")
-local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
+local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
+local clientExposed = _clientExposed
+local getClientConfig = _clientExposed.getClientConfig
 local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local _utils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils")
 local utils = _utils
@@ -15,6 +17,7 @@ local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
 local HttpService = _services.HttpService
 local Players = _services.Players
 local TweenService = _services.TweenService
+local UserInputService = _services.UserInputService
 local animationCompile = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "animate").default
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
 local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
@@ -416,6 +419,9 @@ do
 		self.cameraCFrame = camera.CFrame
 		self.viewmodel.Parent = camera
 		self.character.Humanoid.WalkSpeed = clientExposed.getBaseWalkSpeed() * (if self.stance == -1 then self.multipliers.speed.prone else (if self.stance == 0 then self.multipliers.speed.crouch else 1))
+		local generalSettings = getClientConfig().settings.general
+		local lerpedADS = mathf.lerp(generalSettings.sensitivity, generalSettings.adsSensitivity, self.values.aimDelta.Value)
+		UserInputService.MouseDeltaSensitivity = lerpedADS
 		if not self.loadedAnimations.idle.IsPlaying then
 			self.loadedAnimations.idle:Play()
 		end

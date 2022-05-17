@@ -7,6 +7,7 @@ local UserInputService = _services.UserInputService
 local Workspace = _services.Workspace
 local crosshairController = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "classes", "crosshairController").default
 local hk416_definition = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunDefinitions", "hk416").default
+local clientConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "local", "clientConfig").default
 local rappel = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "mechanics", "rappel")
 local vault = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "mechanics", "vault")
 local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
@@ -30,7 +31,7 @@ do
 			reload = Enum.KeyCode.R,
 			leanRight = Enum.KeyCode.E,
 			leanLeft = Enum.KeyCode.Q,
-			prone = Enum.KeyCode.Z,
+			prone = Enum.KeyCode.LeftControl,
 			crouch = Enum.KeyCode.C,
 			vault = Enum.KeyCode.Space,
 			rappel = Enum.KeyCode.N,
@@ -110,9 +111,11 @@ do
 		if not self.character.PrimaryPart then
 			self.character:GetPropertyChangedSignal("PrimaryPart"):Wait()
 		end
+		local clientSettings = clientConfig.new({})
 		clientExposed.setActionController(self)
 		clientExposed.setCamera(Workspace.CurrentCamera)
 		clientExposed.setBaseWalkSpeed(12)
+		clientExposed.setClientConfig(clientSettings)
 		local item = hk416_definition("Gun1")
 		self.equippedItem = item
 		RunService:BindToRenderStep("main_render", Enum.RenderPriority.Last.Value, function(dt)
