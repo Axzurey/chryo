@@ -1,8 +1,10 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local tableUtils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils").tableUtils
 local gun = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "extended", "gun").default
-local fireMode = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").fireMode
+local _itemConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "global", "itemConfig")
+local itemConfig = _itemConfig
+local itemClean = _itemConfig.itemClean
+local gunIdentifier = "hk416"
 local function hk416_definition(id)
 	local g = gun.new(id, "ReplicatedStorage//guns//hk416&class=Model", {
 		sight = {
@@ -13,27 +15,9 @@ local function hk416_definition(id)
 	}, {
 		idle = "rbxassetid://9335189959",
 	})
-	g.firerate = {
-		burst2 = 600,
-		auto = 500,
-		burst3 = 600,
-		burst4 = 600,
-		shotgun = 1000,
-		semi = 800,
-	}
-	g.maxAmmo = 9999
-	g.ammo = 9999
-	g.reserveAmmo = 120
-	g.togglableFireModes = { fireMode.auto, fireMode.semi }
-	g.reloadSpeed = 1.5
-	g.recoilRegroupTime = 1.5
-	g.spreadHipfirePenalty = 1.1
-	g.spreadMovementHipfirePenalty = 1.2
-	g.spreadDelta = 1.15
-	g.spreadPopTime = 1.5
-	g.spreadUpPerShot = .25
-	g.maxAllowedSpread = 35
-	g.recoilPattern = tableUtils.toMap({ NumberRange.new(0, 10), NumberRange.new(10, 20), NumberRange.new(20, 31) }, { { Vector3.new(.2, .3, .2), Vector3.new(.7, 1, .2) }, { Vector3.new(.2, .7, .3), Vector3.new(.6, .8, .3) }, { Vector3.new(.7, .9, .2), Vector3.new(.5, .5, .4) } })
+	for p, v in pairs(itemClean(itemConfig.getProperties(gunIdentifier))) do
+		g[p] = v
+	end
 	return g
 end
 return {
