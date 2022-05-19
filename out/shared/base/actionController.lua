@@ -48,6 +48,7 @@ do
 					local gun = self.equippedItem
 					gun:cancelReload()
 					gun:aim(if state == Enum.UserInputState.Begin then true else false)
+					self.crosshairController:toggleVisible(state == Enum.UserInputState.Begin, gun.adsLength * .75)
 				end
 			end,
 			fire = function(state)
@@ -167,6 +168,16 @@ do
 				return alias
 			end
 		end
+	end
+	function actionController:inputIs(input, check)
+		local t = self.keybinds[check].Name
+		if input.UserInputType.Name == t or input.KeyCode.Name == t then
+			return true
+		end
+		return false
+	end
+	function actionController:getKey(keybind)
+		return self.keybinds[keybind]
 	end
 	function actionController:equippedIsAGun(equipped)
 		if equipped then

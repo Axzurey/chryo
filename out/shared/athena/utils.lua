@@ -1,4 +1,6 @@
 -- Compiled with roblox-ts v1.3.3
+local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
+local UserInputService = TS.import(script, TS.getModule(script, "@rbxts", "services")).UserInputService
 local utils = {}
 do
 	local _container = utils
@@ -64,6 +66,19 @@ do
 		_container_1.repeatThisThreadEach = repeatThisThreadEach
 	end
 	_container.ease = ease
+	local peripherals = {}
+	do
+		local _container_1 = peripherals
+		local function isButtonDown(button)
+			if button.EnumType == Enum.KeyCode then
+				return UserInputService:IsKeyDown(button)
+			else
+				return UserInputService:IsMouseButtonPressed(button)
+			end
+		end
+		_container_1.isButtonDown = isButtonDown
+	end
+	_container.peripherals = peripherals
 	local dataTypeUtils = {}
 	do
 		local _container_1 = dataTypeUtils

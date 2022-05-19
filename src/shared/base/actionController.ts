@@ -41,6 +41,7 @@ export default class actionController {
 				let gun = this.equippedItem;
 				gun.cancelReload()
 				gun.aim(state === Enum.UserInputState.Begin? true: false);
+				this.crosshairController.toggleVisible(state === Enum.UserInputState.Begin, gun.adsLength * .75)
 			}
 		},
 		fire: (state) => {
@@ -168,7 +169,7 @@ export default class actionController {
 		})
 	}
 
-	private getKeybind(input: InputObject) {
+	getKeybind(input: InputObject) {
 		for (const [alias, key] of pairs(this.keybinds)) {
 			if (key.Name === input.KeyCode.Name || key.Name === input.UserInputType.Name) {
                 return alias;
@@ -176,7 +177,17 @@ export default class actionController {
 		}
 	}
 
-	private equippedIsAGun(equipped: item | undefined): equipped is gun {
+	inputIs(input: InputObject, check: keyof typeof this.keybinds) {
+		let t = this.keybinds[check].Name
+		if (input.UserInputType.Name === t || input.KeyCode.Name === t) return true;
+		return false;
+	}
+
+	getKey(keybind: keyof typeof this.keybinds) {
+		return this.keybinds[keybind]
+	}
+
+	equippedIsAGun(equipped: item | undefined): equipped is gun {
 		if (equipped) {
 			if (equipped.typeIdentifier === gunwork.itemTypeIdentifier.gun) {
 				return true;

@@ -3,7 +3,7 @@ import item from "shared/base/item";
 import paths from "shared/constants/paths";
 import clientExposed, { getActionController, getClientConfig } from "shared/middleware/clientExposed";
 import gunwork, { fireMode, gunAnimationsConfig, gunAttachmentConfig, sightModel } from "shared/types/gunwork";
-import utils, { later, newThread, random, stringify, tableUtils } from 'shared/athena/utils';
+import utils, { later, newThread, random, tableUtils } from 'shared/athena/utils';
 import { HttpService, Players, TweenService, UserInputService } from "@rbxts/services";
 import animationCompile from "shared/athena/animate";
 import system from "shared/zero/system";

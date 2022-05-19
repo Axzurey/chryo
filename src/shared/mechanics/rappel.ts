@@ -1,5 +1,6 @@
-import { Players, RunService, Workspace } from "@rbxts/services";
+import { Players, RunService, UserInputService, Workspace } from "@rbxts/services";
 import mathf from "shared/athena/mathf";
+import { peripherals } from "shared/athena/utils";
 import { getActionController, getCamera } from "shared/middleware/clientExposed";
 import { moveDirectionFromKeys } from "shared/util/userContext";
 
@@ -53,7 +54,7 @@ namespace rappel {
                     ign.FilterType = Enum.RaycastFilterType.Whitelist;
                     ign.FilterDescendantsInstances = [hit];
 
-                    let result = Workspace.Raycast(charf.Position, charf.LookVector.mul(5), ign);
+                    let result = Workspace.Raycast(charf.Position, cast!.Normal.mul(-5), ign);
 
                     if (!result) {
                         print("no result!!!!!");
@@ -76,8 +77,33 @@ namespace rappel {
                         .mul(new CFrame(nextp));
 
                     //make sure targetcframe lies on the surface of the part!
+
+                    let checkIfStillOnPart = Workspace.Raycast(targetCFrame.Position, cast!.Normal.mul(-5), ignore);
                     
-                    character.SetPrimaryPartCFrame(targetCFrame);
+                    let changeDirection = CFrame.lookAt(charf.Position, targetCFrame.Position).LookVector;
+
+                    let changeMagnitude = (charf.Position.sub(targetCFrame.Position)).Magnitude;
+
+                    let checkObscuring = Workspace.Raycast(charf.Position, changeDirection.mul(changeMagnitude), ignore);
+
+                    let halfCharacterHeight = bounding.Y / 2
+
+                    let checkDownForGround = Workspace.Raycast(charf.Position, new Vector3(0, halfCharacterHeight, 0), ignore);
+
+                    if (!checkDownForGround && !checkObscuring && checkIfStillOnPart && checkIfStillOnPart.Instance === cast!.Instance) {
+                        character.SetPrimaryPartCFrame(targetCFrame);
+                    }
+                    else {
+                        let topBlock = hit.Position.add(hit.Size.div(2)).Y
+                        if (checkDownForGround && peripherals.isButtonDown(controller.getKey('rappel'))) {
+                            //exit down
+                        }
+                        else if (math.abs(topBlock - charf.Position.Y) < 2) {
+                            //exit up
+                        } 
+                        print("they will not be on the wall after this move!")
+                    }
+                    
                 });
             }
             else {

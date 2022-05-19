@@ -1,3 +1,5 @@
+import { UserInputService } from "@rbxts/services";
+
 namespace utils {
 
     export function propertyExistsInObject<c extends any, p extends string, propType>(classlike: c, property: p): classlike is c & propertyExists<p, propType> {
@@ -31,9 +33,16 @@ namespace utils {
         }
     }
 
-	export namespace stringify {
-		
-	}
+	export namespace peripherals {
+        export function isButtonDown(button: Enum.KeyCode | Enum.UserInputType) {
+            if (button.EnumType === Enum.KeyCode) {
+                return UserInputService.IsKeyDown(button as Enum.KeyCode)
+            }
+            else {
+                return UserInputService.IsMouseButtonPressed(button as Enum.UserInputType)
+            }
+        }
+    }
 
     export namespace dataTypeUtils {
         /**
