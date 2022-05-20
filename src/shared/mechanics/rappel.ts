@@ -1,5 +1,5 @@
 import { Players, RunService, UserInputService, Workspace } from "@rbxts/services";
-import mathf from "shared/athena/mathf";
+import mathf, { closestPointOnPart } from "shared/athena/mathf";
 import { peripherals } from "shared/athena/utils";
 import { getActionController, getCamera } from "shared/middleware/clientExposed";
 import { moveDirectionFromKeys } from "shared/util/userContext";
@@ -10,7 +10,9 @@ namespace rappel {
     const rappelVelocity = 10;
 
     const up = new Vector3(0, 1, 0)
-    
+    /**
+     * RAPPEL STILL GOING ON EVEN AFTER EXITING!?
+     */
     export function Rappel(ignore: RaycastParams) {
 
         const controller = getActionController()
@@ -97,9 +99,30 @@ namespace rappel {
                         let topBlock = hit.Position.add(hit.Size.div(2)).Y
                         if (checkDownForGround && peripherals.isButtonDown(controller.getKey('rappel'))) {
                             //exit down
+                            r.Disconnect();
                         }
-                        else if (math.abs(topBlock - charf.Position.Y) < 2) {
+                        else if (math.abs(topBlock - charf.Position.Y) < 2 && peripherals.isButtonDown(controller.getKey('rappel'))) {
                             //exit up
+                            r.Disconnect();
+                            let origincharcf = character.GetPivot();
+                            
+                            let start = origincharcf.Position;
+                            let endTarget = closestPointOnPart(hit, start.add(new Vector3(0, 1000, 0))).add(
+                                cast!.Normal.mul(-8) /**move it 8 studs inwards */
+                            ).add(new Vector3(halfCharacterHeight));
+
+                            let middle = mathf.lerpV3(start, endTarget, .75).add(new Vector3(0, 5, 0));
+
+                            let i = 0;
+                            let tip = RunService.RenderStepped.Connect((dt) => {
+                                i = math.clamp(i + .1 * dt, 0, 1);
+                                if (i === 1) {
+                                    tip.Disconnect();
+                                    controller.rappelling = false;
+                                }
+                                let now = mathf.bezierQuadraticV3(i, start, middle, endTarget);
+                                character.SetPrimaryPartCFrame(new CFrame(now));
+                            })
                         } 
                         print("they will not be on the wall after this move!")
                     }

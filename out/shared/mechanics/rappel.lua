@@ -4,7 +4,9 @@ local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
 local Players = _services.Players
 local RunService = _services.RunService
 local Workspace = _services.Workspace
-local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
+local _mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
+local mathf = _mathf
+local closestPointOnPart = _mathf.closestPointOnPart
 local peripherals = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils").peripherals
 local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
 local getActionController = _clientExposed.getActionController
@@ -16,6 +18,10 @@ do
 	local rappelDistance = 5
 	local rappelVelocity = 10
 	local up = Vector3.new(0, 1, 0)
+	--[[
+		*
+		* RAPPEL STILL GOING ON EVEN AFTER EXITING!?
+	]]
 	local function Rappel(ignore)
 		local controller = getActionController()
 		controller.rappelling = true
@@ -37,7 +43,8 @@ do
 			local hit = cast.Instance
 			local topDiff = topSurface.Y - hitPos.Y
 			if topDiff > 20 then
-				local r = RunService.RenderStepped:Connect(function(dt)
+				local r
+				r = RunService.RenderStepped:Connect(function(dt)
 					local direction = moveDirectionFromKeys()
 					direction = Vector3.new(direction.X, direction.Z, 0)
 					local charf = character:GetPrimaryPartCFrame()
@@ -86,7 +93,33 @@ do
 						local _arg0_2 = hit.Size / 2
 						local topBlock = (_position_4 + _arg0_2).Y
 						if checkDownForGround and peripherals.isButtonDown(controller:getKey("rappel")) then
-						elseif math.abs(topBlock - charf.Position.Y) < 2 then
+							-- exit down
+							r:Disconnect()
+						elseif math.abs(topBlock - charf.Position.Y) < 2 and peripherals.isButtonDown(controller:getKey("rappel")) then
+							-- exit up
+							r:Disconnect()
+							local origincharcf = character:GetPivot()
+							local start = origincharcf.Position
+							local _start = start
+							local _vector3 = Vector3.new(0, 1000, 0)
+							local _exp_4 = closestPointOnPart(hit, _start + _vector3)
+							local _arg0_3 = cast.Normal * (-8)
+							local _vector3_1 = Vector3.new(halfCharacterHeight)
+							local endTarget = _exp_4 + _arg0_3 + _vector3_1
+							local _exp_5 = mathf.lerpV3(start, endTarget, .75)
+							local _vector3_2 = Vector3.new(0, 5, 0)
+							local middle = _exp_5 + _vector3_2
+							local i = 0
+							local tip
+							tip = RunService.RenderStepped:Connect(function(dt)
+								i = math.clamp(i + .1 * dt, 0, 1)
+								if i == 1 then
+									tip:Disconnect()
+									controller.rappelling = false
+								end
+								local now = mathf.bezierQuadraticV3(i, start, middle, endTarget)
+								character:SetPrimaryPartCFrame(CFrame.new(now))
+							end)
 						end
 						print("they will not be on the wall after this move!")
 					end
