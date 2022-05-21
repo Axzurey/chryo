@@ -11,13 +11,13 @@ namespace rappel {
 
     const up = new Vector3(0, 1, 0)
     /**
-     * RAPPEL STILL GOING ON EVEN AFTER EXITING!?
+     * RAPPEL STILL GOING ON EVEN AFTER EXITING!
      */
     export function Rappel(ignore: RaycastParams) {
 
         const controller = getActionController()
 
-        controller.rappelling = true;
+        if (controller.rappelling) return;
 
         let character = Players.LocalPlayer.Character!;
 	
@@ -36,6 +36,8 @@ namespace rappel {
 		let cast = Workspace.Raycast(pos, maxL, ignore); //to ensure that they are actually looking at an object!
 
         if (cast) {
+            controller.rappelling = true;
+
             let topSurface = mathf.closestPointOnPart(cast.Instance, cast.Position.add(up.mul(1000)));
 
             const hitPos = cast.Position;
@@ -43,6 +45,8 @@ namespace rappel {
             const hit = cast.Instance;
 
             let topDiff = topSurface.Y - hitPos.Y;
+
+            let starttime = tick()
             
             if (topDiff > 20) {
                 let r = RunService.RenderStepped.Connect((dt) => {
@@ -92,40 +96,72 @@ namespace rappel {
 
                     let checkDownForGround = Workspace.Raycast(charf.Position, new Vector3(0, halfCharacterHeight, 0), ignore);
 
+                    function exitUp() {
+                        r.Disconnect()
+                        let origincharcf = character.GetPivot();
+                            
+                        let start = origincharcf.Position;
+                        let endTarget = closestPointOnPart(hit, start.add(new Vector3(0, 1000, 0))).add(
+                            cast!.Normal.mul(-4) /**move it 4 studs inwards */
+                        ).add(new Vector3(halfCharacterHeight));
+
+                        let middle = mathf.lerpV3(start, endTarget, .75).add(new Vector3(0, 5, 0));
+
+                        let i = 0;
+                        let tip = RunService.RenderStepped.Connect((dt) => {
+                            i = math.clamp(i + .5 * dt, 0, 1);
+                            if (i === 1) {
+                                tip.Disconnect();
+                                controller.rappelling = false;
+                            }
+                            let now = mathf.bezierQuadraticV3(i, start, middle, endTarget);
+                            character.SetPrimaryPartCFrame(new CFrame(now));
+                        })
+                    }
+
+                    function exitDown() {
+                        r.Disconnect()
+                        let origincharcf = character.GetPivot();
+                            
+                        let start = origincharcf.Position;
+                        let endTarget = closestPointOnPart(hit, start).add(
+                            cast!.Normal.mul(4) /**move it 4 studs outwards */
+                        );
+
+                        let middle = mathf.lerpV3(start, endTarget, .2).add(new Vector3(0, 2, 0));
+
+                        let i = 0;
+                        let tip = RunService.RenderStepped.Connect((dt) => {
+                            i = math.clamp(i + .5 * dt, 0, 1);
+                            if (i === 1) {
+                                tip.Disconnect();
+                                controller.rappelling = false;
+                            }
+                            let now = mathf.bezierQuadraticV3(i, start, middle, endTarget);
+                            character.SetPrimaryPartCFrame(new CFrame(now));
+                        })
+                    }
+                    let origincharcf = character.GetPivot();
+
+                    let s = origincharcf.Position;
+
+                    let topBlock = closestPointOnPart(hit, s.add(new Vector3(0, 1000, 0))).Y
+                    let bottomBlock = closestPointOnPart(hit, s.sub(new Vector3(0, 1000, 0))).Y
+
+                    if (math.abs(topBlock - charf.Position.Y) < 4 && peripherals.isButtonDown(controller.getKey('rappel'))) {
+                        //exit up
+                        exitUp()
+                    }
+                    if (math.abs(bottomBlock - charf.Position.Y) < 4 && peripherals.isButtonDown(controller.getKey('rappel'))) {
+                        if (tick() - starttime > 1) {
+                            exitDown()
+                        }
+                    }
+
                     if (!checkDownForGround && !checkObscuring && checkIfStillOnPart && checkIfStillOnPart.Instance === cast!.Instance) {
                         character.SetPrimaryPartCFrame(targetCFrame);
                     }
-                    else {
-                        let topBlock = hit.Position.add(hit.Size.div(2)).Y
-                        if (checkDownForGround && peripherals.isButtonDown(controller.getKey('rappel'))) {
-                            //exit down
-                            r.Disconnect();
-                        }
-                        else if (math.abs(topBlock - charf.Position.Y) < 2 && peripherals.isButtonDown(controller.getKey('rappel'))) {
-                            //exit up
-                            r.Disconnect();
-                            let origincharcf = character.GetPivot();
-                            
-                            let start = origincharcf.Position;
-                            let endTarget = closestPointOnPart(hit, start.add(new Vector3(0, 1000, 0))).add(
-                                cast!.Normal.mul(-8) /**move it 8 studs inwards */
-                            ).add(new Vector3(halfCharacterHeight));
-
-                            let middle = mathf.lerpV3(start, endTarget, .75).add(new Vector3(0, 5, 0));
-
-                            let i = 0;
-                            let tip = RunService.RenderStepped.Connect((dt) => {
-                                i = math.clamp(i + .1 * dt, 0, 1);
-                                if (i === 1) {
-                                    tip.Disconnect();
-                                    controller.rappelling = false;
-                                }
-                                let now = mathf.bezierQuadraticV3(i, start, middle, endTarget);
-                                character.SetPrimaryPartCFrame(new CFrame(now));
-                            })
-                        } 
-                        print("they will not be on the wall after this move!")
-                    }
+                    
                     
                 });
             }
