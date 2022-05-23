@@ -13,6 +13,12 @@ namespace gunwork {
     export enum itemTypeIdentifier {
         none, gun
     }
+
+    export enum reloadType {
+        shell='shell',
+        bolt='bolt',
+        mag='mag'
+    }
     
     export enum fireMode {
         auto="auto", semi="semi", burst2="burst2", burst3="burst3", burst4="burst4", shotgun="shotgun"
@@ -45,7 +51,8 @@ namespace gunwork {
     }
 
     export interface gunAnimationsConfig {
-        idle: string
+        idle: string,
+        pump?: string
     }
 
     export type basicCharacter = Model & {

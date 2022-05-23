@@ -17,11 +17,42 @@ do
 	local _container = rappel
 	local rappelDistance = 5
 	local rappelVelocity = 10
+	local maxHeightDiff = 20
 	local up = Vector3.new(0, 1, 0)
 	--[[
 		*
 		* RAPPEL STILL GOING ON EVEN AFTER EXITING!
 	]]
+	local function check(ignore)
+		local controller = getActionController()
+		if controller.rappelling then
+			return nil
+		end
+		local character = Players.LocalPlayer.Character
+		local cframe = character:GetPivot()
+		local camera = getCamera()
+		local _, bounding = character:GetBoundingBox()
+		local look = cframe.LookVector
+		local pos = cframe.Position
+		local maxL = look * rappelDistance
+		local cast = Workspace:Raycast(pos, maxL, ignore)
+		if cast then
+			local _fn = mathf
+			local _exp = cast.Instance
+			local _position = cast.Position
+			local _arg0 = up * 1000
+			local topSurface = _fn.closestPointOnPart(_exp, _position + _arg0)
+			local hitPos = cast.Position
+			local topDiff = topSurface.Y - hitPos.Y
+			if topDiff > maxHeightDiff then
+				return true
+			else
+				return false
+			end
+		end
+		return false
+	end
+	_container.check = check
 	local function Rappel(ignore)
 		local controller = getActionController()
 		if controller.rappelling then
@@ -36,7 +67,6 @@ do
 		local maxL = look * rappelDistance
 		local cast = Workspace:Raycast(pos, maxL, ignore)
 		if cast then
-			controller.rappelling = true
 			local _fn = mathf
 			local _exp = cast.Instance
 			local _position = cast.Position
@@ -46,7 +76,8 @@ do
 			local hit = cast.Instance
 			local topDiff = topSurface.Y - hitPos.Y
 			local starttime = tick()
-			if topDiff > 20 then
+			if topDiff > maxHeightDiff then
+				controller.rappelling = true
 				local r
 				r = RunService.RenderStepped:Connect(function(dt)
 					local direction = moveDirectionFromKeys()
@@ -89,7 +120,7 @@ do
 					local _changeMagnitude = changeMagnitude
 					local checkObscuring = _fn_2:Raycast(_exp_3, _changeDirection * _changeMagnitude, ignore)
 					local halfCharacterHeight = bounding.Y / 2
-					local checkDownForGround = Workspace:Raycast(charf.Position, Vector3.new(0, halfCharacterHeight, 0), ignore)
+					local checkDownForGround = Workspace:Raycast(charf.Position, Vector3.new(0, halfCharacterHeight * 2, 0), ignore)
 					local function exitUp()
 						r:Disconnect()
 						local origincharcf = character:GetPivot()

@@ -1,5 +1,5 @@
 import { tableUtils } from "shared/athena/utils";
-import { fireMode } from "shared/types/gunwork";
+import { fireMode, reloadType } from "shared/types/gunwork";
 
 const hk416_config = {
     firerate: {
@@ -31,7 +31,8 @@ const hk416_config = {
         [new Vector3(.2, .3, .2), new Vector3(.7, 1, .2)],
         [new Vector3(.2, .7, .3), new Vector3(.6, .8, .3)],
         [new Vector3(.7, .9, .2), new Vector3(.5, .5, .4)]
-    ])
+    ]),
+    reloadType: reloadType.mag
 }
 
 export = hk416_config;

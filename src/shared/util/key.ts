@@ -10,7 +10,13 @@ interface comboConfig {
 interface holdConfig {
 	key: Enum.KeyCode | Enum.UserInputType
 	cancelOnHoldNotInitiatedAfter?: number
-    length: number
+    length: number,
+}
+
+interface keyUpConfig {
+	key: Enum.KeyCode | Enum.UserInputType,
+	maxLength?: number,
+	onUpdate?: (elapsedTime: number) => void
 }
 
 export enum comboOutcome {
@@ -27,6 +33,37 @@ export enum holdOutcome {
 }
 
 export default abstract class key {
+	//make a function to time for a keyup(key is already pressed, when did they stop?)
+	static waitForKeyUp(config: keyUpConfig) {
+		return new Promise<number>((resolve, reject) => {
+			let target = config.key;
+			let start = tick()
+
+			let c2: RBXScriptConnection | undefined
+			if (config.maxLength) {
+				c2 = RunService.RenderStepped.Connect(() => {
+					if (tick() - start >= config.maxLength!) {
+						c1.Disconnect();
+						c2!.Disconnect()
+						resolve(tick() - start);
+					}
+					else if (config.onUpdate) {
+						config.onUpdate(tick() - start)
+					}
+				})
+			}
+
+			let c1 = UserInputService.InputEnded.Connect((input) => {
+				if (target.EnumType === Enum.KeyCode && input.KeyCode === target ||
+                    target.EnumType === Enum.UserInputType && input.UserInputType === target
+                ) {
+					c1.Disconnect();
+					c2?.Disconnect();
+					resolve(tick() - start);
+				}
+			})
+		})
+	}
 	static keyHold(config: holdConfig) {
 		return new Promise((resolve, reject) => {
             let target = config.key;
@@ -82,8 +119,9 @@ export default abstract class key {
 				if (config.cancelOnChainNotInitiatedAfter && currentIndex === 0 &&
 				 tick() - lastcall > config.cancelOnChainNotInitiatedAfter) {
 					connection.Disconnect();
+					step.Disconnect()
 					reject(comboOutcome.timeout);
-				}//finish this, make it time out lastcall too 
+				}
 			})
 			let connection = UserInputService.InputBegan.Connect((input, gp) => {
 				if (gp) return;

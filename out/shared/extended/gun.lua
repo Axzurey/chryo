@@ -6,7 +6,10 @@ local paths = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "con
 local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
 local clientExposed = _clientExposed
 local getClientConfig = _clientExposed.getClientConfig
-local gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
+local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
+local gunwork = _gunwork
+local fireMode = _gunwork.fireMode
+local reloadType = _gunwork.reloadType
 local _utils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils")
 local utils = _utils
 local later = _utils.later
@@ -65,6 +68,8 @@ do
 		self.proneChanging = false
 		self.wantsToSprint = false
 		self.wantsToAim = false
+		self.lastClickIdUsed = ""
+		self.currentClickId = ""
 		self.cframes = {
 			idle = CFrame.new(),
 			aimOffset = CFrame.new(),
@@ -121,6 +126,7 @@ do
 		self.canSprintWith = true
 		self.togglableFireModes = { gunwork.fireMode.auto, gunwork.fireMode.semi }
 		self.firemodeSwitchCooldown = .75
+		self.reloadType = reloadType.mag
 		self.recoilPattern = {}
 		self.recoilRegroupTime = 1
 		self.penetrationDamageFalloff = 0
@@ -179,9 +185,12 @@ do
 		self.viewmodel = viewmodel
 		self.viewmodel:SetPrimaryPartCFrame(clientExposed.getCamera().CFrame)
 		local idleanim = animationCompile:create(animationIDS.idle):final()
+		local _value = animationIDS.pump
+		local pumpAnim = if _value ~= "" and _value then animationCompile:create(animationIDS.pump):final() else nil
 		self.viewmodel.Parent = clientExposed.getCamera()
 		self.loadedAnimations = {
 			idle = viewmodel.controller.animator:LoadAnimation(idleanim),
+			pump = if pumpAnim then viewmodel.controller.animator:LoadAnimation(pumpAnim) else nil,
 		}
 		if attachments.sight then
 			local sightmodel = path:sure(attachments.sight.path):Clone()
@@ -197,6 +206,16 @@ do
 		utils.instanceUtils.nominalizeAllDescendants(viewmodel)
 		self.viewmodel.Parent = nil
 	end
+	function gun:manualFire()
+		local firemode = self.togglableFireModes[self.currentFiremode + 1]
+		if not firemode then
+			firemode = self.togglableFireModes[1]
+		end
+		if tick() - self.lastFired < 60 / self.firerate[firemode] then
+			return nil
+		end
+		self:fire()
+	end
 	function gun:fire()
 		newThread(function()
 			if self.ammo <= 0 then
@@ -209,7 +228,11 @@ do
 			end
 			self.ammo -= 1
 			self.lastFired = tick()
+			self.lastClickIdUsed = self.currentClickId
 			self.viewmodel.audio.fire:Play()
+			if self.loadedAnimations.pump then
+				self.loadedAnimations.pump:Play()
+			end
 			local controller = clientExposed.getActionController()
 			self.spreadDelta += self.spreadUpPerShot
 			local spread = self.spreadDelta * (1 - self.values.aimDelta.Value * self.spreadHipfirePenalty) * (self.spreadMovementHipfirePenalty * self.character.Humanoid.MoveDirection.Magnitude + 1)
@@ -347,10 +370,10 @@ do
 			if not self.fireButtonDown then
 				return nil
 			end
-			if tick() - self.lastFired < 60 / self.firerate[firemode] then
+			if firemode == fireMode.semi or firemode == fireMode.shotgun then
 				return nil
 			end
-			self:fire()
+			self:manualFire()
 			-- the server will verify firemode separately. fire needs only be called once
 			--[[
 				*

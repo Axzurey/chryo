@@ -1,14 +1,16 @@
-import { Players, RunService, UserInputService, Workspace } from "@rbxts/services";
+import { HttpService, Players, RunService, UserInputService, Workspace } from "@rbxts/services";
 import path from "shared/athena/path";
 import { newThread } from "shared/athena/utils";
 import crosshairController from "shared/classes/crosshairController";
 import gun from "shared/extended/gun";
 import hk416_definition from "shared/gunDefinitions/hk416";
+import m870_definition from "shared/gunDefinitions/m870";
 import clientConfig from "shared/local/clientConfig";
 import rappel from "shared/mechanics/rappel";
 import vault from "shared/mechanics/vault";
 import clientExposed from "shared/middleware/clientExposed";
 import gunwork, { fireMode } from "shared/types/gunwork";
+import key from "shared/util/key";
 import item from "./item";
 
 export default class actionController {
@@ -23,11 +25,13 @@ export default class actionController {
 		prone: Enum.KeyCode.LeftControl,
 		crouch: Enum.KeyCode.C,
 		vault: Enum.KeyCode.Space,
-		rappel: Enum.KeyCode.N
+		rappel: Enum.KeyCode.Space
 	}
 
 	vaulting: boolean = false;
 	rappelling: boolean = false;
+
+	idlePrompts: 0[] = [];
 
 	public crosshairController = new crosshairController();
 
@@ -47,8 +51,24 @@ export default class actionController {
 		fire: (state) => {
 			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
-				gun.cancelReload()
-				gun.fireButtonDown = true;
+
+				let firemode = gun.togglableFireModes[gun.currentFiremode];
+				if (!firemode) {
+					firemode = gun.togglableFireModes[0];
+				}
+
+				if (firemode === fireMode.semi || firemode === fireMode.shotgun) {
+					gun.manualFire();
+				}
+				else {
+					gun.cancelReload();
+					gun.fireButtonDown = true;
+					gun.currentClickId = HttpService.GenerateGUID();
+				}
+
+				
+
+				
 			}
 			else if (this.ending(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
@@ -94,10 +114,28 @@ export default class actionController {
 				vault.Vault(ignore)
 			}
 		},
-		rappel: (state) => {
+		rappel: async (state) => {
 			if (this.starting(state)) {
+
 				let ignore = new RaycastParams();
 				ignore.FilterDescendantsInstances = [clientExposed.getCamera(), Players.LocalPlayer.Character!];
+
+				if (!rappel.check(ignore)) return; //check if they can even rappel
+				
+				this.idlePrompts.push(0); //make them unable to move
+
+				let hold = await key.waitForKeyUp({
+					key: this.getKey('rappel'),
+					maxLength: 1,
+					onUpdate: (elapsedTime) => {
+						//update a gui or smth
+					}
+				});
+
+				this.idlePrompts.pop(); //just remove an item from it.
+
+				if (hold < 1) return;
+				
 				rappel.Rappel(ignore);
 			}
 		}
@@ -129,7 +167,7 @@ export default class actionController {
 
 		clientExposed.setClientConfig(clientSettings);
 
-		let item = hk416_definition('Gun1')
+		let item = m870_definition('gun1');
 
 		this.equippedItem = item;
 
@@ -155,26 +193,36 @@ export default class actionController {
 		
 		let mainInputStart = UserInputService.InputBegan.Connect((input, gp) => {
 			if (gp) return;
-			let key = this.getKeybind(input);
-			if (key) {
-				this.actionMap[key](input.UserInputState);
+			let keys = this.getKeybinds(input);
+			if (keys.size() > 0) {
+				keys.forEach((key) => {
+					newThread(() => {
+						this.actionMap[key](input.UserInputState);
+					})
+				})
 			}
 		})
 
 		let mainInputEnd = UserInputService.InputEnded.Connect((input) => {
-			let key = this.getKeybind(input);
-			if (key) {
-				this.actionMap[key](input.UserInputState);
+			let keys = this.getKeybinds(input);
+			if (keys.size() > 0) {
+				keys.forEach((key) => {
+					newThread(() => {
+						this.actionMap[key](input.UserInputState);
+					})
+				})
 			}
 		})
 	}
 
-	getKeybind(input: InputObject) {
+	getKeybinds(input: InputObject) {
+		let g: (keyof typeof this.keybinds)[] = []
 		for (const [alias, key] of pairs(this.keybinds)) {
 			if (key.Name === input.KeyCode.Name || key.Name === input.UserInputType.Name) {
-                return alias;
+                g.push(alias);
             }
 		}
+		return g;
 	}
 
 	inputIs(input: InputObject, check: keyof typeof this.keybinds) {

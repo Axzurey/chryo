@@ -6,9 +6,7 @@ local RunService = _services.RunService
 local Workspace = _services.Workspace
 local interpolate = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "interpolations").interpolate
 local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
-local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
-local getActionController = _clientExposed.getActionController
-local getCamera = _clientExposed.getCamera
+local getActionController = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed").getActionController
 local vault = {}
 do
 	local _container = vault
@@ -16,10 +14,10 @@ do
 	local characterHeight = 10
 	local normalUp = Vector3.new(0, 1, 0)
 	local inset = 2
+	local maxVaultableHeight = 5
 	local function Vault(ignore)
 		local character = Players.LocalPlayer.Character
 		local cframe = character:GetPivot()
-		local camera = getCamera()
 		local _, bounding = character:GetBoundingBox()
 		local look = cframe.LookVector
 		local pos = cframe.Position
@@ -27,19 +25,26 @@ do
 		local cast = Workspace:Raycast(pos, maxL, ignore)
 		local controller = getActionController()
 		if cast then
-			-- next check how tall the object is and if it is at a vaultable height!
+			-- following 3 lines check if the top of the object is a small enough distance to vault
+			local _fn = mathf
+			local _exp = cast.Instance
+			local _position = cast.Position
+			local _vector3 = Vector3.new(0, 100, 0)
+			local top = _fn.closestPointOnPart(_exp, _position + _vector3)
+			local _position_1 = cast.Position
+			local _top = top
+			local distanceToTop = (_position_1 - _top).Magnitude
+			if distanceToTop > maxVaultableHeight then
+				print("too tall a height")
+				return nil
+			end
 			local _filterDescendantsInstances = ignore.FilterDescendantsInstances
 			local _instance = cast.Instance
 			table.insert(_filterDescendantsInstances, _instance)
 			controller.vaulting = true
 			local _pos = pos
-			local _position = cast.Position
-			local distance = (_pos - _position).Magnitude
-			local _fn = mathf
-			local _exp = cast.Instance
-			local _position_1 = cast.Position
-			local _vector3 = Vector3.new(0, 100, 0)
-			local top = _fn.closestPointOnPart(_exp, _position_1 + _vector3)
+			local _position_2 = cast.Position
+			local distance = (_pos - _position_2).Magnitude
 			local up = Workspace:Raycast(top, normalUp * characterHeight, ignore)
 			if up then
 				print("too small a gap to vault!")
@@ -60,11 +65,11 @@ do
 				_arg0(_v, _k - 1, _exp_1)
 			end
 			local p0 = pos
-			local _top = top
+			local _top_1 = top
 			local _look = look
 			local _arg0_1 = inset + distance
 			local _vector3_1 = Vector3.new(0, bounding.Y / 2 + 1, 0)
-			local p2 = _top + (_look * _arg0_1) + _vector3_1
+			local p2 = _top_1 + (_look * _arg0_1) + _vector3_1
 			local _exp_2 = mathf.lerpV3(p0, p2, .25)
 			local _vector3_2 = Vector3.new(0, 2, 0)
 			local p1 = _exp_2 + _vector3_2

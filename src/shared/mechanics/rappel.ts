@@ -9,10 +9,53 @@ namespace rappel {
 
     const rappelVelocity = 10;
 
+    const maxHeightDiff = 20;
+
     const up = new Vector3(0, 1, 0)
     /**
      * RAPPEL STILL GOING ON EVEN AFTER EXITING!
      */
+
+    export function check(ignore: RaycastParams) {
+        const controller = getActionController()
+
+        if (controller.rappelling) return;
+
+        let character = Players.LocalPlayer.Character!;
+	
+		let cframe = character.GetPivot();
+
+		let camera = getCamera();
+
+		let [_, bounding] = character.GetBoundingBox();
+
+		let look = cframe.LookVector;
+
+		let pos = cframe.Position;
+
+		let maxL = look.mul(rappelDistance);
+
+		let cast = Workspace.Raycast(pos, maxL, ignore); //to ensure that they are actually looking at an object!
+
+        if (cast) {
+
+            let topSurface = mathf.closestPointOnPart(cast.Instance, cast.Position.add(up.mul(1000)));
+
+            const hitPos = cast.Position;
+
+            let topDiff = topSurface.Y - hitPos.Y;
+            
+            if (topDiff > maxHeightDiff) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        return false;
+        
+    }
     export function Rappel(ignore: RaycastParams) {
 
         const controller = getActionController()
@@ -36,7 +79,6 @@ namespace rappel {
 		let cast = Workspace.Raycast(pos, maxL, ignore); //to ensure that they are actually looking at an object!
 
         if (cast) {
-            controller.rappelling = true;
 
             let topSurface = mathf.closestPointOnPart(cast.Instance, cast.Position.add(up.mul(1000)));
 
@@ -48,7 +90,10 @@ namespace rappel {
 
             let starttime = tick()
             
-            if (topDiff > 20) {
+            if (topDiff > maxHeightDiff) {
+
+                controller.rappelling = true;
+
                 let r = RunService.RenderStepped.Connect((dt) => {
 
                     let direction = moveDirectionFromKeys();
@@ -94,7 +139,7 @@ namespace rappel {
 
                     let halfCharacterHeight = bounding.Y / 2
 
-                    let checkDownForGround = Workspace.Raycast(charf.Position, new Vector3(0, halfCharacterHeight, 0), ignore);
+                    let checkDownForGround = Workspace.Raycast(charf.Position, new Vector3(0, halfCharacterHeight * 2, 0), ignore);
 
                     function exitUp() {
                         r.Disconnect()

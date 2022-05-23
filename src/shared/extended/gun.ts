@@ -2,7 +2,7 @@ import path from "shared/athena/path";
 import item from "shared/base/item";
 import paths from "shared/constants/paths";
 import clientExposed, { getActionController, getClientConfig } from "shared/middleware/clientExposed";
-import gunwork, { fireMode, gunAnimationsConfig, gunAttachmentConfig, sightModel } from "shared/types/gunwork";
+import gunwork, { fireMode, gunAnimationsConfig, gunAttachmentConfig, reloadType, sightModel } from "shared/types/gunwork";
 import utils, { later, newThread, random, tableUtils } from 'shared/athena/utils';
 import { HttpService, Players, TweenService, UserInputService } from "@rbxts/services";
 import animationCompile from "shared/athena/animate";
@@ -59,6 +59,9 @@ export default class gun extends item {
 	wantsToSprint: boolean = false;
 	wantsToAim: boolean = false;
 
+	lastClickIdUsed: string = '';
+	currentClickId: string = '';
+
 	cframes = {
 		idle: new CFrame(),
 		aimOffset: new CFrame(),
@@ -67,7 +70,7 @@ export default class gun extends item {
 		viewmodelBob: new CFrame(),
 	}
 
-	loadedAnimations: {idle: AnimationTrack}
+	loadedAnimations: {idle: AnimationTrack, pump?: AnimationTrack}
 
 	staticOffsets = {
 		leanRight: CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-25)),
@@ -121,6 +124,7 @@ export default class gun extends item {
 
 	togglableFireModes: gunwork.fireMode[] = [gunwork.fireMode.auto, gunwork.fireMode.semi];
 	firemodeSwitchCooldown: number = .75;
+	reloadType: reloadType = reloadType.mag;
 
 	recoilPattern: Map<NumberRange, [Vector3, Vector3]> = new Map();
 	recoilRegroupTime: number = 1;
@@ -240,10 +244,13 @@ export default class gun extends item {
 
 		let idleanim = animationCompile.create(animationIDS.idle).final();
 
+		let pumpAnim = animationIDS.pump? animationCompile.create(animationIDS.pump!).final(): undefined
+
 		this.viewmodel.Parent = clientExposed.getCamera()
 
 		this.loadedAnimations = {
-			idle: viewmodel.controller.animator.LoadAnimation(idleanim)
+			idle: viewmodel.controller.animator.LoadAnimation(idleanim),
+			pump: pumpAnim? viewmodel.controller.animator.LoadAnimation(pumpAnim): undefined
 		}
 
 		if (attachments.sight) {
@@ -265,6 +272,17 @@ export default class gun extends item {
 		this.viewmodel.Parent = undefined;
 
 	}
+	manualFire() {
+
+		let firemode = this.togglableFireModes[this.currentFiremode];
+		if (!firemode) {
+			firemode = this.togglableFireModes[0];
+		}
+
+		if (tick() - this.lastFired < 60 / this.firerate[firemode]) return;
+
+		this.fire();
+	}
 	fire() {
 		newThread(() => {
 			if (this.ammo <= 0) {this.startReload(); return;}
@@ -275,7 +293,13 @@ export default class gun extends item {
 			this.ammo --;
 			this.lastFired = tick();
 
+			this.lastClickIdUsed = this.currentClickId;
+
 			this.viewmodel.audio.fire.Play()
+
+			if (this.loadedAnimations.pump) {
+				this.loadedAnimations.pump.Play()
+			}
 
 			let controller = clientExposed.getActionController();
 
@@ -442,8 +466,10 @@ export default class gun extends item {
 
 		newThread(() => {
 			if (!this.fireButtonDown) return;
-			if (tick() - this.lastFired < 60 / this.firerate[firemode]) return;
-			this.fire()
+
+			if (firemode === fireMode.semi || firemode === fireMode.shotgun) return //these will be handled separately
+
+			this.manualFire()
 			//the server will verify firemode separately. fire needs only be called once
 			/**
 			switch (firemode) {

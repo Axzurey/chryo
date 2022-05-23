@@ -36,6 +36,36 @@ do
 	key = {}
 	function key:constructor()
 	end
+	function key:waitForKeyUp(config)
+		return TS.Promise.new(function(resolve, reject)
+			local target = config.key
+			local start = tick()
+			local c2
+			local c1
+			local _value = config.maxLength
+			if _value ~= 0 and (_value == _value and _value) then
+				c2 = RunService.RenderStepped:Connect(function()
+					if tick() - start >= config.maxLength then
+						c1:Disconnect()
+						c2:Disconnect()
+						resolve(tick() - start)
+					elseif config.onUpdate then
+						config.onUpdate(tick() - start)
+					end
+				end)
+			end
+			c1 = UserInputService.InputEnded:Connect(function(input)
+				if target.EnumType == Enum.KeyCode and input.KeyCode == target or target.EnumType == Enum.UserInputType and input.UserInputType == target then
+					c1:Disconnect()
+					local _result = c2
+					if _result ~= nil then
+						_result:Disconnect()
+					end
+					resolve(tick() - start)
+				end
+			end)
+		end)
+	end
 	function key:keyHold(config)
 		return TS.Promise.new(function(resolve, reject)
 			local target = config.key
@@ -89,14 +119,15 @@ do
 		return TS.Promise.new(function(resolve, reject)
 			local lastcall = tick()
 			local currentIndex = 0
-			local connection
-			local step = RunService.RenderStepped:Connect(function()
+			local connection, step
+			step = RunService.RenderStepped:Connect(function()
 				local _condition = config.cancelOnChainNotInitiatedAfter
 				if _condition ~= 0 and (_condition == _condition and _condition) then
 					_condition = currentIndex == 0 and tick() - lastcall > config.cancelOnChainNotInitiatedAfter
 				end
 				if _condition ~= 0 and (_condition == _condition and _condition) then
 					connection:Disconnect()
+					step:Disconnect()
 					reject(comboOutcome.timeout)
 				end
 			end)

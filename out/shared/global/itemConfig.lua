@@ -2,12 +2,14 @@
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local hk416_config = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "itemConfig", "hk416")
 local holographic_config = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "itemConfig", "holographic")
+local m870_config = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "itemConfig", "m870")
 local itemConfig = {}
 do
 	local _container = itemConfig
 	local gunData = {
 		holographic = holographic_config,
 		hk416 = hk416_config,
+		m870 = m870_config,
 	}
 	local cleanables = { "path" }
 	local function getItemConfig(itemName, property)

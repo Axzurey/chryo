@@ -1,10 +1,12 @@
 import hk416_config from "shared/itemConfig/hk416";
 import holographic_config from "shared/itemConfig/holographic";
+import m870_config from "shared/itemConfig/m870";
 
 namespace itemConfig {
     const gunData = {
         holographic: holographic_config,
-        hk416: hk416_config
+        hk416: hk416_config,
+        m870: m870_config
     };
 
     const cleanables = ['path'] as const

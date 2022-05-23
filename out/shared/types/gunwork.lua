@@ -28,6 +28,20 @@ do
 		_inverse[1] = "gun"
 	end
 	_container.itemTypeIdentifier = itemTypeIdentifier
+	local reloadType
+	do
+		local _inverse = {}
+		reloadType = setmetatable({}, {
+			__index = _inverse,
+		})
+		reloadType.shell = "shell"
+		_inverse.shell = "shell"
+		reloadType.bolt = "bolt"
+		_inverse.bolt = "bolt"
+		reloadType.mag = "mag"
+		_inverse.mag = "mag"
+	end
+	_container.reloadType = reloadType
 	local fireMode
 	do
 		local _inverse = {}

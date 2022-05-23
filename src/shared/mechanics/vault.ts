@@ -12,13 +12,13 @@ namespace vault {
 	const normalUp = new Vector3(0, 1, 0);
 
 	const inset = 2;
+
+	const maxVaultableHeight = 5;
 	
 	export function Vault(ignore: RaycastParams) {
 		let character = Players.LocalPlayer.Character!;
 	
 		let cframe = character.GetPivot();
-
-		let camera = getCamera();
 
 		let [_, bounding] = character.GetBoundingBox();
 
@@ -30,23 +30,28 @@ namespace vault {
 
 		let cast = Workspace.Raycast(pos, maxL, ignore); //to ensure that they are actually looking at an object!
 
-		const controller = getActionController()
+		const controller = getActionController();
 
 		if (cast) {
-			//next check how tall the object is and if it is at a vaultable height!
+
+			//following 3 lines check if the top of the object is a small enough distance to vault
+			let top = mathf.closestPointOnPart(cast.Instance, cast.Position.add(new Vector3(0, 100, 0)));
+
+			let distanceToTop = (cast.Position.sub(top)).Magnitude;
+
+			if (distanceToTop > maxVaultableHeight) {print("too tall a height"); return;};
+
 			ignore.FilterDescendantsInstances.push(cast.Instance);
 
 			controller.vaulting = true;
 
 			let distance = (pos.sub(cast.Position)).Magnitude;
 
-			let top = mathf.closestPointOnPart(cast.Instance, cast.Position.add(new Vector3(0, 100, 0)));
-
 			let up = Workspace.Raycast(top, normalUp.mul(characterHeight), ignore); //to ensure that nothing above is obstructing this!
 
 			if (up) {print('too small a gap to vault!'); return;};
 
-			let changed: Map<BasePart, boolean> = new Map()
+			let changed: Map<BasePart, boolean> = new Map();
 
 			character.GetChildren().forEach((v) => {
 				if (!v.IsA('BasePart')) return;
