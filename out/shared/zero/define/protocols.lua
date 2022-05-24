@@ -21,6 +21,9 @@ local protocols = {
 	fireContext = {
 		protocol = remoteProtocol.new("item_fire_context", { t.Instance, t.string, t.CFrame }),
 	},
+	fireMultiContext = {
+		protocol = remoteProtocol.new("item_fireMulti_context", { t.Instance, t.string, t.array(t.CFrame) }),
+	},
 	nextFireModeContext = {
 		protocol = remoteProtocol.new("next_fire_mode_context", { t.Instance, t.string }),
 	},

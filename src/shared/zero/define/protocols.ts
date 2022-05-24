@@ -21,6 +21,10 @@ const protocols = {
 		protocol: new remoteProtocol<(player: Player, itemId: string, cameraCFrame: CFrame) => void, () => void>('item_fire_context', 
         [t.Instance, t.string, t.CFrame]),
 	},
+	fireMultiContext: {
+		protocol: new remoteProtocol<(player: Player, itemId: string, directions: CFrame[]) => void, () => void>('item_fireMulti_context',
+		[t.Instance, t.string, t.array(t.CFrame)])
+	},
 	nextFireModeContext: {
 		protocol: new remoteProtocol<(player: Player, itemId: string) => void, () => void>('next_fire_mode_context', 
         [t.Instance, t.string]),

@@ -111,6 +111,15 @@ export default class gun extends item {
 		shotgun: 0
 	}
 
+	bulletsAShot: Record<fireMode, number> = {
+		[fireMode.auto]: 1,
+		[fireMode.semi]: 1,
+		[fireMode.burst2]: 2,
+		[fireMode.burst3]: 3,
+		[fireMode.burst4]: 4,
+		[fireMode.shotgun]: 8,
+	}
+
 	reloadSpeed: number = 0;
 	penetration: number = 0;
 
@@ -316,17 +325,51 @@ export default class gun extends item {
 				this.spreadDelta -= this.spreadUpPerShot;
 			})
 
-			const fireCFrame = this.cameraCFrame;
+			let firemode = this.togglableFireModes[this.currentFiremode];
+			if (!firemode) {
+				firemode = this.togglableFireModes[0];
+			}
 
-			const spreadDirection = controller.crosshairController.getSpreadDirection(this.camera);
+			const cases = {
+				[fireMode.shotgun]: () => {
+					const fireCFrame = this.cameraCFrame;
 
-			let newFireCFrame = CFrame.lookAt(fireCFrame.Position, 
-				fireCFrame.Position.add(spreadDirection));
-				
+					let cframes: CFrame[] = [];
 
-			controller.crosshairController.pushRecoil(spread, this.recoilRegroupTime);
+					for (let i = 0; i < this.bulletsAShot.shotgun; i++) {
+						const spreadDirection = controller.crosshairController.getSpreadDirection(this.camera!);
+		
+						let newFireCFrame = CFrame.lookAt(fireCFrame.Position, 
+							fireCFrame.Position.add(spreadDirection));
 
-			system.remote.client.fireServer('fireContext', this.serverItemIdentification, newFireCFrame);
+						cframes.push(newFireCFrame);
+
+						new tracer(effectOrigin, spreadDirection, 1.5, this.tracerColor);
+					}
+						
+		
+					controller.crosshairController.pushRecoil(spread, this.recoilRegroupTime);
+		
+					system.remote.client.fireServer('fireMultiContext', this.serverItemIdentification, cframes);
+				},
+				[fireMode.auto]: () => {
+					const fireCFrame = this.cameraCFrame;
+
+					const spreadDirection = controller.crosshairController.getSpreadDirection(this.camera!);
+		
+					let newFireCFrame = CFrame.lookAt(fireCFrame.Position, 
+						fireCFrame.Position.add(spreadDirection));
+
+					new tracer(effectOrigin, spreadDirection, 1.5, this.tracerColor);
+
+					controller.crosshairController.pushRecoil(spread, this.recoilRegroupTime);
+		
+					system.remote.client.fireServer('fireContext', this.serverItemIdentification, newFireCFrame);
+				}
+			}
+
+			//cases[firemode]()
+			
 
 			let t = tick()
 
@@ -353,8 +396,6 @@ export default class gun extends item {
 			});
 
 			let effectOrigin = this.viewmodel.barrel.muzzle.WorldPosition;
-
-			new tracer(effectOrigin, spreadDirection, 1.5, this.tracerColor);
 		})
 	}
 	startReload() {

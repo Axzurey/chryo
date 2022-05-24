@@ -116,6 +116,14 @@ do
 			burst4 = 0,
 			shotgun = 0,
 		}
+		self.bulletsAShot = {
+			[fireMode.auto] = 1,
+			[fireMode.semi] = 1,
+			[fireMode.burst2] = 2,
+			[fireMode.burst3] = 3,
+			[fireMode.burst4] = 4,
+			[fireMode.shotgun] = 8,
+		}
 		self.reloadSpeed = 0
 		self.penetration = 0
 		self.bodyDamage = 0
@@ -240,11 +248,48 @@ do
 			later(self.spreadPopTime, function()
 				self.spreadDelta -= self.spreadUpPerShot
 			end)
-			local fireCFrame = self.cameraCFrame
-			local spreadDirection = controller.crosshairController:getSpreadDirection(self.camera)
-			local newFireCFrame = CFrame.lookAt(fireCFrame.Position, fireCFrame.Position + spreadDirection)
-			controller.crosshairController:pushRecoil(spread, self.recoilRegroupTime)
-			system.remote.client.fireServer("fireContext", self.serverItemIdentification, newFireCFrame)
+			local firemode = self.togglableFireModes[self.currentFiremode + 1]
+			if not firemode then
+				firemode = self.togglableFireModes[1]
+			end
+			local effectOrigin
+			local cases = {
+				[fireMode.shotgun] = function()
+					local fireCFrame = self.cameraCFrame
+					local cframes = {}
+					do
+						local i = 0
+						local _shouldIncrement = false
+						while true do
+							if _shouldIncrement then
+								i += 1
+							else
+								_shouldIncrement = true
+							end
+							if not (i < self.bulletsAShot.shotgun) then
+								break
+							end
+							local spreadDirection = controller.crosshairController:getSpreadDirection(self.camera)
+							local newFireCFrame = CFrame.lookAt(fireCFrame.Position, fireCFrame.Position + spreadDirection)
+							local _cframes = cframes
+							local _newFireCFrame = newFireCFrame
+							table.insert(_cframes, _newFireCFrame)
+							tracer.new(effectOrigin, spreadDirection, 1.5, self.tracerColor)
+						end
+					end
+					controller.crosshairController:pushRecoil(spread, self.recoilRegroupTime)
+					system.remote.client.fireServer("fireMultiContext", self.serverItemIdentification, cframes)
+				end,
+				[fireMode.auto] = function()
+					local fireCFrame = self.cameraCFrame
+					local spreadDirection = controller.crosshairController:getSpreadDirection(self.camera)
+					local newFireCFrame = CFrame.lookAt(fireCFrame.Position, fireCFrame.Position + spreadDirection)
+					tracer.new(effectOrigin, spreadDirection, 1.5, self.tracerColor)
+					controller.crosshairController:pushRecoil(spread, self.recoilRegroupTime)
+					system.remote.client.fireServer("fireContext", self.serverItemIdentification, newFireCFrame)
+				end,
+			}
+			-- cases[firemode]()
 			local t = tick()
 			self.lastFired = t
 			local max = tableUtils.rangeUpperClamp(self.recoilPattern)
@@ -261,8 +306,7 @@ do
 				end
 				self.currentRecoilIndex -= 1
 			end)
-			local effectOrigin = self.viewmodel.barrel.muzzle.WorldPosition
-			tracer.new(effectOrigin, spreadDirection, 1.5, self.tracerColor)
+			effectOrigin = self.viewmodel.barrel.muzzle.WorldPosition
 		end)
 	end
 	function gun:startReload()
