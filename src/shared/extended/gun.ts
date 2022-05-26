@@ -111,6 +111,8 @@ export default class gun extends item {
 		shotgun: 0
 	}
 
+	unaimAfterShot: boolean = false;
+
 	bulletsAShot: Record<fireMode, number> = {
 		[fireMode.auto]: 1,
 		[fireMode.semi]: 1,
@@ -306,10 +308,6 @@ export default class gun extends item {
 
 			this.viewmodel.audio.fire.Play()
 
-			if (this.loadedAnimations.pump) {
-				this.loadedAnimations.pump.Play()
-			}
-
 			let controller = clientExposed.getActionController();
 
 			this.spreadDelta += this.spreadUpPerShot;
@@ -329,6 +327,8 @@ export default class gun extends item {
 			if (!firemode) {
 				firemode = this.togglableFireModes[0];
 			}
+
+			let effectOrigin = this.viewmodel.barrel.muzzle.WorldPosition;
 
 			const cases = {
 				[fireMode.shotgun]: () => {
@@ -365,11 +365,36 @@ export default class gun extends item {
 					controller.crosshairController.pushRecoil(spread, this.recoilRegroupTime);
 		
 					system.remote.client.fireServer('fireContext', this.serverItemIdentification, newFireCFrame);
+				},
+				[fireMode.semi]: () => {
+					cases[fireMode.auto]
+				},
+				[fireMode.burst2]: () => {
+					cases[fireMode.auto]
+				},
+				[fireMode.burst3]: () => {
+					cases[fireMode.auto]
+				},
+				[fireMode.burst4]: () => {
+					cases[fireMode.auto]
 				}
 			}
 
-			//cases[firemode]()
-			
+			if (this.unaimAfterShot) {
+				getActionController().actionMap.aim(Enum.UserInputState.End);
+			}
+
+			if (this.loadedAnimations.pump) {
+				this.loadedAnimations.pump.Play()
+				this.loadedAnimations.pump.GetMarkerReachedSignal('boltForward').Connect(() => {
+					this.viewmodel.audio.boltforward.Play()
+				})
+				this.loadedAnimations.pump.GetMarkerReachedSignal('boltBackward').Connect(() => {
+					this.viewmodel.audio.boltback.Play()
+				})
+			}
+
+			cases[firemode]()
 
 			let t = tick()
 
@@ -394,8 +419,6 @@ export default class gun extends item {
 				if (this.lastFired !== t) return;
 				this.currentRecoilIndex --;
 			});
-
-			let effectOrigin = this.viewmodel.barrel.muzzle.WorldPosition;
 		})
 	}
 	startReload() {

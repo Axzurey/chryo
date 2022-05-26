@@ -73,10 +73,10 @@ namespace gunwork {
         sightNode: BasePart,
         audio: Folder & {
             boltback: Sound,
-            boldforward: Sound,
+            boltforward: Sound,
             fire: Sound,
             magin: Sound,
-            magout: Sound
+            magout: Sound,
         }
     }
 }

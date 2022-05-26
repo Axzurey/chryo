@@ -10,7 +10,7 @@ local m870_config = {
 		auto = 0,
 		burst3 = 0,
 		burst4 = 0,
-		shotgun = 50,
+		shotgun = 75,
 		semi = 0,
 	},
 	adsLength = .5,
@@ -26,7 +26,8 @@ local m870_config = {
 	spreadPopTime = 1.5,
 	spreadUpPerShot = .25,
 	maxAllowedSpread = 35,
-	recoilPattern = tableUtils.toMap({ NumberRange.new(0, 90) }, { { Vector3.new(.4, .5, .4), Vector3.new(.8, .8, .6) } }),
+	recoilPattern = tableUtils.toMap({ NumberRange.new(0, 90) }, { { Vector3.new(.4, .5, -.4 * 5), Vector3.new(.8, .8, -.6 * 5) } }),
 	reloadType = reloadType.shell,
+	unaimAfterShot = true,
 }
 return m870_config

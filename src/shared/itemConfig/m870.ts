@@ -7,7 +7,7 @@ const m870_config = {
         auto: 0,
         burst3: 0,
         burst4: 0,
-        shotgun: 50,
+        shotgun: 75,
         semi: 0
     },
     adsLength: .5,
@@ -26,9 +26,10 @@ const m870_config = {
     recoilPattern: tableUtils.toMap([
         new NumberRange(0, 90),
     ], [
-        [new Vector3(.4, .5, .4), new Vector3(.8, .8, .6)],
+        [new Vector3(.4, .5, -.4 * 5), new Vector3(.8, .8, -.6 * 5)],
     ]),
-    reloadType: reloadType.shell
+    reloadType: reloadType.shell,
+    unaimAfterShot: true
 }
 
 export = m870_config;

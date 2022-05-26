@@ -5,6 +5,7 @@ local item = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base
 local paths = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "paths")
 local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
 local clientExposed = _clientExposed
+local getActionController = _clientExposed.getActionController
 local getClientConfig = _clientExposed.getClientConfig
 local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local gunwork = _gunwork
@@ -116,6 +117,7 @@ do
 			burst4 = 0,
 			shotgun = 0,
 		}
+		self.unaimAfterShot = false
 		self.bulletsAShot = {
 			[fireMode.auto] = 1,
 			[fireMode.semi] = 1,
@@ -238,9 +240,6 @@ do
 			self.lastFired = tick()
 			self.lastClickIdUsed = self.currentClickId
 			self.viewmodel.audio.fire:Play()
-			if self.loadedAnimations.pump then
-				self.loadedAnimations.pump:Play()
-			end
 			local controller = clientExposed.getActionController()
 			self.spreadDelta += self.spreadUpPerShot
 			local spread = self.spreadDelta * (1 - self.values.aimDelta.Value * self.spreadHipfirePenalty) * (self.spreadMovementHipfirePenalty * self.character.Humanoid.MoveDirection.Magnitude + 1)
@@ -252,8 +251,9 @@ do
 			if not firemode then
 				firemode = self.togglableFireModes[1]
 			end
-			local effectOrigin
-			local cases = {
+			local effectOrigin = self.viewmodel.barrel.muzzle.WorldPosition
+			local cases
+			cases = {
 				[fireMode.shotgun] = function()
 					local fireCFrame = self.cameraCFrame
 					local cframes = {}
@@ -288,8 +288,32 @@ do
 					controller.crosshairController:pushRecoil(spread, self.recoilRegroupTime)
 					system.remote.client.fireServer("fireContext", self.serverItemIdentification, newFireCFrame)
 				end,
+				[fireMode.semi] = function()
+					local _ = cases[fireMode.auto]
+				end,
+				[fireMode.burst2] = function()
+					local _ = cases[fireMode.auto]
+				end,
+				[fireMode.burst3] = function()
+					local _ = cases[fireMode.auto]
+				end,
+				[fireMode.burst4] = function()
+					local _ = cases[fireMode.auto]
+				end,
 			}
-			-- cases[firemode]()
+			if self.unaimAfterShot then
+				getActionController().actionMap.aim(Enum.UserInputState.End)
+			end
+			if self.loadedAnimations.pump then
+				self.loadedAnimations.pump:Play()
+				self.loadedAnimations.pump:GetMarkerReachedSignal("boltForward"):Connect(function()
+					self.viewmodel.audio.boltforward:Play()
+				end)
+				self.loadedAnimations.pump:GetMarkerReachedSignal("boltBackward"):Connect(function()
+					self.viewmodel.audio.boltback:Play()
+				end)
+			end
+			cases[firemode]()
 			local t = tick()
 			self.lastFired = t
 			local max = tableUtils.rangeUpperClamp(self.recoilPattern)
@@ -306,7 +330,6 @@ do
 				end
 				self.currentRecoilIndex -= 1
 			end)
-			effectOrigin = self.viewmodel.barrel.muzzle.WorldPosition
 		end)
 	end
 	function gun:startReload()
