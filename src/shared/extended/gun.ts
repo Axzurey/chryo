@@ -47,6 +47,7 @@ export default class gun extends item {
 	spreadDelta: number = 0;
 
 	sprinting: boolean = false;
+	togglingAim: boolean = false;
 	aiming: boolean = false;
 	reloading: boolean = false;
 	stance: -1 | 0 | 1 = 1; //standing = 1; crouching = 0; prone = -1;
@@ -381,7 +382,13 @@ export default class gun extends item {
 			}
 
 			if (this.unaimAfterShot) {
-				getActionController().actionMap.aim(Enum.UserInputState.End);
+				controller.actionMap.aim(Enum.UserInputState.End);
+				later(60 / this.firerate[firemode], () => {
+					if (utils.peripherals.isButtonDown(controller.getKey('aim')) && !this.togglingAim) {
+						controller.actionMap.aim(Enum.UserInputState.Begin);
+					}
+				})
+				//for user convenience, make this aim them back in if they still holding the button after a bit.
 			}
 
 			if (this.loadedAnimations.pump) {
@@ -447,6 +454,7 @@ export default class gun extends item {
 	}
 	aim(t: boolean) {
 		newThread(() => {
+			this.togglingAim = true
 			let diff = t? this.adsLength - mathf.lerp(0, this.adsLength, this.values.aimDelta.Value): this.adsLength;
 
 			let info = new TweenInfo(diff, Enum.EasingStyle.Quart, Enum.EasingDirection.Out);
@@ -456,6 +464,8 @@ export default class gun extends item {
 			}).Play();
 
 			task.wait(diff);
+
+			this.togglingAim = false
 
 			this.aiming = t;
 		})

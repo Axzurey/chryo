@@ -9,6 +9,7 @@ local examine = _examine
 local examineHitLocation = _examine.examineHitLocation
 local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier
 local entityType = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "define", "zeroDefinitions").entityType
+local breach = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverMechanics", "breach")
 local serverGun
 do
 	local super = serverItem
@@ -76,6 +77,31 @@ do
 			return nil
 		end
 	end
+	function serverGun:fireMulti(cameraCFrames)
+		if not self.userEquipped then
+			return nil
+		end
+		if self.reloading then
+			return nil
+		end
+		if self.ammo <= 0 then
+			return nil
+		end
+		self.ammo -= 1
+		local tocsg = {}
+		local _arg0 = function(v)
+			local hit = self:handleFire(v)
+			if hit then
+				local _tocsg = tocsg
+				local _arg0_1 = breach.shotgun(hit[2], v.LookVector)
+				table.insert(_tocsg, _arg0_1)
+			end
+		end
+		for _k, _v in ipairs(cameraCFrames) do
+			_arg0(_v, _k - 1, cameraCFrames)
+		end
+		breach.bulk(tocsg)
+	end
 	function serverGun:fire(cameraCFrame)
 		if not self.userEquipped then
 			return nil
@@ -86,10 +112,13 @@ do
 		if self.ammo <= 0 then
 			return nil
 		end
+		self.ammo -= 1
+		self:handleFire(cameraCFrame)
+	end
+	function serverGun:handleFire(cameraCFrame)
 		if not self.source.images then
 			return nil
 		end
-		self.ammo -= 1
 		local caster = rocaster.new({
 			from = cameraCFrame.Position,
 			direction = cameraCFrame.LookVector,
@@ -123,6 +152,7 @@ do
 			else
 				self.source.images.normal:spawn(castResult.position, castResult.normal, 1)
 			end
+			return { castResult.instance, castResult.position }
 		end
 	end
 	function serverGun:equip()

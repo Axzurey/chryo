@@ -5,7 +5,6 @@ local item = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base
 local paths = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "paths")
 local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
 local clientExposed = _clientExposed
-local getActionController = _clientExposed.getActionController
 local getClientConfig = _clientExposed.getClientConfig
 local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local gunwork = _gunwork
@@ -59,6 +58,7 @@ do
 		self.lastReload = 0
 		self.spreadDelta = 0
 		self.sprinting = false
+		self.togglingAim = false
 		self.aiming = false
 		self.reloading = false
 		self.stance = 1
@@ -302,7 +302,13 @@ do
 				end,
 			}
 			if self.unaimAfterShot then
-				getActionController().actionMap.aim(Enum.UserInputState.End)
+				controller.actionMap.aim(Enum.UserInputState.End)
+				later(60 / self.firerate[firemode], function()
+					if utils.peripherals.isButtonDown(controller:getKey("aim")) and not self.togglingAim then
+						controller.actionMap.aim(Enum.UserInputState.Begin)
+					end
+				end)
+				-- for user convenience, make this aim them back in if they still holding the button after a bit.
 			end
 			if self.loadedAnimations.pump then
 				self.loadedAnimations.pump:Play()
@@ -369,12 +375,14 @@ do
 	end
 	function gun:aim(t)
 		newThread(function()
+			self.togglingAim = true
 			local diff = if t then self.adsLength - mathf.lerp(0, self.adsLength, self.values.aimDelta.Value) else self.adsLength
 			local info = TweenInfo.new(diff, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 			TweenService:Create(self.values.aimDelta, info, {
 				Value = if t then 1 else 0,
 			}):Play()
 			task.wait(diff)
+			self.togglingAim = false
 			self.aiming = t
 		end)
 	end

@@ -6,6 +6,7 @@ import hk416_server_definition from "server/serverGunDefinitions/hk416";
 import environment from "shared/constants/environment"
 import { itemTypeIdentifier } from "shared/types/gunwork";
 import system from "shared/zero/system";
+import m870_server_definition from "server/serverGunDefinitions/m870";
 
 interface serverDataInterface {
     playerConfiguration: Record<number, {
@@ -32,7 +33,7 @@ Players.PlayerAdded.Connect((client) => {
 
     let mix = {
         items: {
-            primary: hk416_server_definition('Gun1'), //ofc, we gonna generate those normally
+            primary: m870_server_definition('Gun1'), //ofc, we gonna generate those normally
         },
         currentEquipped: undefined
     }
@@ -112,6 +113,19 @@ system.remote.server.on('fireContext', (player, itemId, cframe) => {
         if (obj.typeIdentifier === itemTypeIdentifier.gun) {
             if (obj.userEquipped) {
                 (obj as serverGun).fire(cframe)
+            }
+        }
+    }
+})
+
+system.remote.server.on('fireMultiContext', (player, itemId, cframes) => {
+    let fromMap = internalIdentification[itemId]
+    if (!fromMap) return
+    if (fromMap.owner && fromMap.owner === player) {
+        let obj = fromMap.object;
+        if (obj.typeIdentifier === itemTypeIdentifier.gun) {
+            if (obj.userEquipped) {
+                (obj as serverGun).fireMulti(cframes)
             }
         }
     }

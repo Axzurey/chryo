@@ -167,7 +167,7 @@ export default class actionController {
 
 		clientExposed.setClientConfig(clientSettings);
 
-		let item = m870_definition('gun1');
+		let item = m870_definition('Gun1');
 
 		this.equippedItem = item;
 

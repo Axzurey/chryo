@@ -7,6 +7,7 @@ import { bulletHoleLocation, itemTypeIdentifier } from "shared/types/gunwork";
 import { entityType } from "shared/zero/define/zeroDefinitions";
 import human from "shared/zero/entities/human";
 import image from "shared/classes/image";
+import breach from "server/serverMechanics/breach";
 
 export default class serverGun extends serverItem {
     //internal
@@ -79,14 +80,36 @@ export default class serverGun extends serverItem {
 
         if (diff > this.reloadSpeedMax || diff < this.reloadSpeedMin ) return //reload took too short or too long!
     }
+    fireMulti(cameraCFrames: CFrame[]) {
+        if (!this.userEquipped) return;
+        if (this.reloading) return;
+        if (this.ammo <= 0) return;
+
+        this.ammo --;
+
+        let tocsg: BasePart[] = [];
+        
+        cameraCFrames.forEach((v) => {
+            let hit = this.handleFire(v)
+            if (hit) {
+                tocsg.push(breach.shotgun(hit[1], v.LookVector))
+            }
+        })
+
+        breach.bulk(tocsg);
+    }
     fire(cameraCFrame: CFrame) {
         if (!this.userEquipped) return;
         if (this.reloading) return;
         if (this.ammo <= 0) return;
 
-        if (!this.source.images) return;
-
         this.ammo --;
+
+        this.handleFire(cameraCFrame)
+    }
+    handleFire(cameraCFrame: CFrame): [BasePart, Vector3] | undefined {
+
+        if (!this.source.images) return;
 
         let caster = new rocaster({
             from: cameraCFrame.Position,
@@ -124,6 +147,7 @@ export default class serverGun extends serverItem {
             else {
                 this.source.images.normal.spawn(castResult.position, castResult.normal, 1);
             }
+            return [castResult.instance, castResult.position]
         }
     }
     equip() {

@@ -147,7 +147,7 @@ do
 		clientExposed.setCamera(Workspace.CurrentCamera)
 		clientExposed.setBaseWalkSpeed(12)
 		clientExposed.setClientConfig(clientSettings)
-		local item = m870_definition("gun1")
+		local item = m870_definition("Gun1")
 		self.equippedItem = item
 		RunService:BindToRenderStep("main_render", Enum.RenderPriority.Last.Value, function(dt)
 			local equipped = self.equippedItem

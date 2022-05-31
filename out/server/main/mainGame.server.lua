@@ -2,10 +2,10 @@
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Players = TS.import(script, TS.getModule(script, "@rbxts", "services")).Players
 local positionTracker = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverMechanics", "positionTracker")
-local hk416_server_definition = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverGunDefinitions", "hk416").default
 local environment = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "environment")
 local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
+local m870_server_definition = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverGunDefinitions", "m870").default
 local serverData = {
 	playerConfiguration = {},
 }
@@ -15,7 +15,7 @@ Players.PlayerAdded:Connect(function(client)
 	positionTracker.addPlayer(client)
 	local mix = {
 		items = {
-			primary = hk416_server_definition("Gun1"),
+			primary = m870_server_definition("Gun1"),
 		},
 		currentEquipped = nil,
 	}
@@ -93,6 +93,20 @@ system.remote.server.on("fireContext", function(player, itemId, cframe)
 		if obj.typeIdentifier == itemTypeIdentifier.gun then
 			if obj.userEquipped then
 				obj:fire(cframe)
+			end
+		end
+	end
+end)
+system.remote.server.on("fireMultiContext", function(player, itemId, cframes)
+	local fromMap = internalIdentification[itemId]
+	if not fromMap then
+		return nil
+	end
+	if fromMap.owner and fromMap.owner == player then
+		local obj = fromMap.object
+		if obj.typeIdentifier == itemTypeIdentifier.gun then
+			if obj.userEquipped then
+				obj:fireMulti(cframes)
 			end
 		end
 	end
