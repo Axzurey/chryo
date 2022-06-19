@@ -63,7 +63,7 @@ namespace system {
             export function fireServer<T extends keyof typeof protocols>(protocol: T, 
                 ...args: omitFirstValueOfArray<Parameters<GetGenericOfClassServer<(typeof protocols)[T]["protocol"]>>>) {
                 if (RunService.IsClient()) {
-                    protocols[protocol].protocol.fireServer(args as any);
+                    protocols[protocol].protocol.fireServer(args as never);
                 }
                 else {
                     throw `this method can not be called from the server`;

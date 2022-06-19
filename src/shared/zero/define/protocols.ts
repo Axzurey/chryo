@@ -33,6 +33,10 @@ const protocols = {
 		protocol: new remoteProtocol<(player: Player, itemId: string, stance: 1 | 0 | -1) => void, () => void>('change_stance_context', 
         [t.Instance, t.string, t.literal(-1, 0, 1)]),
 	},
+	clientFlingBasepart: {
+		protocol: new remoteProtocol<() => void, (instance: BasePart, position: Vector3, direction: Vector3) => void>('client_fling_basepart_context', 
+        [t.Instance, t.Instance, t.Vector3, t.Vector3]),
+	},
 }
 
 export = protocols;

@@ -30,5 +30,8 @@ local protocols = {
 	changeStanceContext = {
 		protocol = remoteProtocol.new("change_stance_context", { t.Instance, t.string, t.literal(-1, 0, 1) }),
 	},
+	clientFlingBasepart = {
+		protocol = remoteProtocol.new("client_fling_basepart_context", { t.Instance, t.Instance, t.Vector3, t.Vector3 }),
+	},
 }
 return protocols

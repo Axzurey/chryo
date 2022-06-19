@@ -12,7 +12,7 @@ interface rocastParams {
     debug: boolean
 }
 
-interface castResult {
+export interface castResult {
     position: Vector3,
     normal: Vector3,
     material: Enum.Material,

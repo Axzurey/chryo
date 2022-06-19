@@ -5,6 +5,7 @@ import space from "shared/zero/space";
 let bots = Workspace.WaitForChild('bots').GetChildren() as Model[];
 
 bots.forEach((v) => {
-    let entity = space.life.create(v, human);
+    let entity = space.life.create(human);
+    entity.vessel = v
     entity.health = 100;
 })

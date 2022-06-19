@@ -1,5 +1,5 @@
 import serverItem from "../serverBase/serverItem";
-import rocaster from 'shared/zero/rocast';
+import rocaster, { castResult } from 'shared/zero/rocast';
 import { newThread } from "shared/athena/utils";
 import space from "shared/zero/space";
 import examine, { examineHitLocation } from "server/serverBase/examine";
@@ -8,6 +8,8 @@ import { entityType } from "shared/zero/define/zeroDefinitions";
 import human from "shared/zero/entities/human";
 import image from "shared/classes/image";
 import breach from "server/serverMechanics/breach";
+import { e } from "shared/athena/mathf";
+import system from "shared/zero/system";
 
 export default class serverGun extends serverItem {
     //internal
@@ -86,17 +88,26 @@ export default class serverGun extends serverItem {
         if (this.ammo <= 0) return;
 
         this.ammo --;
-
-        let tocsg: BasePart[] = [];
         
         cameraCFrames.forEach((v) => {
             let hit = this.handleFire(v)
             if (hit) {
-                tocsg.push(breach.shotgun(hit[1], v.LookVector))
+                if (hit[0].Mass < 1) {
+                    let z = hit[0].GetNetworkOwner()
+                    if (!z) {
+                        hit[0].ApplyImpulseAtPosition(v.LookVector, hit[1])
+                    }
+                    else {
+                        system.remote.server.fireClient('clientFlingBasepart', z, hit[0], hit[1], v.LookVector)
+                    }
+                }
+                else {
+                    if (hit[2]) {
+                        this.source.images!.normal.spawn(hit[3].position, hit[3].normal, 1);
+                    }
+                }
             }
         })
-
-        breach.bulk(tocsg);
     }
     fire(cameraCFrame: CFrame) {
         if (!this.userEquipped) return;
@@ -107,7 +118,7 @@ export default class serverGun extends serverItem {
 
         this.handleFire(cameraCFrame)
     }
-    handleFire(cameraCFrame: CFrame): [BasePart, Vector3] | undefined {
+    handleFire(cameraCFrame: CFrame): [BasePart, Vector3, boolean, castResult] | undefined {
 
         if (!this.source.images) return;
 
@@ -132,6 +143,7 @@ export default class serverGun extends serverItem {
 
         if (castResult) {
             let entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance);
+            let nominal = true
             if (entity && space.query.entityIsThatIfOfType<human>(entity, entityType.human) ) {
                 let location = examineHitLocation(castResult.instance);
                 if (location === examine.hitLocation.head) {
@@ -143,11 +155,9 @@ export default class serverGun extends serverItem {
                 else {
                     entity.takeDamage(this.damage.limb);
                 }
+                nominal = false
             }
-            else {
-                this.source.images.normal.spawn(castResult.position, castResult.normal, 1);
-            }
-            return [castResult.instance, castResult.position]
+            return [castResult.instance, castResult.position, nominal, castResult]
         }
     }
     equip() {

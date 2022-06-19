@@ -6,6 +6,8 @@ local environment = TS.import(script, game:GetService("ReplicatedStorage"), "TS"
 local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
 local m870_server_definition = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverGunDefinitions", "m870").default
+local space = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "space")
+local user = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverClasses", "user").default
 local serverData = {
 	playerConfiguration = {},
 }
@@ -13,11 +15,22 @@ local dotenv = environment.getSharedEnvironment()
 local internalIdentification = {}
 Players.PlayerAdded:Connect(function(client)
 	positionTracker.addPlayer(client)
+	local characterClass = space.life.create(user)
+	characterClass:setClient(client)
+	local character = client.Character or (client.CharacterAdded:Wait())
+	characterClass:setCharacter(character)
+	local newCharacterConnection = client.CharacterAdded:Connect(function(character)
+		characterClass:setCharacter(character)
+	end)
 	local mix = {
 		items = {
 			primary = m870_server_definition("Gun1"),
 		},
 		currentEquipped = nil,
+		characterClass = characterClass,
+		connections = {
+			newCharacterConnection = newCharacterConnection,
+		},
 	}
 	mix.items.primary:setUser(client)
 	internalIdentification.Gun1 = {

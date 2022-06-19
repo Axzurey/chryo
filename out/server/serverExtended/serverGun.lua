@@ -9,7 +9,7 @@ local examine = _examine
 local examineHitLocation = _examine.examineHitLocation
 local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier
 local entityType = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "define", "zeroDefinitions").entityType
-local breach = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverMechanics", "breach")
+local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
 local serverGun
 do
 	local super = serverItem
@@ -88,19 +88,26 @@ do
 			return nil
 		end
 		self.ammo -= 1
-		local tocsg = {}
 		local _arg0 = function(v)
 			local hit = self:handleFire(v)
 			if hit then
-				local _tocsg = tocsg
-				local _arg0_1 = breach.shotgun(hit[2], v.LookVector)
-				table.insert(_tocsg, _arg0_1)
+				if hit[1].Mass < 1 then
+					local z = hit[1]:GetNetworkOwner()
+					if not z then
+						hit[1]:ApplyImpulseAtPosition(v.LookVector, hit[2])
+					else
+						system.remote.server.fireClient("clientFlingBasepart", z, hit[1], hit[2], v.LookVector)
+					end
+				else
+					if hit[3] then
+						self.source.images.normal:spawn(hit[4].position, hit[4].normal, 1)
+					end
+				end
 			end
 		end
 		for _k, _v in ipairs(cameraCFrames) do
 			_arg0(_v, _k - 1, cameraCFrames)
 		end
-		breach.bulk(tocsg)
 	end
 	function serverGun:fire(cameraCFrame)
 		if not self.userEquipped then
@@ -140,6 +147,7 @@ do
 		})
 		if castResult then
 			local entity = space.query.findFirstEntityWithVesselThatContainsInstance(castResult.instance)
+			local nominal = true
 			if entity and space.query.entityIsThatIfOfType(entity, entityType.human) then
 				local location = examineHitLocation(castResult.instance)
 				if location == examine.hitLocation.head then
@@ -149,10 +157,9 @@ do
 				else
 					entity:takeDamage(self.damage.limb)
 				end
-			else
-				self.source.images.normal:spawn(castResult.position, castResult.normal, 1)
+				nominal = false
 			end
-			return { castResult.instance, castResult.position }
+			return { castResult.instance, castResult.position, nominal, castResult }
 		end
 	end
 	function serverGun:equip()

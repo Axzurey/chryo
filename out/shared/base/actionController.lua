@@ -17,6 +17,7 @@ local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "
 local gunwork = _gunwork
 local fireMode = _gunwork.fireMode
 local key = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "util", "key").default
+local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
 local actionController
 do
 	actionController = setmetatable({}, {
@@ -194,6 +195,9 @@ do
 					_arg0(_v, _k - 1, _keys)
 				end
 			end
+		end)
+		system.remote.client.on("clientFlingBasepart", function(inst, pos, dir)
+			inst:ApplyImpulseAtPosition(dir, pos)
 		end)
 	end
 	function actionController:starting(state)

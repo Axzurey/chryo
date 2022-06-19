@@ -7,12 +7,20 @@ import environment from "shared/constants/environment"
 import { itemTypeIdentifier } from "shared/types/gunwork";
 import system from "shared/zero/system";
 import m870_server_definition from "server/serverGunDefinitions/m870";
+import space from "shared/zero/space";
+import user, { characterType } from "server/serverClasses/user";
 
 interface serverDataInterface {
     playerConfiguration: Record<number, {
         currentEquipped: serverGun | undefined
         items: {
             primary: serverGun
+        },
+
+        characterClass: user,
+
+        connections: {
+            newCharacterConnection: RBXScriptConnection
         }
     }>
 }
@@ -31,11 +39,29 @@ let internalIdentification: {[key: string]: {
 Players.PlayerAdded.Connect((client) => {
     positionTracker.addPlayer(client);
 
-    let mix = {
+    const characterClass = space.life.create(user)
+
+    characterClass.setClient(client)
+
+    let character = client.Character || client.CharacterAdded.Wait()[0]
+
+    characterClass.setCharacter(character as characterType)
+
+    const newCharacterConnection = client.CharacterAdded.Connect((character) => {
+        characterClass.setCharacter(character as characterType)
+    })
+
+    let mix: serverDataInterface['playerConfiguration'][number] = {
         items: {
             primary: m870_server_definition('Gun1'), //ofc, we gonna generate those normally
+            //TODO: ^PUT THE CHARACTERCLASS INSIDE HERE AND USE IT AS VERIFICATION
         },
-        currentEquipped: undefined
+        currentEquipped: undefined,
+        characterClass: characterClass,
+        
+        connections: {
+            newCharacterConnection: newCharacterConnection
+        }
     }
 
     mix.items.primary.setUser(client)

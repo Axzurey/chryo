@@ -11,6 +11,7 @@ import vault from "shared/mechanics/vault";
 import clientExposed from "shared/middleware/clientExposed";
 import gunwork, { fireMode } from "shared/types/gunwork";
 import key from "shared/util/key";
+import system from "shared/zero/system";
 import item from "./item";
 
 export default class actionController {
@@ -212,6 +213,10 @@ export default class actionController {
 					})
 				})
 			}
+		})
+
+		system.remote.client.on('clientFlingBasepart', (inst, pos, dir) => {
+			inst.ApplyImpulseAtPosition(dir, pos)
 		})
 	}
 

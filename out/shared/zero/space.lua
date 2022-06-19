@@ -10,8 +10,8 @@ do
 	local life = {}
 	do
 		local _container_1 = life
-		local function create(model, entityType)
-			local e = entityType.new(model)
+		local function create(entityType)
+			local e = entityType.new()
 			local _e = e
 			table.insert(entities, _e)
 			return e

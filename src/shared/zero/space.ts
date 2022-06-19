@@ -7,8 +7,8 @@ namespace space {
     export const ignoreInstances: Instance[] = [];
 
     export namespace life {
-        export function create<T extends entity>(model: Model, entityType: new (vessel?: Instance) => T): T {
-            let e = new entityType(model);
+        export function create<T extends entity>(entityType: new (vessel?: Instance) => T): T {
+            let e = new entityType();
             entities.push(e);
             return e;
         }
