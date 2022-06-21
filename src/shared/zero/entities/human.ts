@@ -20,17 +20,15 @@ export default class human extends entity {
      * must be manually called if takeDamage returns a dead state
      */
     died = new connection<(by: entity | string, killed: human) => void>()
-    takeDamage(damage: number) {
+    takeDamage(damage: number, ...args: unknown[]) {
         if (this.health - damage < 0) {
             let diff = this.health - damage;
             this.damaged.fire(this.health, 0, damage, diff);
             this.health = 0;
-            return this.health <= 0;
         }
         else {
             this.damaged.fire(this.health, 0, this.health - damage, 0);
             this.health -= damage;
-            return this.health <= 0;
         }
     }
     heal(hp: number) {

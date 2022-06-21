@@ -10,6 +10,7 @@ import image from "shared/classes/image";
 import breach from "server/serverMechanics/breach";
 import { e } from "shared/athena/mathf";
 import system from "shared/zero/system";
+import user from "server/serverClasses/user";
 
 export default class serverGun extends serverItem {
     //internal
@@ -49,7 +50,7 @@ export default class serverGun extends serverItem {
 
     reloading: boolean = false;
 
-    constructor(serverId: string) {
+    constructor(serverId: string, public characterClass: user) {
         super(serverId);
         this.ammo = 10
         this.userEquipped = true
@@ -81,32 +82,56 @@ export default class serverGun extends serverItem {
         let diff = tick() - this.reloadStarted;
 
         if (diff > this.reloadSpeedMax || diff < this.reloadSpeedMin ) return //reload took too short or too long!
+
+        let ammoLeftInReserve = this.reserveAmmo;
+
+        let ammoMaxInMag = this.maxAmmo + this.magazineOverload;
+
+        let current = this.maxAmmo;
+
+        let ammoDifference = ammoMaxInMag - current;
+
+        if (ammoLeftInReserve >= ammoDifference) {
+            //they have enough to reload a full mag
+            ammoLeftInReserve -= ammoDifference;
+            this.ammo = ammoMaxInMag;
+        }
+        else {
+            //they don't have enough to reload a full mag
+            this.ammo += ammoLeftInReserve;
+            this.reserveAmmo = 0
+        }
+    }
+    determineWhatToDoWithImpact(hit: [BasePart, Vector3, boolean, castResult] | undefined, v: CFrame) {
+        if (hit) {
+            if (hit[0].Mass < 1) {
+                if (hit[0].Anchored) return;
+                let z = hit[0].GetNetworkOwner()
+                if (!z) {
+                    hit[0].ApplyImpulseAtPosition(v.LookVector, hit[1])
+                }
+                else {
+                    system.remote.server.fireClient('clientFlingBasepart', z, hit[0], hit[1], v.LookVector)
+                }
+            }
+            else {
+                if (hit[2]) {
+                    this.source.images!.normal.spawn(hit[3].position, hit[3].normal, 1);
+                }
+            }
+        }
     }
     fireMulti(cameraCFrames: CFrame[]) {
         if (!this.userEquipped) return;
         if (this.reloading) return;
         if (this.ammo <= 0) return;
+        if (!this.characterClass.isAlive()) return;
 
         this.ammo --;
         
         cameraCFrames.forEach((v) => {
             let hit = this.handleFire(v)
-            if (hit) {
-                if (hit[0].Mass < 1) {
-                    let z = hit[0].GetNetworkOwner()
-                    if (!z) {
-                        hit[0].ApplyImpulseAtPosition(v.LookVector, hit[1])
-                    }
-                    else {
-                        system.remote.server.fireClient('clientFlingBasepart', z, hit[0], hit[1], v.LookVector)
-                    }
-                }
-                else {
-                    if (hit[2]) {
-                        this.source.images!.normal.spawn(hit[3].position, hit[3].normal, 1);
-                    }
-                }
-            }
+            this.determineWhatToDoWithImpact(hit, v)
         })
     }
     fire(cameraCFrame: CFrame) {
@@ -114,9 +139,12 @@ export default class serverGun extends serverItem {
         if (this.reloading) return;
         if (this.ammo <= 0) return;
 
+        if (!this.characterClass.isAlive()) return;
+
         this.ammo --;
 
-        this.handleFire(cameraCFrame)
+        let hit = this.handleFire(cameraCFrame)
+        this.determineWhatToDoWithImpact(hit, cameraCFrame)
     }
     handleFire(cameraCFrame: CFrame): [BasePart, Vector3, boolean, castResult] | undefined {
 

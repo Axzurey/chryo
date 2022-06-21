@@ -1,4 +1,5 @@
-import { propertyExistsInObject } from "shared/athena/utils";
+import { RunService } from "@rbxts/services";
+import { newThread, propertyExistsInObject } from "shared/athena/utils";
 import entity from "./basic/entity";
 import { entityType } from "./define/zeroDefinitions";
 
@@ -12,6 +13,12 @@ namespace space {
             entities.push(e);
             return e;
         }
+
+        const lifeCycle = RunService.Heartbeat.Connect((dt) => {
+            entities.forEach((e) => {
+                newThread((dt: number) => {e.tick(dt)}, dt)
+            })
+        })
     }
 
     export namespace query {

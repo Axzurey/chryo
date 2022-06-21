@@ -26,16 +26,15 @@ do
 		self.healed = connection.new()
 		self.died = connection.new()
 	end
-	function human:takeDamage(damage)
+	function human:takeDamage(damage, ...)
+		local args = { ... }
 		if self.health - damage < 0 then
 			local diff = self.health - damage
 			self.damaged:fire(self.health, 0, damage, diff)
 			self.health = 0
-			return self.health <= 0
 		else
 			self.damaged:fire(self.health, 0, self.health - damage, 0)
 			self.health -= damage
-			return self.health <= 0
 		end
 	end
 	function human:heal(hp)

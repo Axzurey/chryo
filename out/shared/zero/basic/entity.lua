@@ -17,6 +17,8 @@ do
 		self.vessel = vessel
 		self.entityType = entityType.unknown
 	end
+	function entity:tick(dt)
+	end
 end
 return {
 	default = entity,

@@ -2,8 +2,8 @@
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local serverGun = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverExtended", "serverGun").default
 local images = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "global", "source").images
-local function hk416_server_definition(id)
-	local gun = serverGun.new(id)
+local function hk416_server_definition(id, characterClass)
+	local gun = serverGun.new(id, characterClass)
 	gun.ammo = 999
 	gun.maxAmmo = 999
 	gun.reserveAmmo = 999

@@ -7,8 +7,8 @@ namespace utils {
         return false;
     }
 
-    export function newThread(callback: () => void) {
-        task.spawn(callback);
+    export function newThread<T extends (...args: never[]) => void>(callback: T, ...args: Parameters<T>) {
+        coroutine.wrap(callback)(...args)
     }
 
     export function later(when: number, callback: () => void) {

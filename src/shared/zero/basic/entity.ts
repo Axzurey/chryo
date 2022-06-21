@@ -5,4 +5,5 @@ export default class entity {
     constructor(public vessel?: Instance) {
         
     }
+    tick(dt: number) {}
 }

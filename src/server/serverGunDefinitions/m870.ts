@@ -1,11 +1,12 @@
+import user from "server/serverClasses/user";
 import serverGun from "server/serverExtended/serverGun";
 import itemConfig, { itemClean } from "shared/global/itemConfig";
 import { images } from "shared/global/source";
 
 const gunIdentifier = 'm870';
 
-export default function m870_server_definition(id: string) {
-	let gun = new serverGun(id);
+export default function m870_server_definition(id: string, clientClass: user) {
+	let gun = new serverGun(id, clientClass);
 
     for (let [p, v] of pairs(itemClean(itemConfig.getProperties(gunIdentifier)))) {
         if (gun[p as keyof typeof gun] !== undefined) {

@@ -6,8 +6,8 @@ local itemConfig = _itemConfig
 local itemClean = _itemConfig.itemClean
 local images = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "global", "source").images
 local gunIdentifier = "m870"
-local function m870_server_definition(id)
-	local gun = serverGun.new(id)
+local function m870_server_definition(id, clientClass)
+	local gun = serverGun.new(id, clientClass)
 	for p, v in pairs(itemClean(itemConfig.getProperties(gunIdentifier))) do
 		if gun[p] ~= nil then
 			gun[p] = v

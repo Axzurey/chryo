@@ -53,7 +53,7 @@ Players.PlayerAdded.Connect((client) => {
 
     let mix: serverDataInterface['playerConfiguration'][number] = {
         items: {
-            primary: m870_server_definition('Gun1'), //ofc, we gonna generate those normally
+            primary: m870_server_definition('Gun1', characterClass), //ofc, we gonna generate those normally
             //TODO: ^PUT THE CHARACTERCLASS INSIDE HERE AND USE IT AS VERIFICATION
         },
         currentEquipped: undefined,

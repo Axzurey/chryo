@@ -1,6 +1,9 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local propertyExistsInObject = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils").propertyExistsInObject
+local RunService = TS.import(script, TS.getModule(script, "@rbxts", "services")).RunService
+local _utils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils")
+local newThread = _utils.newThread
+local propertyExistsInObject = _utils.propertyExistsInObject
 local space = {}
 do
 	local _container = space
@@ -17,6 +20,16 @@ do
 			return e
 		end
 		_container_1.create = create
+		local lifeCycle = RunService.Heartbeat:Connect(function(dt)
+			local _arg0 = function(e)
+				newThread(function(dt)
+					e:tick(dt)
+				end, dt)
+			end
+			for _k, _v in ipairs(entities) do
+				_arg0(_v, _k - 1, entities)
+			end
+		end)
 	end
 	_container.life = life
 	local query = {}

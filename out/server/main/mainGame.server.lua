@@ -24,7 +24,7 @@ Players.PlayerAdded:Connect(function(client)
 	end)
 	local mix = {
 		items = {
-			primary = m870_server_definition("Gun1"),
+			primary = m870_server_definition("Gun1", characterClass),
 		},
 		currentEquipped = nil,
 		characterClass = characterClass,

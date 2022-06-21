@@ -12,8 +12,9 @@ do
 		return false
 	end
 	_container.propertyExistsInObject = propertyExistsInObject
-	local function newThread(callback)
-		task.spawn(callback)
+	local function newThread(callback, ...)
+		local args = { ... }
+		coroutine.wrap(callback)(unpack(args))
 	end
 	_container.newThread = newThread
 	local function later(when, callback)

@@ -1,8 +1,9 @@
+import user from "server/serverClasses/user";
 import serverGun from "server/serverExtended/serverGun";
 import { images } from "shared/global/source";
 
-export default function hk416_server_definition(id: string) {
-	let gun = new serverGun(id);
+export default function hk416_server_definition(id: string, characterClass: user) {
+	let gun = new serverGun(id, characterClass);
 
     gun.ammo = 999;
     gun.maxAmmo = 999;

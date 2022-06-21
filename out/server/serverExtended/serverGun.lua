@@ -24,8 +24,9 @@ do
 		local self = setmetatable({}, serverGun)
 		return self:constructor(...) or self
 	end
-	function serverGun:constructor(serverId)
+	function serverGun:constructor(serverId, characterClass)
 		super.constructor(self, serverId)
+		self.characterClass = characterClass
 		self.ammo = 0
 		self.maxAmmo = 0
 		self.reserveAmmo = 0
@@ -76,6 +77,38 @@ do
 		if diff > self.reloadSpeedMax or diff < self.reloadSpeedMin then
 			return nil
 		end
+		local ammoLeftInReserve = self.reserveAmmo
+		local ammoMaxInMag = self.maxAmmo + self.magazineOverload
+		local current = self.maxAmmo
+		local ammoDifference = ammoMaxInMag - current
+		if ammoLeftInReserve >= ammoDifference then
+			-- they have enough to reload a full mag
+			ammoLeftInReserve -= ammoDifference
+			self.ammo = ammoMaxInMag
+		else
+			-- they don't have enough to reload a full mag
+			self.ammo += ammoLeftInReserve
+			self.reserveAmmo = 0
+		end
+	end
+	function serverGun:determineWhatToDoWithImpact(hit, v)
+		if hit then
+			if hit[1].Mass < 1 then
+				if hit[1].Anchored then
+					return nil
+				end
+				local z = hit[1]:GetNetworkOwner()
+				if not z then
+					hit[1]:ApplyImpulseAtPosition(v.LookVector, hit[2])
+				else
+					system.remote.server.fireClient("clientFlingBasepart", z, hit[1], hit[2], v.LookVector)
+				end
+			else
+				if hit[3] then
+					self.source.images.normal:spawn(hit[4].position, hit[4].normal, 1)
+				end
+			end
+		end
 	end
 	function serverGun:fireMulti(cameraCFrames)
 		if not self.userEquipped then
@@ -87,23 +120,13 @@ do
 		if self.ammo <= 0 then
 			return nil
 		end
+		if not self.characterClass:isAlive() then
+			return nil
+		end
 		self.ammo -= 1
 		local _arg0 = function(v)
 			local hit = self:handleFire(v)
-			if hit then
-				if hit[1].Mass < 1 then
-					local z = hit[1]:GetNetworkOwner()
-					if not z then
-						hit[1]:ApplyImpulseAtPosition(v.LookVector, hit[2])
-					else
-						system.remote.server.fireClient("clientFlingBasepart", z, hit[1], hit[2], v.LookVector)
-					end
-				else
-					if hit[3] then
-						self.source.images.normal:spawn(hit[4].position, hit[4].normal, 1)
-					end
-				end
-			end
+			self:determineWhatToDoWithImpact(hit, v)
 		end
 		for _k, _v in ipairs(cameraCFrames) do
 			_arg0(_v, _k - 1, cameraCFrames)
@@ -119,8 +142,12 @@ do
 		if self.ammo <= 0 then
 			return nil
 		end
+		if not self.characterClass:isAlive() then
+			return nil
+		end
 		self.ammo -= 1
-		self:handleFire(cameraCFrame)
+		local hit = self:handleFire(cameraCFrame)
+		self:determineWhatToDoWithImpact(hit, cameraCFrame)
 	end
 	function serverGun:handleFire(cameraCFrame)
 		if not self.source.images then
