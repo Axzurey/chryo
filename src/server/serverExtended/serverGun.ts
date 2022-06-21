@@ -106,7 +106,10 @@ export default class serverGun extends serverItem {
         if (hit) {
             if (hit[0].Mass < 1) {
                 if (hit[0].Anchored) return;
-                let z = hit[0].GetNetworkOwner()
+                let z = hit[0].GetNetworkOwner();
+                let r = hit[0].GetConnectedParts();
+
+                if (r.size() > 0) return; //the part is welded to something anchored, we can't fling it!
                 if (!z) {
                     hit[0].ApplyImpulseAtPosition(v.LookVector, hit[1])
                 }

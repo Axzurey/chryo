@@ -98,6 +98,10 @@ do
 					return nil
 				end
 				local z = hit[1]:GetNetworkOwner()
+				local r = hit[1]:GetConnectedParts()
+				if #r > 0 then
+					return nil
+				end
 				if not z then
 					hit[1]:ApplyImpulseAtPosition(v.LookVector, hit[2])
 				else
