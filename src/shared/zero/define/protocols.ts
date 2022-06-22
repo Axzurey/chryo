@@ -37,6 +37,14 @@ const protocols = {
 		protocol: new remoteProtocol<() => void, (instance: BasePart, position: Vector3, direction: Vector3) => void>('client_fling_basepart_context', 
         [t.Instance, t.Instance, t.Vector3, t.Vector3]),
 	},
+	startReinforcement: {
+		protocol: new remoteProtocol<(player: Player, cameraCFrame: CFrame) => void, () => void>('start_reinforcement_context', 
+        [t.Instance, t.CFrame]),
+	},
+	cancelReinforcement: {
+		protocol: new remoteProtocol<(player: Player) => void, () => void>('cancel_reinforcement_context', 
+        [t.Instance]),
+	},
 }
 
 export = protocols;

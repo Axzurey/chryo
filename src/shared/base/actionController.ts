@@ -8,11 +8,13 @@ import m870_definition from "shared/gunDefinitions/m870";
 import clientConfig from "shared/local/clientConfig";
 import rappel from "shared/mechanics/rappel";
 import vault from "shared/mechanics/vault";
-import clientExposed from "shared/middleware/clientExposed";
+import clientExposed, { getCamera } from "shared/middleware/clientExposed";
 import gunwork, { fireMode } from "shared/types/gunwork";
 import key from "shared/util/key";
 import system from "shared/zero/system";
 import item from "./item";
+
+const client = Players.LocalPlayer;
 
 export default class actionController {
 	private equippedItem: item | undefined;
@@ -26,7 +28,8 @@ export default class actionController {
 		prone: Enum.KeyCode.LeftControl,
 		crouch: Enum.KeyCode.C,
 		vault: Enum.KeyCode.Space,
-		rappel: Enum.KeyCode.Space
+		rappel: Enum.KeyCode.Space,
+		reinforce: Enum.KeyCode.V,
 	}
 
 	vaulting: boolean = false;
@@ -138,6 +141,14 @@ export default class actionController {
 				if (hold < 1) return;
 				
 				rappel.Rappel(ignore);
+			}
+		},
+		reinforce: (state) => {
+			if (this.starting(state)) {
+				system.remote.client.fireServer('startReinforcement', getCamera().CFrame)
+			}
+			else {
+				//ends
 			}
 		}
 	}

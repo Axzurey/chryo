@@ -12,12 +12,15 @@ local m870_definition = TS.import(script, game:GetService("ReplicatedStorage"), 
 local clientConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "local", "clientConfig").default
 local rappel = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "mechanics", "rappel")
 local vault = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "mechanics", "vault")
-local clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
+local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
+local clientExposed = _clientExposed
+local getCamera = _clientExposed.getCamera
 local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local gunwork = _gunwork
 local fireMode = _gunwork.fireMode
 local key = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "util", "key").default
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
+local client = Players.LocalPlayer
 local actionController
 do
 	actionController = setmetatable({}, {
@@ -41,6 +44,7 @@ do
 			crouch = Enum.KeyCode.C,
 			vault = Enum.KeyCode.Space,
 			rappel = Enum.KeyCode.Space,
+			reinforce = Enum.KeyCode.V,
 		}
 		self.vaulting = false
 		self.rappelling = false
@@ -138,6 +142,11 @@ do
 					rappel.Rappel(ignore)
 				end
 			end),
+			reinforce = function(state)
+				if self:starting(state) then
+					system.remote.client.fireServer("startReinforcement", getCamera().CFrame)
+				end
+			end,
 		}
 		self.character = Players.LocalPlayer.Character or (Players.LocalPlayer.CharacterAdded:Wait())
 		if not self.character.PrimaryPart then

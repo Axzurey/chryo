@@ -33,5 +33,11 @@ local protocols = {
 	clientFlingBasepart = {
 		protocol = remoteProtocol.new("client_fling_basepart_context", { t.Instance, t.Instance, t.Vector3, t.Vector3 }),
 	},
+	startReinforcement = {
+		protocol = remoteProtocol.new("start_reinforcement_context", { t.Instance, t.CFrame }),
+	},
+	cancelReinforcement = {
+		protocol = remoteProtocol.new("cancel_reinforcement_context", { t.Instance }),
+	},
 }
 return protocols

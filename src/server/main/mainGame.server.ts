@@ -9,6 +9,7 @@ import system from "shared/zero/system";
 import m870_server_definition from "server/serverGunDefinitions/m870";
 import space from "shared/zero/space";
 import user, { characterType } from "server/serverClasses/user";
+import reinforcement from "server/serverMechanics/reinforcement";
 
 interface serverDataInterface {
     playerConfiguration: Record<number, {
@@ -159,4 +160,8 @@ system.remote.server.on('fireMultiContext', (player, itemId, cframes) => {
 
 system.remote.server.on('updateMovement', (player, newcframe) => {
     let result = positionTracker.setPosition(player, newcframe);
+})
+
+system.remote.server.on('startReinforcement', (player, cam) => {
+    reinforcement.reinforce(player, cam)
 })

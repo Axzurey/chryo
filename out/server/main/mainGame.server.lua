@@ -8,6 +8,7 @@ local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "ze
 local m870_server_definition = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverGunDefinitions", "m870").default
 local space = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "space")
 local user = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverClasses", "user").default
+local reinforcement = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverMechanics", "reinforcement")
 local serverData = {
 	playerConfiguration = {},
 }
@@ -126,4 +127,7 @@ system.remote.server.on("fireMultiContext", function(player, itemId, cframes)
 end)
 system.remote.server.on("updateMovement", function(player, newcframe)
 	local result = positionTracker.setPosition(player, newcframe)
+end)
+system.remote.server.on("startReinforcement", function(player, cam)
+	reinforcement.reinforce(player, cam)
 end)
