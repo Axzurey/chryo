@@ -142,11 +142,23 @@ do
 					rappel.Rappel(ignore)
 				end
 			end),
-			reinforce = function(state)
+			reinforce = TS.async(function(state)
 				if self:starting(state) then
 					system.remote.client.fireServer("startReinforcement", getCamera().CFrame)
+					local _idlePrompts = self.idlePrompts
+					table.insert(_idlePrompts, 0)
+					local hold = TS.await(key:waitForKeyUp({
+						key = self:getKey("reinforce"),
+						maxLength = 2.5,
+						onUpdate = function(elapsedTime) end,
+					}))
+					local _exp = self.idlePrompts
+					_exp[#_exp] = nil
+					if hold < 2.3 then
+						system.remote.client.fireServer("cancelReinforcement")
+					end
 				end
-			end,
+			end),
 		}
 		self.character = Players.LocalPlayer.Character or (Players.LocalPlayer.CharacterAdded:Wait())
 		if not self.character.PrimaryPart then

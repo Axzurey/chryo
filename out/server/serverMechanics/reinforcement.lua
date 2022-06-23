@@ -1,7 +1,9 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Workspace = TS.import(script, TS.getModule(script, "@rbxts", "services")).Workspace
+local anime = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "anime")
 local path = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "path").default
+local newThread = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils").newThread
 local rocaster = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "rocast").default
 local reinforcement = {}
 do
@@ -42,43 +44,75 @@ do
 		local _size = selectedWall.Size
 		local _vector3_1 = Vector3.new(0, 0, -selectedWall.Size.Z * 2)
 		local bottomLeft = wallPosition - ((_size + _vector3_1) / 2)
-		local _vector3_2 = Vector3.new(1, 1, 0)
-		local lastposition = bottomLeft + _vector3_2
+		local animations = {}
+		local i = {}
+		local canceled = false
 		do
-			local y = 0
+			local _x = 0
 			local _shouldIncrement = false
 			while true do
+				local x = _x
 				if _shouldIncrement then
-					y += 1
+					x += 1
 				else
 					_shouldIncrement = true
 				end
-				if not (y < 5) then
+				if not (x < 4) then
 					break
 				end
-				do
-					local x = 0
-					local _shouldIncrement_1 = false
-					while true do
-						if _shouldIncrement_1 then
-							x += 1
-						else
-							_shouldIncrement_1 = true
+				local _vector3_2 = Vector3.new(x * 2 + 1, 1, 0)
+				local lastposition = bottomLeft + _vector3_2
+				newThread(function()
+					do
+						local y = 0
+						local _shouldIncrement_1 = false
+						while true do
+							if _shouldIncrement_1 then
+								y += 1
+							else
+								_shouldIncrement_1 = true
+							end
+							if not (y < 5) then
+								break
+							end
+							if canceled then
+								break
+							end
+							local _vector3_3 = Vector3.new(x * 2 + 1, y * 2 + 1, 0)
+							local calculatedPosition = bottomLeft + _vector3_3
+							local clone = pathObject:Clone()
+							clone:SetPrimaryPartCFrame(CFrame.lookAt(lastposition, lastposition + selectedWallNormal))
+							local animation = anime.animateModelPosition(clone, calculatedPosition, .4)
+							local _unbind = animation.binding.unbind
+							table.insert(animations, _unbind)
+							local _clone = clone
+							table.insert(i, _clone)
+							clone.Parent = Workspace
+							task.wait(.5)
+							lastposition = calculatedPosition
 						end
-						if not (x < 4) then
-							break
-						end
-						local _vector3_3 = Vector3.new(x * 2 + 1, y * 2 + 1, 0)
-						local calculatedPosition = bottomLeft + _vector3_3
-						local clone = pathObject:Clone()
-						clone:SetPrimaryPartCFrame(CFrame.lookAt(lastposition, calculatedPosition + selectedWallNormal))
-						clone.Parent = Workspace
-						task.wait(.5)
-						lastposition = calculatedPosition
 					end
-				end
+				end)
+				_x = x
 			end
 		end
+		return {
+			cancel = function()
+				canceled = true
+				local _arg0 = function(v)
+					v()
+				end
+				for _k, _v in ipairs(animations) do
+					_arg0(_v, _k - 1, animations)
+				end
+				local _arg0_1 = function(v)
+					v:Destroy()
+				end
+				for _k, _v in ipairs(i) do
+					_arg0_1(_v, _k - 1, i)
+				end
+			end,
+		}
 	end
 	_container.reinforce = reinforce
 end

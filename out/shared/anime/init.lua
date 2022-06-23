@@ -1,6 +1,7 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local RunService = TS.import(script, TS.getModule(script, "@rbxts", "services")).RunService
+local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
 local anime = {}
 do
 	local _container = anime
@@ -38,12 +39,13 @@ do
 		end
 		local _arg0 = function(invocation)
 			task.spawn(function()
-				local t = invocation.elapsedTime + 1 * dt
+				local now = invocation.elapsedTime + 1 * dt
+				local t = math.clamp(1 - mathf.normalize(0, 1, invocation.time - now), 0, 1)
 				local _exp = INTERPOLATIONS
 				local _current = invocation.current
 				local index = _exp[typeof(_current)]
 				invocation.current = index(invocation.origin, invocation.target, t)
-				invocation.elapsedTime = t
+				invocation.elapsedTime = now
 			end)
 		end
 		for _k, _v in ipairs(invocationList) do
@@ -78,19 +80,25 @@ do
 				self.instance[property] = self:getCurrentValue()
 			end)
 		end
+		function animeInstanceClass:bindCallbackToValue(callback)
+			local connection = loopType:Connect(function(dt, _dt2)
+				if _dt2 ~= 0 and (_dt2 == _dt2 and _dt2) then
+					dt = _dt2
+				end
+				callback(self:getCurrentValue())
+			end)
+			return {
+				unbind = function()
+					connection:Disconnect()
+				end,
+			}
+		end
 		function animeInstanceClass:getCurrentValue()
 			return self.invocable.current
 		end
 	end
-	local origin = Vector3.new()
-	local l = animeInstanceClass.new(Instance.new("Part"), {
-		target = origin,
-		origin = origin,
-		current = origin,
-		time = 1,
-		elapsedTime = 0,
-	})
-	local function animateModel(model, to, time)
+	_container.animeInstanceClass = animeInstanceClass
+	local function animateModelPosition(model, to, time)
 		if not model.PrimaryPart then
 			error("model can not be animated without a primarypart set")
 		end
@@ -105,8 +113,19 @@ do
 		local animationClass = animeInstanceClass.new(model, invoc)
 		local _invoc = invoc
 		table.insert(invocationList, _invoc)
-		return animationClass
+		local vCallback = animationClass:bindCallbackToValue(function(value)
+			local xr, yr, zr = model:GetPrimaryPartCFrame():ToOrientation()
+			local _fn = model
+			local _cFrame = CFrame.new(value)
+			local _arg0 = CFrame.fromOrientation(xr, yr, zr)
+			_fn:SetPrimaryPartCFrame(_cFrame * _arg0)
+		end)
+		return {
+			animation = animationClass,
+			binding = vCallback,
+			model = model,
+		}
 	end
-	_container.animateModel = animateModel
+	_container.animateModelPosition = animateModelPosition
 end
 return anime

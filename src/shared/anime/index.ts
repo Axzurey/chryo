@@ -1,4 +1,5 @@
 import { RunService } from "@rbxts/services";
+import mathf from "shared/athena/mathf";
 
 namespace anime {
     interface invocatable<T extends animatable[keyof animatable]> {
@@ -57,28 +58,26 @@ namespace anime {
         }
         invocationList.forEach((invocation) => {
             task.spawn(() => {
-                let t = invocation.elapsedTime + 1 * dt
+                let now = invocation.elapsedTime + 1 * dt
+                let t = math.clamp(1 - mathf.normalize(0, 1, invocation.time - now), 0, 1)
                 let index = INTERPOLATIONS[typeOf(invocation.current) as keyof typeof INTERPOLATIONS];
                 type indexParameters = Parameters<typeof index>
                 
                 invocation.current = index(invocation.origin as indexParameters[0], invocation.target, t);
 
-                invocation.elapsedTime = t
+                invocation.elapsedTime = now
             })
         })
     })
 
-    type propertyCheck<I extends Instance, P extends keyof WritableInstanceProperties<I>, V extends animatable[keyof animatable]> =
-        WritableInstanceProperties<I>[P] extends V ? P : never
-
     type KeysWithValsOfType<T,V> = keyof { [ P in keyof T as T[P] extends V ? P : never ] : P };
 
-    class animeInstanceClass<I extends Instance, V extends animatable[keyof animatable]> {
-        private propertyConnections: Partial<Record<keyof WritableInstanceProperties<I>, RBXScriptConnection>> = {}
+    export class animeInstanceClass<I extends Instance, V extends animatable[keyof animatable]> {
+        private propertyConnections: Partial<Record<KeysWithValsOfType<WritableInstanceProperties<I>, V>, RBXScriptConnection>> = {}
         constructor(public instance: I, private invocable: invocatable<V>) {
 
         }
-        bindPropertyToValue<P extends WritableInstanceProperties<I>>(property: KeysWithValsOfType<P, V>) {
+        bindPropertyToValue(property: KeysWithValsOfType<WritableInstanceProperties<I>, V>) {
             if (this.propertyConnections[property]) {
                 throw `property ${tostring(property)} is already bound.`
             }
@@ -88,27 +87,30 @@ namespace anime {
                     dt = _dt2
                 }
 
-                this.instance[property] = this.getCurrentValue() as any
+                this.instance[property as keyof I] = this.getCurrentValue() as any;
             })
+        }
+        bindCallbackToValue(callback: (value: V) => void) {
+            let connection = loopType.Connect((dt, _dt2) => {
+                if (_dt2) {
+                    dt = _dt2
+                }
+
+                callback(this.getCurrentValue())
+            })
+
+            return {
+                unbind: () => {
+                    connection.Disconnect()
+                }
+            }
         }
         getCurrentValue() {
             return this.invocable.current;
         }
     }
 
-    let origin = new Vector3()
-
-    let l = new animeInstanceClass(new Instance("Part"), {
-        target: origin,
-        origin: origin,
-        current: origin,
-        time: 1,
-        elapsedTime: 0
-    })
-
-    l.bindPropertyToValue('Velocity')
-
-    export function animateModel(model: Model, to: Vector3, time: number) {
+    export function animateModelPosition(model: Model, to: Vector3, time: number) {
         if (!model.PrimaryPart) {throw 'model can not be animated without a primarypart set'}
 
         let origin = model.GetPrimaryPartCFrame().Position
@@ -124,7 +126,17 @@ namespace anime {
         const animationClass = new animeInstanceClass(model, invoc);
 
         invocationList.push(invoc);
-        return animationClass;
+
+        const vCallback = animationClass.bindCallbackToValue((value) => {
+            let [xr, yr, zr] = model.GetPrimaryPartCFrame().ToOrientation()
+            model.SetPrimaryPartCFrame(new CFrame(value).mul(CFrame.fromOrientation(xr, yr, zr)))
+        })
+
+        return {
+            animation: animationClass,
+            binding: vCallback,
+            model: model
+        };
     }
 }
 

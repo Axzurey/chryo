@@ -143,12 +143,25 @@ export default class actionController {
 				rappel.Rappel(ignore);
 			}
 		},
-		reinforce: (state) => {
+		reinforce: async (state) => {
 			if (this.starting(state)) {
-				system.remote.client.fireServer('startReinforcement', getCamera().CFrame)
-			}
-			else {
-				//ends
+				system.remote.client.fireServer('startReinforcement', getCamera().CFrame);
+
+				this.idlePrompts.push(0); //make them unable to move
+
+				let hold = await key.waitForKeyUp({
+					key: this.getKey('reinforce'),
+					maxLength: 2.5,
+					onUpdate: (elapsedTime) => {
+						//update a gui or smth
+					}
+				});
+
+				this.idlePrompts.pop()
+
+				if (hold < 2.3) {
+					system.remote.client.fireServer('cancelReinforcement');
+				}
 			}
 		}
 	}

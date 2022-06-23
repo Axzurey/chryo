@@ -1,5 +1,7 @@
 import { TweenService, Workspace } from "@rbxts/services";
+import anime from "shared/anime";
 import path from "shared/athena/path";
+import { newThread } from "shared/athena/utils";
 import rocaster from "shared/zero/rocast";
 
 namespace reinforcement {
@@ -46,21 +48,47 @@ namespace reinforcement {
 
         const bottomLeft = wallPosition.sub(selectedWall.Size.add(new Vector3(0, 0, -selectedWall.Size.Z * 2)).div(2));
 
-        let lastposition = bottomLeft.add(new Vector3(1, 1, 0));
+        const animations: (() => void)[] = []
 
-        for (let y = 0; y < 5; y ++) {
-            for (let x = 0; x < 4; x ++) {
-                let calculatedPosition = bottomLeft.add(new Vector3(x * 2 + 1, y * 2 + 1, 0));
+        const i: Instance[] = []
+        
+        let canceled = false;
 
-                let clone = pathObject.Clone();
+        for (let x = 0; x < 4; x ++) {
+            let lastposition = bottomLeft.add(new Vector3(x * 2 + 1, 1, 0));
+            newThread(() => {
+                for (let y = 0; y < 5; y ++) {
+                    if (canceled) break;
+                    let calculatedPosition = bottomLeft.add(new Vector3(x * 2 + 1, y * 2 + 1, 0));
+    
+                    let clone = pathObject.Clone();
+    
+                    clone.SetPrimaryPartCFrame(CFrame.lookAt(lastposition, lastposition.add(selectedWallNormal)));
+    
+                    const animation = anime.animateModelPosition(clone, calculatedPosition, .4)
 
-                clone.SetPrimaryPartCFrame(CFrame.lookAt(lastposition, calculatedPosition.add(selectedWallNormal)));
+                    animations.push(animation.binding.unbind)
 
-                clone.Parent = Workspace;
+                    i.push(clone);
+    
+                    clone.Parent = Workspace;
+    
+                    task.wait(.5)
+    
+                    lastposition = calculatedPosition;
+                }
+            })
+        }
 
-                task.wait(.5)
-
-                lastposition = calculatedPosition;
+        return {
+            cancel: () => {
+                canceled = true
+                animations.forEach((v) => {
+                    v()
+                })
+                i.forEach((v) => {
+                    v.Destroy()
+                })
             }
         }
     }

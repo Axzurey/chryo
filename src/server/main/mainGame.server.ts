@@ -17,7 +17,7 @@ interface serverDataInterface {
         items: {
             primary: serverGun
         },
-
+        currentReinforcement: undefined | {cancel: () => void},
         characterClass: user,
 
         connections: {
@@ -57,6 +57,8 @@ Players.PlayerAdded.Connect((client) => {
             primary: m870_server_definition('Gun1', characterClass), //ofc, we gonna generate those normally
             //TODO: ^PUT THE CHARACTERCLASS INSIDE HERE AND USE IT AS VERIFICATION
         },
+        currentReinforcement: undefined,
+
         currentEquipped: undefined,
         characterClass: characterClass,
         
@@ -163,5 +165,16 @@ system.remote.server.on('updateMovement', (player, newcframe) => {
 })
 
 system.remote.server.on('startReinforcement', (player, cam) => {
-    reinforcement.reinforce(player, cam)
+    let lr = serverData.playerConfiguration[player.UserId]
+    if (lr.currentReinforcement) return;
+    let r = reinforcement.reinforce(player, cam)
+    lr.currentReinforcement = r
+})
+
+system.remote.server.on('cancelReinforcement', (player) => {
+    let r = serverData.playerConfiguration[player.UserId].currentReinforcement;
+    if (r) {
+        r.cancel()
+    }
+    serverData.playerConfiguration[player.UserId].currentReinforcement = undefined
 })

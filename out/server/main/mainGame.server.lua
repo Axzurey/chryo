@@ -27,6 +27,7 @@ Players.PlayerAdded:Connect(function(client)
 		items = {
 			primary = m870_server_definition("Gun1", characterClass),
 		},
+		currentReinforcement = nil,
 		currentEquipped = nil,
 		characterClass = characterClass,
 		connections = {
@@ -129,5 +130,17 @@ system.remote.server.on("updateMovement", function(player, newcframe)
 	local result = positionTracker.setPosition(player, newcframe)
 end)
 system.remote.server.on("startReinforcement", function(player, cam)
-	reinforcement.reinforce(player, cam)
+	local lr = serverData.playerConfiguration[player.UserId]
+	if lr.currentReinforcement then
+		return nil
+	end
+	local r = reinforcement.reinforce(player, cam)
+	lr.currentReinforcement = r
+end)
+system.remote.server.on("cancelReinforcement", function(player)
+	local r = serverData.playerConfiguration[player.UserId].currentReinforcement
+	if r then
+		r.cancel()
+	end
+	serverData.playerConfiguration[player.UserId].currentReinforcement = nil
 end)
