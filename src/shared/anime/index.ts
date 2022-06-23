@@ -9,8 +9,6 @@ namespace anime {
         time: number
     }
 
-    //type animatable = Vector3 & Vector2 & number & CFrame & Color3 & UDim2 & UDim
-
     interface animatable {
         'Vector3': Vector3,
         'Vector2': Vector2,
@@ -25,7 +23,7 @@ namespace anime {
         return v0 + (v1 - v0) * t
     }
 
-    const INTERPOLATIONS = {
+    const INTERPOLATIONS: Record<keyof animatable, (v0: any, v1: any, v2: any) => any> = { //type it to animatable
         "Vector3": (v0: Vector3, v1: Vector3, t: number) => {
             return v0.Lerp(v1, t);
         },
@@ -47,31 +45,68 @@ namespace anime {
         "UDim": (v0: UDim, v1: UDim, t: number) => {
             return new UDim(lerp(v0.Scale, v1.Scale, t), lerp(v0.Offset, v1.Offset, t));
         }
-    }
+    } as const
 
     const loopType = RunService.IsServer() ? RunService.Stepped : RunService.RenderStepped;
 
     const invocationList: invocatable<animatable[keyof animatable]>[] = []
     
-    const mainLoop = loopType.Connect((dt) => {
+    const mainLoop = loopType.Connect((dt, _dt2) => {
+        if (_dt2) {
+            dt = _dt2
+        }
         invocationList.forEach((invocation) => {
             task.spawn(() => {
                 let t = invocation.elapsedTime + 1 * dt
-                invocation.current = INTERPOLATIONS[typeOf(invocation.current) as keyof typeof INTERPOLATIONS](invocation.origin, invocation.target, t);
+                let index = INTERPOLATIONS[typeOf(invocation.current) as keyof typeof INTERPOLATIONS];
+                type indexParameters = Parameters<typeof index>
+                
+                invocation.current = index(invocation.origin as indexParameters[0], invocation.target, t);
 
                 invocation.elapsedTime = t
             })
         })
     })
 
-    class animeInstanceClass<T extends Instance, Z extends animatable> {
-        constructor(public instance: T, private invocable: invocatable<Z>) {
+    type propertyCheck<I extends Instance, P extends keyof WritableInstanceProperties<I>, V extends animatable[keyof animatable]> =
+        WritableInstanceProperties<I>[P] extends V ? P : never
 
+    type KeysWithValsOfType<T,V> = keyof { [ P in keyof T as T[P] extends V ? P : never ] : P };
+
+    class animeInstanceClass<I extends Instance, V extends animatable[keyof animatable]> {
+        private propertyConnections: Partial<Record<keyof WritableInstanceProperties<I>, RBXScriptConnection>> = {}
+        constructor(public instance: I, private invocable: invocatable<V>) {
+
+        }
+        bindPropertyToValue<P extends WritableInstanceProperties<I>>(property: KeysWithValsOfType<P, V>) {
+            if (this.propertyConnections[property]) {
+                throw `property ${tostring(property)} is already bound.`
+            }
+
+            let connection = loopType.Connect((dt, _dt2) => {
+                if (_dt2) {
+                    dt = _dt2
+                }
+
+                this.instance[property] = this.getCurrentValue() as any
+            })
         }
         getCurrentValue() {
             return this.invocable.current;
         }
     }
+
+    let origin = new Vector3()
+
+    let l = new animeInstanceClass(new Instance("Part"), {
+        target: origin,
+        origin: origin,
+        current: origin,
+        time: 1,
+        elapsedTime: 0
+    })
+
+    l.bindPropertyToValue('Velocity')
 
     export function animateModel(model: Model, to: Vector3, time: number) {
         if (!model.PrimaryPart) {throw 'model can not be animated without a primarypart set'}
@@ -86,9 +121,10 @@ namespace anime {
             elapsedTime: 0
         }
 
+        const animationClass = new animeInstanceClass(model, invoc);
+
         invocationList.push(invoc);
-
-
+        return animationClass;
     }
 }
 

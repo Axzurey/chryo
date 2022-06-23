@@ -32,11 +32,18 @@ do
 	}
 	local loopType = if RunService:IsServer() then RunService.Stepped else RunService.RenderStepped
 	local invocationList = {}
-	local mainLoop = loopType:Connect(function(dt)
+	local mainLoop = loopType:Connect(function(dt, _dt2)
+		if _dt2 ~= 0 and (_dt2 == _dt2 and _dt2) then
+			dt = _dt2
+		end
 		local _arg0 = function(invocation)
 			task.spawn(function()
 				local t = invocation.elapsedTime + 1 * dt
-				local _ = invocation.current
+				local _exp = INTERPOLATIONS
+				local _current = invocation.current
+				local index = _exp[typeof(_current)]
+				invocation.current = index(invocation.origin, invocation.target, t)
+				invocation.elapsedTime = t
 			end)
 		end
 		for _k, _v in ipairs(invocationList) do
@@ -58,11 +65,31 @@ do
 		function animeInstanceClass:constructor(instance, invocable)
 			self.instance = instance
 			self.invocable = invocable
+			self.propertyConnections = {}
+		end
+		function animeInstanceClass:bindPropertyToValue(property)
+			if self.propertyConnections[property] then
+				error("property " .. (tostring(property) .. " is already bound."))
+			end
+			local connection = loopType:Connect(function(dt, _dt2)
+				if _dt2 ~= 0 and (_dt2 == _dt2 and _dt2) then
+					dt = _dt2
+				end
+				self.instance[property] = self:getCurrentValue()
+			end)
 		end
 		function animeInstanceClass:getCurrentValue()
 			return self.invocable.current
 		end
 	end
+	local origin = Vector3.new()
+	local l = animeInstanceClass.new(Instance.new("Part"), {
+		target = origin,
+		origin = origin,
+		current = origin,
+		time = 1,
+		elapsedTime = 0,
+	})
 	local function animateModel(model, to, time)
 		if not model.PrimaryPart then
 			error("model can not be animated without a primarypart set")
@@ -75,8 +102,10 @@ do
 			time = time,
 			elapsedTime = 0,
 		}
+		local animationClass = animeInstanceClass.new(model, invoc)
 		local _invoc = invoc
 		table.insert(invocationList, _invoc)
+		return animationClass
 	end
 	_container.animateModel = animateModel
 end
