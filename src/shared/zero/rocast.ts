@@ -16,18 +16,26 @@ export interface castResult {
     position: Vector3,
     normal: Vector3,
     material: Enum.Material,
-    instance: BasePart
+    instance: BasePart,
+    subHits: Omit<castResult, 'subHits'>[]
 }
 
 interface castParams {
-    canPierce: (result: RaycastResult) => {damageMultiplier: number, weight: number} | undefined
+    canPierce: (result: RaycastResult) => {damageMultiplier: number, weight: number} | undefined | boolean
 }
 
 export default class rocaster {
     constructor(private params: rocastParams) {
 
     }
-    loopCast(from: Vector3, direction: Vector3, distancePassed: number, ignore: Instance[], castParams: castParams): RaycastResult | undefined {
+    loopCast(
+        from: Vector3, 
+        direction: Vector3, 
+        distancePassed: number, 
+        ignore: Instance[], 
+        castParams: castParams, 
+        subHits: Omit<castResult, 'subHits'>[]
+        ): [RaycastResult, Omit<castResult, 'subHits'>[]] | undefined {
         let i = new RaycastParams()
         i.FilterDescendantsInstances = ignore;
 
@@ -37,7 +45,7 @@ export default class rocaster {
 
             if (this.params.ignoreNames.indexOf(result.Instance.Name) !== -1) {
                 ignore.push(result.Instance);
-                return this.loopCast(from, direction, distancePassed, ignore, castParams);
+                return this.loopCast(from, direction, distancePassed, ignore, castParams, subHits);
             }
 
             let r = castParams.canPierce(result);
@@ -46,10 +54,16 @@ export default class rocaster {
             }
             if (r) {
                 ignore.push(result.Instance)
-                return this.loopCast(result.Position, direction, distance + distancePassed, ignore, castParams);
+                subHits.push({
+                    instance: result.Instance,
+                    normal: result.Normal,
+                    position: result.Position,
+                    material: result.Material,
+                })
+                return this.loopCast(result.Position, direction, distance + distancePassed, ignore, castParams, subHits);
             }
             else {
-                return result;
+                return [result, subHits];
             }
         }
         else {
@@ -60,13 +74,14 @@ export default class rocaster {
         return undefined;
     }
     cast(params: castParams): castResult | undefined {
-        let result = this.loopCast(this.params.from, this.params.direction, 0, this.params.ignore, params);
+        let result = this.loopCast(this.params.from, this.params.direction, 0, this.params.ignore, params, []);
         if (result) {
             return {
-                instance: result.Instance,
-                normal: result.Normal,
-                position: result.Position,
-                material: result.Material
+                instance: result[0].Instance,
+                normal: result[0].Normal,
+                position: result[0].Position,
+                material: result[0].Material,
+                subHits: result[1]
             }
         }
     }

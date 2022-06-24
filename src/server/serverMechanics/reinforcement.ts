@@ -40,6 +40,9 @@ namespace reinforcement {
             return
         }
 
+        let attr = wallCast.instance.GetAttribute('reinforcable');
+        if (!attr) return;
+
         const selectedWall = wallCast.instance;
 
         const selectedWallNormal = wallCast.normal;
@@ -47,6 +50,8 @@ namespace reinforcement {
         const wallPosition = selectedWall.Position;
 
         const bottomLeft = wallPosition.sub(selectedWall.Size.add(new Vector3(0, 0, -selectedWall.Size.Z * 2)).div(2));
+
+        const backBottomLeft = wallPosition.sub(selectedWall.Size).div(2);
 
         const animations: (() => void)[] = []
 
@@ -60,6 +65,32 @@ namespace reinforcement {
                 for (let y = 0; y < 5; y ++) {
                     if (canceled) break;
                     let calculatedPosition = bottomLeft.add(new Vector3(x * 2 + 1, y * 2 + 1, 0));
+    
+                    let clone = pathObject.Clone();
+    
+                    clone.SetPrimaryPartCFrame(CFrame.lookAt(lastposition, lastposition.add(selectedWallNormal)));
+    
+                    const animation = anime.animateModelPosition(clone, calculatedPosition, .4)
+
+                    animations.push(animation.binding.unbind)
+
+                    i.push(clone);
+    
+                    clone.Parent = Workspace;
+    
+                    task.wait(.5)
+    
+                    lastposition = calculatedPosition;
+                }
+            })
+        }
+
+        for (let x = 0; x < 4; x ++) {
+            let lastposition = backBottomLeft.add(new Vector3(x * 2 + 1, 1, 0));
+            newThread(() => {
+                for (let y = 0; y < 5; y ++) {
+                    if (canceled) break;
+                    let calculatedPosition = backBottomLeft.add(new Vector3(x * 2 + 1, y * 2 + 1, 0));
     
                     let clone = pathObject.Clone();
     

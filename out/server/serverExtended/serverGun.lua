@@ -93,13 +93,23 @@ do
 	end
 	function serverGun:determineWhatToDoWithImpact(hit, v)
 		if hit then
+			local rx = hit[4]
+			if rx then
+				local _subHits = rx.subHits
+				local _arg0 = function(vx)
+					self:determineWhatToDoWithImpact({ vx.instance, vx.position, false, nil }, v)
+				end
+				for _k, _v in ipairs(_subHits) do
+					_arg0(_v, _k - 1, _subHits)
+				end
+			end
 			if hit[1].Mass < 1 then
 				if hit[1].Anchored then
 					return nil
 				end
 				local z = hit[1]:GetNetworkOwner()
 				local r = hit[1]:GetConnectedParts()
-				if #r > 0 then
+				if #r > 1 then
 					return nil
 				end
 				if not z then
@@ -108,7 +118,7 @@ do
 					system.remote.server.fireClient("clientFlingBasepart", z, hit[1], hit[2], v.LookVector)
 				end
 			else
-				if hit[3] then
+				if hit[3] and hit[4] then
 					self.source.images.normal:spawn(hit[4].position, hit[4].normal, 1)
 				end
 			end
@@ -162,11 +172,14 @@ do
 			direction = cameraCFrame.LookVector,
 			maxDistance = 999,
 			ignore = { self:getUser().Character },
-			ignoreNames = { "HumanoidRootPart" },
+			ignoreNames = { "HumanoidRootPart", "imageBackdrop" },
 			debug = false,
 		})
 		local castResult = caster:cast({
 			canPierce = function(result)
+				if result.Instance.Mass < 1 then
+					return true
+				end
 				return nil
 				--[[
 					return {

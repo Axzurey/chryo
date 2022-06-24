@@ -19,6 +19,7 @@ local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "
 local gunwork = _gunwork
 local fireMode = _gunwork.fireMode
 local key = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "util", "key").default
+local rocaster = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "rocast").default
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
 local client = Players.LocalPlayer
 local actionController
@@ -143,7 +144,39 @@ do
 				end
 			end),
 			reinforce = TS.async(function(state)
+				local reinforceRange = 8
 				if self:starting(state) then
+					local cameraCFrame = getCamera().CFrame
+					local _lookVector = cameraCFrame.LookVector
+					local _vector3 = Vector3.new(0, cameraCFrame.LookVector.Y, 0)
+					local lookvector = _lookVector - _vector3
+					local caster = rocaster.new({
+						from = cameraCFrame.Position,
+						direction = lookvector,
+						maxDistance = reinforceRange,
+						ignore = { client.Character },
+						ignoreNames = { "HumanoidRootPart" },
+						debug = false,
+					})
+					local wallCast = caster:cast({
+						canPierce = function(result)
+							return nil
+							--[[
+								return {
+								damageMultiplier: 1,
+								weight: 1
+								}
+							]]
+						end,
+					})
+					if not wallCast then
+						print("there is no wall!")
+						return nil
+					end
+					local attr = wallCast.instance:GetAttribute("reinforcable")
+					if not (attr ~= 0 and (attr == attr and (attr ~= "" and attr))) then
+						return nil
+					end
 					system.remote.client.fireServer("startReinforcement", getCamera().CFrame)
 					local _idlePrompts = self.idlePrompts
 					table.insert(_idlePrompts, 0)

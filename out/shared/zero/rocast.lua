@@ -17,7 +17,7 @@ do
 	function rocaster:constructor(params)
 		self.params = params
 	end
-	function rocaster:loopCast(from, direction, distancePassed, ignore, castParams)
+	function rocaster:loopCast(from, direction, distancePassed, ignore, castParams, subHits)
 		local i = RaycastParams.new()
 		i.FilterDescendantsInstances = ignore
 		local _fn = Workspace
@@ -30,7 +30,7 @@ do
 			if (table.find(_ignoreNames, _name) or 0) - 1 ~= -1 then
 				local _instance = result.Instance
 				table.insert(ignore, _instance)
-				return self:loopCast(from, direction, distancePassed, ignore, castParams)
+				return self:loopCast(from, direction, distancePassed, ignore, castParams, subHits)
 			end
 			local r = castParams.canPierce(result)
 			if self.params.debug then
@@ -39,9 +39,16 @@ do
 			if r then
 				local _instance = result.Instance
 				table.insert(ignore, _instance)
-				return self:loopCast(result.Position, direction, distance + distancePassed, ignore, castParams)
+				local _arg0_1 = {
+					instance = result.Instance,
+					normal = result.Normal,
+					position = result.Position,
+					material = result.Material,
+				}
+				table.insert(subHits, _arg0_1)
+				return self:loopCast(result.Position, direction, distance + distancePassed, ignore, castParams, subHits)
 			else
-				return result
+				return { result, subHits }
 			end
 		else
 			if self.params.debug then
@@ -53,13 +60,14 @@ do
 		return nil
 	end
 	function rocaster:cast(params)
-		local result = self:loopCast(self.params.from, self.params.direction, 0, self.params.ignore, params)
+		local result = self:loopCast(self.params.from, self.params.direction, 0, self.params.ignore, params, {})
 		if result then
 			return {
-				instance = result.Instance,
-				normal = result.Normal,
-				position = result.Position,
-				material = result.Material,
+				instance = result[1].Instance,
+				normal = result[1].Normal,
+				position = result[1].Position,
+				material = result[1].Material,
+				subHits = result[2],
 			}
 		end
 	end

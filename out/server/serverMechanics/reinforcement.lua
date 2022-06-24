@@ -38,12 +38,18 @@ do
 			print("there is no wall!")
 			return nil
 		end
+		local attr = wallCast.instance:GetAttribute("reinforcable")
+		if not (attr ~= 0 and (attr == attr and (attr ~= "" and attr))) then
+			return nil
+		end
 		local selectedWall = wallCast.instance
 		local selectedWallNormal = wallCast.normal
 		local wallPosition = selectedWall.Position
 		local _size = selectedWall.Size
 		local _vector3_1 = Vector3.new(0, 0, -selectedWall.Size.Z * 2)
 		local bottomLeft = wallPosition - ((_size + _vector3_1) / 2)
+		local _size_1 = selectedWall.Size
+		local backBottomLeft = (wallPosition - _size_1) / 2
 		local animations = {}
 		local i = {}
 		local canceled = false
@@ -80,6 +86,55 @@ do
 							end
 							local _vector3_3 = Vector3.new(x * 2 + 1, y * 2 + 1, 0)
 							local calculatedPosition = bottomLeft + _vector3_3
+							local clone = pathObject:Clone()
+							clone:SetPrimaryPartCFrame(CFrame.lookAt(lastposition, lastposition + selectedWallNormal))
+							local animation = anime.animateModelPosition(clone, calculatedPosition, .4)
+							local _unbind = animation.binding.unbind
+							table.insert(animations, _unbind)
+							local _clone = clone
+							table.insert(i, _clone)
+							clone.Parent = Workspace
+							task.wait(.5)
+							lastposition = calculatedPosition
+						end
+					end
+				end)
+				_x = x
+			end
+		end
+		do
+			local _x = 0
+			local _shouldIncrement = false
+			while true do
+				local x = _x
+				if _shouldIncrement then
+					x += 1
+				else
+					_shouldIncrement = true
+				end
+				if not (x < 4) then
+					break
+				end
+				local _vector3_2 = Vector3.new(x * 2 + 1, 1, 0)
+				local lastposition = backBottomLeft + _vector3_2
+				newThread(function()
+					do
+						local y = 0
+						local _shouldIncrement_1 = false
+						while true do
+							if _shouldIncrement_1 then
+								y += 1
+							else
+								_shouldIncrement_1 = true
+							end
+							if not (y < 5) then
+								break
+							end
+							if canceled then
+								break
+							end
+							local _vector3_3 = Vector3.new(x * 2 + 1, y * 2 + 1, 0)
+							local calculatedPosition = backBottomLeft + _vector3_3
 							local clone = pathObject:Clone()
 							clone:SetPrimaryPartCFrame(CFrame.lookAt(lastposition, lastposition + selectedWallNormal))
 							local animation = anime.animateModelPosition(clone, calculatedPosition, .4)

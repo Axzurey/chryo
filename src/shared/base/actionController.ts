@@ -11,6 +11,7 @@ import vault from "shared/mechanics/vault";
 import clientExposed, { getCamera } from "shared/middleware/clientExposed";
 import gunwork, { fireMode } from "shared/types/gunwork";
 import key from "shared/util/key";
+import rocaster from "shared/zero/rocast";
 import system from "shared/zero/system";
 import item from "./item";
 
@@ -144,7 +145,40 @@ export default class actionController {
 			}
 		},
 		reinforce: async (state) => {
+			const reinforceRange = 8
 			if (this.starting(state)) {
+
+				let cameraCFrame = getCamera().CFrame;
+
+				let lookvector = cameraCFrame.LookVector.sub(new Vector3(0, cameraCFrame.LookVector.Y, 0)); //remove the y, it's a bother.
+
+				let caster = new rocaster({
+					from: cameraCFrame.Position,
+					direction: lookvector,
+					maxDistance: reinforceRange,
+					ignore: [client.Character as Model],
+					ignoreNames: ['HumanoidRootPart'],
+					debug: false
+				});
+
+				let wallCast = caster.cast({
+					canPierce: (result) => {
+						return undefined
+						/*return {
+							damageMultiplier: 1,
+							weight: 1
+						}*/
+					}
+				});
+
+				if (!wallCast) {
+					print('there is no wall!')
+					return
+				}
+
+				let attr = wallCast.instance.GetAttribute('reinforcable');
+				if (!attr) return;
+
 				system.remote.client.fireServer('startReinforcement', getCamera().CFrame);
 
 				this.idlePrompts.push(0); //make them unable to move

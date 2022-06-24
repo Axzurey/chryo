@@ -102,14 +102,23 @@ export default class serverGun extends serverItem {
             this.reserveAmmo = 0
         }
     }
-    determineWhatToDoWithImpact(hit: [BasePart, Vector3, boolean, castResult] | undefined, v: CFrame) {
+    determineWhatToDoWithImpact(hit: [BasePart, Vector3, boolean, castResult | undefined] | undefined, v: CFrame) {
         if (hit) {
+            let rx = hit[3]
+            if (rx) {
+                rx.subHits.forEach((vx) => {
+                    this.determineWhatToDoWithImpact([vx.instance, vx.position, false, undefined], v);
+                })
+            }
+            
             if (hit[0].Mass < 1) {
                 if (hit[0].Anchored) return;
+
                 let z = hit[0].GetNetworkOwner();
                 let r = hit[0].GetConnectedParts();
 
-                if (r.size() > 0) return; //the part is welded to something anchored, we can't fling it!
+                if (r.size() > 1) { return }; //the part is welded to something anchored, we can't fling it! //for some reason, r has hit[0] in it. ignore i guess.
+
                 if (!z) {
                     hit[0].ApplyImpulseAtPosition(v.LookVector, hit[1])
                 }
@@ -118,7 +127,7 @@ export default class serverGun extends serverItem {
                 }
             }
             else {
-                if (hit[2]) {
+                if (hit[2] && hit[3]) {
                     this.source.images!.normal.spawn(hit[3].position, hit[3].normal, 1);
                 }
             }
@@ -158,12 +167,15 @@ export default class serverGun extends serverItem {
             direction: cameraCFrame.LookVector,
             maxDistance: 999,
             ignore: [this.getUser()!.Character as Model],
-            ignoreNames: ['HumanoidRootPart'],
+            ignoreNames: ['HumanoidRootPart', 'imageBackdrop'],
             debug: false
         });
 
         let castResult = caster.cast({
             canPierce: (result) => {
+                if (result.Instance.Mass < 1) {
+                    return true;
+                }
                 return undefined
                 /*return {
                     damageMultiplier: 1,
