@@ -1,6 +1,16 @@
 import pattern from "./pattern";
 
 export default abstract class path {
+    static exists(pathlike: string) {
+        return this.getInstance(pathlike) ? true : false
+    }
+    static last(pathlike: string) {
+        pathlike = pathlike.split('&')[0];
+
+        let paths = pathlike.split('//');
+
+        return paths[paths.size() - 1]
+    }
     static getInstance(pathlike: string): Instance | undefined {
         pathlike = pathlike.split('&')[0];
 

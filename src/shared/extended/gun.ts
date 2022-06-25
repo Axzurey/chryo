@@ -71,7 +71,7 @@ export default class gun extends item {
 		viewmodelBob: new CFrame(),
 	}
 
-	loadedAnimations: {idle: AnimationTrack, pump?: AnimationTrack}
+	loadedAnimations: Partial<Record<keyof gunwork.gunAnimationsConfig, AnimationTrack>> = {}
 
 	staticOffsets = {
 		leanRight: CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-25)),
@@ -199,6 +199,9 @@ export default class gun extends item {
 	 * time to prone / unprone
 	 */
 	proneTransitionTime: number = .5;
+
+	shellPath?: string = undefined;
+
 	constructor(public serverItemIdentification: string, 
 		private pathToGun: pathLike, 
 		private attachments: gunAttachmentConfig, 
@@ -254,15 +257,14 @@ export default class gun extends item {
 		this.viewmodel = viewmodel as gunwork.gunViewmodel;
 		this.viewmodel.SetPrimaryPartCFrame(clientExposed.getCamera().CFrame);
 
-		let idleanim = animationCompile.create(animationIDS.idle).final();
-
-		let pumpAnim = animationIDS.pump? animationCompile.create(animationIDS.pump!).final(): undefined
-
 		this.viewmodel.Parent = clientExposed.getCamera()
 
-		this.loadedAnimations = {
-			idle: viewmodel.controller.animator.LoadAnimation(idleanim),
-			pump: pumpAnim? viewmodel.controller.animator.LoadAnimation(pumpAnim): undefined
+		for (const [name, id] of pairs(animationIDS)) {
+			let anim = animationCompile.create(id)
+			let final = anim.final()
+			this.loadedAnimations[name] = viewmodel.controller.animator.LoadAnimation(final)
+
+			anim.cleanUp()
 		}
 
 		if (attachments.sight) {
@@ -427,6 +429,38 @@ export default class gun extends item {
 				this.currentRecoilIndex --;
 			});
 		})
+	}
+	initiateSingleAnimation() {
+		if (this.loadedAnimations.reloadStart) {
+			this.loadedAnimations.reloadStart.Play();
+			task.wait(this.loadedAnimations.reloadStart.Length - .1)
+		}
+	}
+	loadShell() {
+		if (this.shellPath) {
+			let c = path.getInstance(this.shellPath) as Model;
+			if (c) {
+				c = c.Clone();
+
+				c.Parent = this.viewmodel;
+
+				let m6d = new Instance('Motor6D')
+				m6d.Part0 = this.viewmodel.aimpart;
+				m6d.Part1 = c.PrimaryPart;
+				m6d.Parent = this.viewmodel.aimpart
+			}
+			else {
+				throw `path ${this.shellPath} is invalid`
+			}
+			return c;
+		}
+	}
+	reloadSingle() {
+		system.remote.client.fireServer('reloadFeedSingleContext', this.serverItemIdentification);
+		if (this.loadedAnimations.reloadFill) {
+			this.loadedAnimations.reloadFill.Play();
+			task.wait(this.loadedAnimations.reloadFill.Length)
+		}
 	}
 	startReload() {
 		newThread(() => {
@@ -633,7 +667,7 @@ export default class gun extends item {
 
 		UserInputService.MouseDeltaSensitivity = lerpedADS;
 
-		if (!this.loadedAnimations.idle.IsPlaying) {
+		if (this.loadedAnimations.idle && !this.loadedAnimations.idle.IsPlaying) {
 			this.loadedAnimations.idle.Play()
 		}
     }

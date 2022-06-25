@@ -52,7 +52,9 @@ namespace gunwork {
 
     export interface gunAnimationsConfig {
         idle: string,
-        pump?: string
+        pump?: string,
+        reloadStart?: string,
+        reloadFill?: string
     }
 
     export type basicCharacter = Model & {

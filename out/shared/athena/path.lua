@@ -6,6 +6,14 @@ do
 	path = {}
 	function path:constructor()
 	end
+	function path:exists(pathlike)
+		return if self:getInstance(pathlike) then true else false
+	end
+	function path:last(pathlike)
+		pathlike = string.split(pathlike, "&")[1]
+		local paths = string.split(pathlike, "//")
+		return paths[#paths - 1 + 1]
+	end
 	function path:getInstance(pathlike)
 		pathlike = string.split(pathlike, "&")[1]
 		local paths = string.split(pathlike, "//")

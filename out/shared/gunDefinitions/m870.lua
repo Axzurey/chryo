@@ -15,6 +15,8 @@ local function m870_definition(id)
 	}, {
 		idle = "rbxassetid://9708823676",
 		pump = "rbxassetid://9708836982",
+		reloadStart = "rbxassetid://10025405779",
+		reloadFill = "rbxassetid://10025403248",
 	})
 	for p, v in pairs(itemClean(itemConfig.getProperties(gunIdentifier))) do
 		g[p] = v

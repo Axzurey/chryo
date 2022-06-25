@@ -3,12 +3,10 @@ import rocaster, { castResult } from 'shared/zero/rocast';
 import { newThread } from "shared/athena/utils";
 import space from "shared/zero/space";
 import examine, { examineHitLocation } from "server/serverBase/examine";
-import { bulletHoleLocation, itemTypeIdentifier } from "shared/types/gunwork";
+import { bulletHoleLocation, itemTypeIdentifier, reloadType } from "shared/types/gunwork";
 import { entityType } from "shared/zero/define/zeroDefinitions";
 import human from "shared/zero/entities/human";
 import image from "shared/classes/image";
-import breach from "server/serverMechanics/breach";
-import { e } from "shared/athena/mathf";
 import system from "shared/zero/system";
 import user from "server/serverClasses/user";
 
@@ -50,6 +48,8 @@ export default class serverGun extends serverItem {
 
     reloading: boolean = false;
 
+    reloadType: reloadType = reloadType.shell;
+
     constructor(serverId: string, public characterClass: user) {
         super(serverId);
         this.ammo = 10
@@ -74,6 +74,15 @@ export default class serverGun extends serverItem {
     }
     cancelReload() {
         this.reloading = false;
+    }
+    lastFeed: number = tick()
+    feedSingle() {
+        if (this.reloadType === reloadType.shell) {
+            if (this.ammo >= this.maxAmmo) return;
+            if (tick() - this.lastFeed < .15) return;
+            this.lastFeed = tick()
+            this.ammo += 1
+        }
     }
     finishReload() {
         if (this.maxAmmo - (this.ammo + this.magazineOverload) <= 0) return; //magazine is already full

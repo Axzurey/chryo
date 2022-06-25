@@ -29,7 +29,8 @@ const m870_config = {
         [new Vector3(.4, .5, -.4 * 5), new Vector3(.8, .8, -.6 * 5)],
     ]),
     reloadType: reloadType.shell,
-    unaimAfterShot: true
+    unaimAfterShot: true,
+    shellPath: 'ReplicatedStorage//gunAddons//blue_shotgun_shell'
 }
 
 export = m870_config;

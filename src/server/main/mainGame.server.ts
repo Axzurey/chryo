@@ -93,6 +93,21 @@ system.remote.server.on('equipContext', (player, itemId) => {
     }
 })
 
+system.remote.server.on('reloadFeedSingleContext', (player, itemId) => {
+    let fromMap = internalIdentification[itemId]
+    if (!fromMap) {
+        //handle this somehow. it should never happen in the first place unless the client is being a meanie and sending dumb stuff
+    }
+    if (fromMap.owner && fromMap.owner === player) {
+        let obj = fromMap.object;
+        if (obj.typeIdentifier === itemTypeIdentifier.gun) {
+            if (obj.userEquipped) {
+                (obj as serverGun).feedSingle()
+            }
+        }
+    }
+})
+
 system.remote.server.on('reloadStartContext', (player, itemId) => {
 	let fromMap = internalIdentification[itemId]
     if (!fromMap) {

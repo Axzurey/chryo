@@ -9,7 +9,7 @@ import clientConfig from "shared/local/clientConfig";
 import rappel from "shared/mechanics/rappel";
 import vault from "shared/mechanics/vault";
 import clientExposed, { getCamera } from "shared/middleware/clientExposed";
-import gunwork, { fireMode } from "shared/types/gunwork";
+import gunwork, { fireMode, reloadType } from "shared/types/gunwork";
 import key from "shared/util/key";
 import rocaster from "shared/zero/rocast";
 import system from "shared/zero/system";
@@ -84,7 +84,27 @@ export default class actionController {
         reload: (state) => {
 			if (this.starting(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
-				gun.startReload();
+				if (gun.reloading) return;
+				if (gun.reloadType === reloadType.mag) {
+					gun.startReload();
+				}
+				else if (gun.reloadType === reloadType.shell) {
+					let diff = gun.maxAmmo - gun.ammo;
+					gun.reloading = true;
+					gun.initiateSingleAnimation()
+					let shell = gun.loadShell()
+					for (let i = 0; i < diff; i++) {
+						gun.reloadSingle();
+						//task.wait(gun.reloadSpeed / gun.maxAmmo);
+						if (gun.maxAmmo - gun.ammo <= 0) break;
+					}
+
+					if (shell) {
+						shell.Destroy()
+					}
+
+					gun.reloading = false
+				}
 			}
             return 'TODO'
         },

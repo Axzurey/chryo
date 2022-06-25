@@ -78,6 +78,7 @@ do
 			cameraBob = CFrame.new(),
 			viewmodelBob = CFrame.new(),
 		}
+		self.loadedAnimations = {}
 		local _object = {
 			leanRight = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(-25)),
 			leanLeft = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(25)),
@@ -156,6 +157,7 @@ do
 		self.leanLength = .35
 		self.crouchTranitionTime = .25
 		self.proneTransitionTime = .5
+		self.shellPath = nil
 		self.character = Players.LocalPlayer.Character
 		self.lastPosition = self.character:GetPrimaryPartCFrame().Position
 		-- get the gun model from path
@@ -194,14 +196,13 @@ do
 		-- load animations!
 		self.viewmodel = viewmodel
 		self.viewmodel:SetPrimaryPartCFrame(clientExposed.getCamera().CFrame)
-		local idleanim = animationCompile:create(animationIDS.idle):final()
-		local _value = animationIDS.pump
-		local pumpAnim = if _value ~= "" and _value then animationCompile:create(animationIDS.pump):final() else nil
 		self.viewmodel.Parent = clientExposed.getCamera()
-		self.loadedAnimations = {
-			idle = viewmodel.controller.animator:LoadAnimation(idleanim),
-			pump = if pumpAnim then viewmodel.controller.animator:LoadAnimation(pumpAnim) else nil,
-		}
+		for name, id in pairs(animationIDS) do
+			local anim = animationCompile:create(id)
+			local final = anim:final()
+			self.loadedAnimations[name] = viewmodel.controller.animator:LoadAnimation(final)
+			anim:cleanUp()
+		end
 		if attachments.sight then
 			local sightmodel = path:sure(attachments.sight.path):Clone()
 			sightmodel:SetPrimaryPartCFrame(viewmodel.sightNode.CFrame)
@@ -337,6 +338,36 @@ do
 				self.currentRecoilIndex -= 1
 			end)
 		end)
+	end
+	function gun:initiateSingleAnimation()
+		if self.loadedAnimations.reloadStart then
+			self.loadedAnimations.reloadStart:Play()
+			task.wait(self.loadedAnimations.reloadStart.Length - .1)
+		end
+	end
+	function gun:loadShell()
+		local _value = self.shellPath
+		if _value ~= "" and _value then
+			local c = path:getInstance(self.shellPath)
+			if c then
+				c = c:Clone()
+				c.Parent = self.viewmodel
+				local m6d = Instance.new("Motor6D")
+				m6d.Part0 = self.viewmodel.aimpart
+				m6d.Part1 = c.PrimaryPart
+				m6d.Parent = self.viewmodel.aimpart
+			else
+				error("path " .. (self.shellPath .. " is invalid"))
+			end
+			return c
+		end
+	end
+	function gun:reloadSingle()
+		system.remote.client.fireServer("reloadFeedSingleContext", self.serverItemIdentification)
+		if self.loadedAnimations.reloadFill then
+			self.loadedAnimations.reloadFill:Play()
+			task.wait(self.loadedAnimations.reloadFill.Length)
+		end
 	end
 	function gun:startReload()
 		newThread(function()
@@ -520,7 +551,7 @@ do
 		local generalSettings = getClientConfig().settings.general
 		local lerpedADS = mathf.lerp(generalSettings.sensitivity, generalSettings.adsSensitivity, self.values.aimDelta.Value)
 		UserInputService.MouseDeltaSensitivity = lerpedADS
-		if not self.loadedAnimations.idle.IsPlaying then
+		if self.loadedAnimations.idle and not self.loadedAnimations.idle.IsPlaying then
 			self.loadedAnimations.idle:Play()
 		end
 	end

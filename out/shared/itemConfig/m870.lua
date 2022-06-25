@@ -29,5 +29,6 @@ local m870_config = {
 	recoilPattern = tableUtils.toMap({ NumberRange.new(0, 90) }, { { Vector3.new(.4, .5, -.4 * 5), Vector3.new(.8, .8, -.6 * 5) } }),
 	reloadType = reloadType.shell,
 	unaimAfterShot = true,
+	shellPath = "ReplicatedStorage//gunAddons//blue_shotgun_shell",
 }
 return m870_config

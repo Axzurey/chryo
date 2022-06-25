@@ -8,6 +8,9 @@ const protocols = {
     equipContext: {
         protocol: new remoteProtocol<(player: Player, itemId: string) => void, () => void>('item_equip_context', [t.Instance, t.string]),
     },
+	reloadFeedSingleContext: {
+		protocol: new remoteProtocol<(player: Player, itemId: string) => void, () => void>('item_reload_single_context', [t.Instance, t.string]),
+	},
 	reloadStartContext: {
 		protocol: new remoteProtocol<(player: Player, itemId: string) => void, () => void>('item_reload_start_context', [t.Instance, t.string]),
 	},

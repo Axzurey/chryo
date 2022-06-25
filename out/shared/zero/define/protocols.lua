@@ -9,6 +9,9 @@ local protocols = {
 	equipContext = {
 		protocol = remoteProtocol.new("item_equip_context", { t.Instance, t.string }),
 	},
+	reloadFeedSingleContext = {
+		protocol = remoteProtocol.new("item_reload_single_context", { t.Instance, t.string }),
+	},
 	reloadStartContext = {
 		protocol = remoteProtocol.new("item_reload_start_context", { t.Instance, t.string }),
 	},

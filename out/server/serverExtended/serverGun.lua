@@ -7,7 +7,9 @@ local space = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zer
 local _examine = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverBase", "examine")
 local examine = _examine
 local examineHitLocation = _examine.examineHitLocation
-local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier
+local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
+local itemTypeIdentifier = _gunwork.itemTypeIdentifier
+local reloadType = _gunwork.reloadType
 local entityType = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "define", "zeroDefinitions").entityType
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
 local serverGun
@@ -42,6 +44,8 @@ do
 		self.reloadSpeedMax = 3
 		self.reloadStarted = tick()
 		self.reloading = false
+		self.reloadType = reloadType.shell
+		self.lastFeed = tick()
 		self.ammo = 10
 		self.userEquipped = true
 		self.typeIdentifier = itemTypeIdentifier.gun
@@ -65,6 +69,18 @@ do
 	end
 	function serverGun:cancelReload()
 		self.reloading = false
+	end
+	function serverGun:feedSingle()
+		if self.reloadType == reloadType.shell then
+			if self.ammo >= self.maxAmmo then
+				return nil
+			end
+			if tick() - self.lastFeed < .15 then
+				return nil
+			end
+			self.lastFeed = tick()
+			self.ammo += 1
+		end
 	end
 	function serverGun:finishReload()
 		if self.maxAmmo - (self.ammo + self.magazineOverload) <= 0 then

@@ -57,6 +57,19 @@ system.remote.server.on("equipContext", function(player, itemId)
 		end
 	end
 end)
+system.remote.server.on("reloadFeedSingleContext", function(player, itemId)
+	local fromMap = internalIdentification[itemId]
+	if not fromMap then
+	end
+	if fromMap.owner and fromMap.owner == player then
+		local obj = fromMap.object
+		if obj.typeIdentifier == itemTypeIdentifier.gun then
+			if obj.userEquipped then
+				obj:feedSingle()
+			end
+		end
+	end
+end)
 system.remote.server.on("reloadStartContext", function(player, itemId)
 	local fromMap = internalIdentification[itemId]
 	if not fromMap then

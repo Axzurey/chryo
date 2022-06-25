@@ -12,7 +12,9 @@ export default function m870_definition(id: string) {
         }
     }, {
         idle: 'rbxassetid://9708823676',
-        pump: 'rbxassetid://9708836982'
+        pump: 'rbxassetid://9708836982',
+        reloadStart: 'rbxassetid://10025405779',
+        reloadFill: 'rbxassetid://10025403248'
     });
 
     for (let [p, v] of pairs(itemClean(itemConfig.getProperties(gunIdentifier)))) {

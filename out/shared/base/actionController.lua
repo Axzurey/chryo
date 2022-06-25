@@ -18,6 +18,7 @@ local getCamera = _clientExposed.getCamera
 local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
 local gunwork = _gunwork
 local fireMode = _gunwork.fireMode
+local reloadType = _gunwork.reloadType
 local key = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "util", "key").default
 local rocaster = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "rocast").default
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
@@ -86,7 +87,40 @@ do
 			reload = function(state)
 				if self:starting(state) and self:equippedIsAGun(self.equippedItem) then
 					local gun = self.equippedItem
-					gun:startReload()
+					if gun.reloading then
+						return nil
+					end
+					if gun.reloadType == reloadType.mag then
+						gun:startReload()
+					elseif gun.reloadType == reloadType.shell then
+						local diff = gun.maxAmmo - gun.ammo
+						gun.reloading = true
+						gun:initiateSingleAnimation()
+						local shell = gun:loadShell()
+						do
+							local i = 0
+							local _shouldIncrement = false
+							while true do
+								if _shouldIncrement then
+									i += 1
+								else
+									_shouldIncrement = true
+								end
+								if not (i < diff) then
+									break
+								end
+								gun:reloadSingle()
+								-- task.wait(gun.reloadSpeed / gun.maxAmmo);
+								if gun.maxAmmo - gun.ammo <= 0 then
+									break
+								end
+							end
+						end
+						if shell then
+							shell:Destroy()
+						end
+						gun.reloading = false
+					end
 				end
 				return "TODO"
 			end,
