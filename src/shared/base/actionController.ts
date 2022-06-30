@@ -1,19 +1,21 @@
 import { HttpService, Players, RunService, UserInputService, Workspace } from "@rbxts/services";
-import path from "shared/athena/path";
-import { newThread } from "shared/athena/utils";
+import path from "shared/modules/path";
+import { newThread } from "shared/modules/utils";
 import crosshairController from "shared/classes/crosshairController";
-import gun from "shared/extended/gun";
+import gun from "shared/global/gun";
 import hk416_definition from "shared/gunDefinitions/hk416";
 import m870_definition from "shared/gunDefinitions/m870";
-import clientConfig from "shared/local/clientConfig";
+import clientConfig from "shared/global/clientConfig";
 import rappel from "shared/mechanics/rappel";
 import vault from "shared/mechanics/vault";
-import clientExposed, { getCamera } from "shared/middleware/clientExposed";
-import gunwork, { fireMode, reloadType } from "shared/types/gunwork";
+import clientExposed, { getCamera } from "shared/global/clientExposed";
+import gunwork, { fireMode, reloadType } from "shared/gunwork";
 import key from "shared/util/key";
-import rocaster from "shared/zero/rocast";
-import system from "shared/zero/system";
+import rocaster from "shared/entities/rocast";
+import system from "shared/entities/system";
 import item from "./item";
+import drone from "shared/classes/drone";
+import observable from "shared/classes/observable";
 
 const client = Players.LocalPlayer;
 
@@ -31,6 +33,8 @@ export default class actionController {
 		vault: Enum.KeyCode.Space,
 		rappel: Enum.KeyCode.Space,
 		reinforce: Enum.KeyCode.V,
+		throwDrone: Enum.KeyCode.Six,
+		toggleCameras: Enum.KeyCode.Five
 	}
 
 	vaulting: boolean = false;
@@ -42,6 +46,8 @@ export default class actionController {
 
 	start = Enum.UserInputState.Begin;
 	end = Enum.UserInputState.End;
+
+	cameras: observable[] = []
 
 	actionMap: Record<keyof typeof this.keybinds, (state: Enum.UserInputState) => void> = {
 		aim: (state) => {
@@ -217,8 +223,23 @@ export default class actionController {
 					system.remote.client.fireServer('cancelReinforcement');
 				}
 			}
+		},
+		throwDrone: (state) => {
+			if (!this.starting(state)) return;
+			system.remote.client.fireServer('throwDrone')
+		},
+		toggleCameras: (state) => {
+			this.onCameras = !this.onCameras;
+
+			if (this.onCameras) {
+				let cameraIndex = this.cameras[this.cameraIndex];
+
+			}
 		}
 	}
+
+	onCameras: boolean = false;
+	cameraIndex: number = 0;
 
 	private starting(state: Enum.UserInputState): state is Enum.UserInputState.Begin {
 		if (state === Enum.UserInputState.Begin) return true;
@@ -265,6 +286,10 @@ export default class actionController {
 			if (this.equippedIsAGun(equipped)) {
 				equipped.update(dt);
 			}
+
+			this.cameras.forEach((v) => {
+				v.update()
+			})
 		})
 
 		UserInputService.MouseIconEnabled = false;
@@ -295,6 +320,13 @@ export default class actionController {
 
 		system.remote.client.on('clientFlingBasepart', (inst, pos, dir) => {
 			inst.ApplyImpulseAtPosition(dir, pos)
+		})
+
+		system.remote.client.on('throwDrone', (id: string, owner: Player, model: Model) => {
+			let d = new drone(id, owner, model);
+			print(id)
+			print('drone created!')
+			this.cameras.push(d);
 		})
 	}
 

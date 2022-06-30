@@ -1,30 +1,16 @@
-import { Players } from "@rbxts/services";
+import { HttpService, Players } from "@rbxts/services";
 import positionTracker from "server/serverMechanics/positionTracker";
 import serverItem from "server/serverBase/serverItem";
-import serverGun from "server/serverExtended/serverGun"
+import serverGun from "server/serverClasses/serverGun"
 import hk416_server_definition from "server/serverGunDefinitions/hk416";
 import environment from "shared/constants/environment"
-import { itemTypeIdentifier } from "shared/types/gunwork";
-import system from "shared/zero/system";
+import { itemTypeIdentifier } from "shared/gunwork";
+import system from "shared/entities/system";
 import m870_server_definition from "server/serverGunDefinitions/m870";
-import space from "shared/zero/space";
+import space from "shared/entities/space";
 import user, { characterType } from "server/serverClasses/user";
 import reinforcement from "server/serverMechanics/reinforcement";
-
-interface serverDataInterface {
-    playerConfiguration: Record<number, {
-        currentEquipped: serverGun | undefined
-        items: {
-            primary: serverGun
-        },
-        currentReinforcement: undefined | {cancel: () => void},
-        characterClass: user,
-
-        connections: {
-            newCharacterConnection: RBXScriptConnection
-        }
-    }>
-}
+import serverDrone from "server/serverClasses/serverDrone";
 
 let serverData: serverDataInterface = {
     playerConfiguration: {}
@@ -35,6 +21,10 @@ const dotenv = environment.getSharedEnvironment();
 let internalIdentification: {[key: string]: {
     owner?: Player,
     object: serverItem
+}} = {}
+
+let internalDrones: {[key: string]: {
+    object: serverDrone
 }} = {}
 
 Players.PlayerAdded.Connect((client) => {
@@ -58,6 +48,8 @@ Players.PlayerAdded.Connect((client) => {
             //TODO: ^PUT THE CHARACTERCLASS INSIDE HERE AND USE IT AS VERIFICATION
         },
         currentReinforcement: undefined,
+
+        player: client,
 
         currentEquipped: undefined,
         characterClass: characterClass,
@@ -191,5 +183,27 @@ system.remote.server.on('cancelReinforcement', (player) => {
     if (r) {
         r.cancel()
     }
-    serverData.playerConfiguration[player.UserId].currentReinforcement = undefined
+    serverData.playerConfiguration[player.UserId].currentReinforcement = undefined;
+})
+
+system.remote.server.on('throwDrone', (player) => {
+    let id = HttpService.GenerateGUID()
+    let drone = new serverDrone(id, player, serverData, player.Character!.GetPrimaryPartCFrame().Position);
+    internalDrones[id] = {object: drone};
+
+    system.remote.server.fireClient('throwDrone', player, id, player, drone.model);
+})
+
+system.remote.server.on('observeCamera', (player, id, view) => {
+    let d = internalDrones[id]
+    if (!d) return;
+    view ? d.object.addToQueue(player) : d.object.removeFromQueue(player);
+})
+
+system.remote.server.on('moveDrone', (player, id, dir) => {
+    let d = internalDrones[id]
+    print('this', id)
+    if (!d) return;
+    d.object.update(dir)
+    print('updated!', dir)
 })

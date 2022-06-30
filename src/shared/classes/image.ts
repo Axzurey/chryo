@@ -1,4 +1,4 @@
-import path from "shared/athena/path";
+import path from "shared/modules/path";
 
 const directory = path.createIfMissing('Workspace//imageSource', 'Folder');
 

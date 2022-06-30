@@ -1,5 +1,5 @@
 import { RunService, TweenService, Players, Workspace } from "@rbxts/services";
-import mathf from "shared/athena/mathf";
+import mathf from "shared/modules/mathf";
 import elastic from "shared/base/elastic";
 import spring from "shared/base/spring";
 

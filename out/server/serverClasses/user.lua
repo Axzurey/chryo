@@ -1,7 +1,7 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local human = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "entities", "human").default
-local connection = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "signals", "connection").default
+local human = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "entityClasses", "human").default
+local connection = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "connection").default
 local characterState
 do
 	local _inverse = {}
@@ -69,6 +69,9 @@ do
 	function user:tick(dt)
 		if self.state == characterState.dbno then
 			self.health -= 45 * dt
+		end
+		if not self.character then
+			return nil
 		end
 		self.character.Humanoid.MaxHealth = self.maxHealth
 		self.character.Humanoid.Health = self.health

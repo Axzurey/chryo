@@ -1,5 +1,5 @@
 import user from "server/serverClasses/user";
-import serverGun from "server/serverExtended/serverGun";
+import serverGun from "server/serverClasses/serverGun";
 import itemConfig, { itemClean } from "shared/global/itemConfig";
 import { images } from "shared/global/source";
 

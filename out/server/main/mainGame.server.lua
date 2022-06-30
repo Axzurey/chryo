@@ -1,19 +1,23 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local Players = TS.import(script, TS.getModule(script, "@rbxts", "services")).Players
+local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
+local HttpService = _services.HttpService
+local Players = _services.Players
 local positionTracker = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverMechanics", "positionTracker")
 local environment = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "environment")
-local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork").itemTypeIdentifier
-local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
+local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunwork").itemTypeIdentifier
+local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "system")
 local m870_server_definition = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverGunDefinitions", "m870").default
-local space = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "space")
+local space = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "space")
 local user = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverClasses", "user").default
 local reinforcement = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverMechanics", "reinforcement")
+local serverDrone = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverClasses", "serverDrone").default
 local serverData = {
 	playerConfiguration = {},
 }
 local dotenv = environment.getSharedEnvironment()
 local internalIdentification = {}
+local internalDrones = {}
 Players.PlayerAdded:Connect(function(client)
 	positionTracker.addPlayer(client)
 	local characterClass = space.life.create(user)
@@ -28,6 +32,7 @@ Players.PlayerAdded:Connect(function(client)
 			primary = m870_server_definition("Gun1", characterClass),
 		},
 		currentReinforcement = nil,
+		player = client,
 		currentEquipped = nil,
 		characterClass = characterClass,
 		connections = {
@@ -156,4 +161,32 @@ system.remote.server.on("cancelReinforcement", function(player)
 		r.cancel()
 	end
 	serverData.playerConfiguration[player.UserId].currentReinforcement = nil
+end)
+system.remote.server.on("throwDrone", function(player)
+	local id = HttpService:GenerateGUID()
+	local drone = serverDrone.new(id, player, serverData, player.Character:GetPrimaryPartCFrame().Position)
+	internalDrones[id] = {
+		object = drone,
+	}
+	system.remote.server.fireClient("throwDrone", player, id, player, drone.model)
+end)
+system.remote.server.on("observeCamera", function(player, id, view)
+	local d = internalDrones[id]
+	if not d then
+		return nil
+	end
+	if view then
+		d.object:addToQueue(player)
+	else
+		d.object:removeFromQueue(player)
+	end
+end)
+system.remote.server.on("moveDrone", function(player, id, dir)
+	local d = internalDrones[id]
+	print("this", id)
+	if not d then
+		return nil
+	end
+	d.object:update(dir)
+	print("updated!", dir)
 end)

@@ -1,4 +1,4 @@
-import connection from "shared/zero/signals/connection"
+import connection from "shared/modules/connection"
 import datastore from "./datastore"
 import radonCode from "./errors"
 

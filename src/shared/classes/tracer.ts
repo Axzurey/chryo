@@ -1,5 +1,5 @@
 import { RunService } from "@rbxts/services";
-import path from "shared/athena/path";
+import path from "shared/modules/path";
 export default class tracer {
     constructor(origin: Vector3, direction: Vector3, lifeTime: number, color: Color3) {
 

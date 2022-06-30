@@ -1,5 +1,5 @@
 import { Workspace } from "@rbxts/services"
-import { newThread } from "shared/athena/utils"
+import { newThread } from "shared/modules/utils"
 
 namespace breach {
     export function shotgun(pos: Vector3, dir: Vector3) {

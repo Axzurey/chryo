@@ -1,6 +1,6 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local path = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "path").default
+local path = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "path").default
 local directory = path:createIfMissing("Workspace//imageSource", "Folder")
 local image
 do

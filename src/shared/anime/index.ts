@@ -1,5 +1,5 @@
 import { RunService } from "@rbxts/services";
-import mathf from "shared/athena/mathf";
+import mathf from "shared/modules/mathf";
 
 namespace anime {
     interface invocatable<T extends animatable[keyof animatable]> {
@@ -48,14 +48,11 @@ namespace anime {
         }
     } as const
 
-    const loopType = RunService.IsServer() ? RunService.Stepped : RunService.RenderStepped;
+    const loopType = RunService.Heartbeat
 
     const invocationList: invocatable<animatable[keyof animatable]>[] = []
     
-    const mainLoop = loopType.Connect((dt, _dt2) => {
-        if (_dt2) {
-            dt = _dt2
-        }
+    const mainLoop = loopType.Connect((dt) => {
         invocationList.forEach((invocation) => {
             task.spawn(() => {
                 let now = invocation.elapsedTime + 1 * dt
@@ -82,19 +79,14 @@ namespace anime {
                 throw `property ${tostring(property)} is already bound.`
             }
 
-            let connection = loopType.Connect((dt, _dt2) => {
-                if (_dt2) {
-                    dt = _dt2
-                }
+            let connection = loopType.Connect((dt: number) => {
 
                 this.instance[property as keyof I] = this.getCurrentValue() as any;
             })
+            this.propertyConnections[property] = connection;
         }
         bindCallbackToValue(callback: (value: V) => void) {
-            let connection = loopType.Connect((dt, _dt2) => {
-                if (_dt2) {
-                    dt = _dt2
-                }
+            let connection = loopType.Connect((dt: number) => {
 
                 callback(this.getCurrentValue())
             })

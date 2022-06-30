@@ -1,5 +1,5 @@
 import { ReplicatedStorage, RunService } from "@rbxts/services";
-import tree, { castTree } from "shared/athena/tree";
+import tree, { castTree } from "shared/modules/tree";
 
 namespace environment {
     /**

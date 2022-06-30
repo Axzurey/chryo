@@ -2,9 +2,9 @@
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Workspace = TS.import(script, TS.getModule(script, "@rbxts", "services")).Workspace
 local anime = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "anime")
-local path = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "path").default
-local newThread = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils").newThread
-local rocaster = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "rocast").default
+local path = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "path").default
+local newThread = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "utils").newThread
+local rocaster = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "rocast").default
 local reinforcement = {}
 do
 	local _container = reinforcement

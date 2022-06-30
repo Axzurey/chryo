@@ -1,5 +1,5 @@
-import { tableUtils } from "shared/athena/utils";
-import { fireMode, reloadType } from "shared/types/gunwork";
+import { tableUtils } from "shared/modules/utils";
+import { fireMode, reloadType } from "shared/gunwork";
 
 const hk416_config = {
     firerate: {

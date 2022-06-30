@@ -3,7 +3,7 @@ local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_incl
 local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
 local ReplicatedStorage = _services.ReplicatedStorage
 local RunService = _services.RunService
-local tree = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "tree").default
+local tree = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "tree").default
 local environment = {}
 do
 	local _container = environment

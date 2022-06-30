@@ -1,4 +1,4 @@
-import gun from "shared/extended/gun";
+import gun from "shared/global/gun";
 import itemConfig, { itemClean } from "shared/global/itemConfig";
 
 const gunIdentifier = 'hk416';

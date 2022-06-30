@@ -1,7 +1,7 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local tableUtils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils").tableUtils
-local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
+local tableUtils = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "utils").tableUtils
+local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunwork")
 local fireMode = _gunwork.fireMode
 local reloadType = _gunwork.reloadType
 local hk416_config = {

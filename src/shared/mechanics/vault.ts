@@ -1,8 +1,7 @@
 import { Players, RunService, Workspace } from "@rbxts/services";
-import { interpolate } from "shared/athena/interpolations";
-import mathf from "shared/athena/mathf";
-import { plotInWorld } from "shared/athena/plot3d";
-import { getActionController, getCamera } from "shared/middleware/clientExposed";
+import { interpolate } from "shared/modules/interpolations";
+import mathf from "shared/modules/mathf";
+import { getActionController } from "shared/global/clientExposed";
 
 namespace vault {
 	const vaultDistance = 4;

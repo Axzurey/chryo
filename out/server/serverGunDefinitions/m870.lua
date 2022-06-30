@@ -1,6 +1,6 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local serverGun = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverExtended", "serverGun").default
+local serverGun = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverClasses", "serverGun").default
 local _itemConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "global", "itemConfig")
 local itemConfig = _itemConfig
 local itemClean = _itemConfig.itemClean

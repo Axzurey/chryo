@@ -1,8 +1,8 @@
 import { TweenService, Workspace } from "@rbxts/services";
 import anime from "shared/anime";
-import path from "shared/athena/path";
-import { newThread } from "shared/athena/utils";
-import rocaster from "shared/zero/rocast";
+import path from "shared/modules/path";
+import { newThread } from "shared/modules/utils";
+import rocaster from "shared/entities/rocast";
 
 namespace reinforcement {
 

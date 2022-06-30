@@ -1,9 +1,9 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Workspace = TS.import(script, TS.getModule(script, "@rbxts", "services")).Workspace
-local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
-local newThread = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils").newThread
-local ignoreInstances = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "space").ignoreInstances
+local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "mathf")
+local newThread = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "utils").newThread
+local ignoreInstances = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "space").ignoreInstances
 local explosion = {}
 do
 	local _container = explosion

@@ -1,5 +1,5 @@
 import user from "server/serverClasses/user";
-import serverGun from "server/serverExtended/serverGun";
+import serverGun from "server/serverClasses/serverGun";
 import { images } from "shared/global/source";
 
 export default function hk416_server_definition(id: string, characterClass: user) {

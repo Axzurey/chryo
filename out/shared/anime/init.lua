@@ -1,7 +1,7 @@
 -- Compiled with roblox-ts v1.3.3
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local RunService = TS.import(script, TS.getModule(script, "@rbxts", "services")).RunService
-local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
+local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "mathf")
 local anime = {}
 do
 	local _container = anime
@@ -31,12 +31,9 @@ do
 			return UDim.new(lerp(v0.Scale, v1.Scale, t), lerp(v0.Offset, v1.Offset, t))
 		end,
 	}
-	local loopType = if RunService:IsServer() then RunService.Stepped else RunService.RenderStepped
+	local loopType = RunService.Heartbeat
 	local invocationList = {}
-	local mainLoop = loopType:Connect(function(dt, _dt2)
-		if _dt2 ~= 0 and (_dt2 == _dt2 and _dt2) then
-			dt = _dt2
-		end
+	local mainLoop = loopType:Connect(function(dt)
 		local _arg0 = function(invocation)
 			task.spawn(function()
 				local now = invocation.elapsedTime + 1 * dt
@@ -73,18 +70,13 @@ do
 			if self.propertyConnections[property] then
 				error("property " .. (tostring(property) .. " is already bound."))
 			end
-			local connection = loopType:Connect(function(dt, _dt2)
-				if _dt2 ~= 0 and (_dt2 == _dt2 and _dt2) then
-					dt = _dt2
-				end
+			local connection = loopType:Connect(function(dt)
 				self.instance[property] = self:getCurrentValue()
 			end)
+			self.propertyConnections[property] = connection
 		end
 		function animeInstanceClass:bindCallbackToValue(callback)
-			local connection = loopType:Connect(function(dt, _dt2)
-				if _dt2 ~= 0 and (_dt2 == _dt2 and _dt2) then
-					dt = _dt2
-				end
+			local connection = loopType:Connect(function(dt)
 				callback(self:getCurrentValue())
 			end)
 			return {

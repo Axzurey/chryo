@@ -1,0 +1,5 @@
+namespace phantom {
+
+}
+
+export = phantom;

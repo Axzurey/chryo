@@ -1,7 +1,7 @@
 import { Players, RunService, UserInputService, Workspace } from "@rbxts/services";
-import mathf, { closestPointOnPart } from "shared/athena/mathf";
-import { peripherals } from "shared/athena/utils";
-import { getActionController, getCamera } from "shared/middleware/clientExposed";
+import mathf, { closestPointOnPart } from "shared/modules/mathf";
+import { peripherals } from "shared/modules/utils";
+import { getActionController, getCamera } from "shared/global/clientExposed";
 import { moveDirectionFromKeys } from "shared/util/userContext";
 
 namespace rappel {

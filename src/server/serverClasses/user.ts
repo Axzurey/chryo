@@ -1,5 +1,5 @@
-import human from "shared/zero/entities/human";
-import connection from "shared/zero/signals/connection";
+import human from "shared/entities/entityClasses/human";
+import connection from "shared/modules/connection";
 
 export type characterType = Model & {
     HumanoidRootPart: BasePart,
@@ -67,6 +67,7 @@ export default class user extends human {
         if (this.state === characterState.dbno) {
             this.health -= 45 * dt
         }
+        if (!this.character) return;
         this.character!.Humanoid.MaxHealth = this.maxHealth;
         this.character!.Humanoid.Health = this.health;
     }

@@ -6,22 +6,23 @@ local Players = _services.Players
 local RunService = _services.RunService
 local UserInputService = _services.UserInputService
 local Workspace = _services.Workspace
-local newThread = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "utils").newThread
+local newThread = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "utils").newThread
 local crosshairController = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "classes", "crosshairController").default
 local m870_definition = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunDefinitions", "m870").default
-local clientConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "local", "clientConfig").default
+local clientConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "global", "clientConfig").default
 local rappel = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "mechanics", "rappel")
 local vault = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "mechanics", "vault")
-local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed")
+local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "global", "clientExposed")
 local clientExposed = _clientExposed
 local getCamera = _clientExposed.getCamera
-local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "types", "gunwork")
+local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunwork")
 local gunwork = _gunwork
 local fireMode = _gunwork.fireMode
 local reloadType = _gunwork.reloadType
 local key = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "util", "key").default
-local rocaster = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "rocast").default
-local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "zero", "system")
+local rocaster = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "rocast").default
+local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "system")
+local drone = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "classes", "drone").default
 local client = Players.LocalPlayer
 local actionController
 do
@@ -47,6 +48,8 @@ do
 			vault = Enum.KeyCode.Space,
 			rappel = Enum.KeyCode.Space,
 			reinforce = Enum.KeyCode.V,
+			throwDrone = Enum.KeyCode.Six,
+			toggleCameras = Enum.KeyCode.Five,
 		}
 		self.vaulting = false
 		self.rappelling = false
@@ -54,6 +57,7 @@ do
 		self.crosshairController = crosshairController.new()
 		self.start = Enum.UserInputState.Begin
 		self["end"] = Enum.UserInputState.End
+		self.cameras = {}
 		self.actionMap = {
 			aim = function(state)
 				if self:equippedIsAGun(self.equippedItem) then
@@ -226,7 +230,21 @@ do
 					end
 				end
 			end),
+			throwDrone = function(state)
+				if not self:starting(state) then
+					return nil
+				end
+				system.remote.client.fireServer("throwDrone")
+			end,
+			toggleCameras = function(state)
+				self.onCameras = not self.onCameras
+				if self.onCameras then
+					local cameraIndex = self.cameras[self.cameraIndex + 1]
+				end
+			end,
 		}
+		self.onCameras = false
+		self.cameraIndex = 0
 		self.character = Players.LocalPlayer.Character or (Players.LocalPlayer.CharacterAdded:Wait())
 		if not self.character.PrimaryPart then
 			self.character:GetPropertyChangedSignal("PrimaryPart"):Wait()
@@ -249,6 +267,13 @@ do
 			end
 			if self:equippedIsAGun(equipped) then
 				equipped:update(dt)
+			end
+			local _cameras = self.cameras
+			local _arg0 = function(v)
+				v:update()
+			end
+			for _k, _v in ipairs(_cameras) do
+				_arg0(_v, _k - 1, _cameras)
 			end
 		end)
 		UserInputService.MouseIconEnabled = false
@@ -286,6 +311,14 @@ do
 		end)
 		system.remote.client.on("clientFlingBasepart", function(inst, pos, dir)
 			inst:ApplyImpulseAtPosition(dir, pos)
+		end)
+		system.remote.client.on("throwDrone", function(id, owner, model)
+			local d = drone.new(id, owner, model)
+			print(id)
+			print("drone created!")
+			local _cameras = self.cameras
+			local _d = d
+			table.insert(_cameras, _d)
 		end)
 	end
 	function actionController:starting(state)

@@ -4,9 +4,9 @@ local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
 local Players = _services.Players
 local RunService = _services.RunService
 local Workspace = _services.Workspace
-local interpolate = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "interpolations").interpolate
-local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "athena", "mathf")
-local getActionController = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "middleware", "clientExposed").getActionController
+local interpolate = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "interpolations").interpolate
+local mathf = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "mathf")
+local getActionController = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "global", "clientExposed").getActionController
 local vault = {}
 do
 	local _container = vault

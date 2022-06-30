@@ -1,6 +1,6 @@
 import { Workspace } from "@rbxts/services";
-import human from "shared/zero/entities/human";
-import space from "shared/zero/space";
+import human from "shared/entities/entityClasses/human";
+import space from "shared/entities/space";
 
 let bots = Workspace.WaitForChild('bots').GetChildren() as Model[];
 

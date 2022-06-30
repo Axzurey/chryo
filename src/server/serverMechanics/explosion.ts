@@ -1,7 +1,7 @@
 import { Workspace } from "@rbxts/services";
-import mathf from "shared/athena/mathf";
-import { newThread } from "shared/athena/utils";
-import { ignoreInstances } from "shared/zero/space";
+import mathf from "shared/modules/mathf";
+import { newThread } from "shared/modules/utils";
+import { ignoreInstances } from "shared/entities/space";
 
 namespace explosion {
     interface damageInfo {
