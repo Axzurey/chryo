@@ -4,6 +4,7 @@ local _services = TS.import(script, TS.getModule(script, "@rbxts", "services"))
 local HttpService = _services.HttpService
 local Players = _services.Players
 local positionTracker = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverMechanics", "positionTracker")
+local hk416_server_definition = TS.import(script, game:GetService("ServerScriptService"), "TS", "serverGunDefinitions", "hk416").default
 local environment = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "environment")
 local itemTypeIdentifier = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunwork").itemTypeIdentifier
 local system = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "system")
@@ -30,6 +31,7 @@ Players.PlayerAdded:Connect(function(client)
 	local mix = {
 		items = {
 			primary = m870_server_definition("Gun1", characterClass),
+			secondary = hk416_server_definition("Gun2", characterClass),
 		},
 		currentReinforcement = nil,
 		player = client,
@@ -40,9 +42,14 @@ Players.PlayerAdded:Connect(function(client)
 		},
 	}
 	mix.items.primary:setUser(client)
+	mix.items.secondary:setUser(client)
 	internalIdentification.Gun1 = {
 		owner = client,
 		object = mix.items.primary,
+	}
+	internalIdentification.Gun2 = {
+		owner = client,
+		object = mix.items.secondary,
 	}
 	serverData.playerConfiguration[client.UserId] = mix
 end)
@@ -183,10 +190,15 @@ system.remote.server.on("observeCamera", function(player, id, view)
 end)
 system.remote.server.on("moveDrone", function(player, id, dir)
 	local d = internalDrones[id]
-	print("this", id)
 	if not d then
 		return nil
 	end
 	d.object:update(dir)
-	print("updated!", dir)
+end)
+system.remote.server.on("jumpDrone", function(player, id)
+	local d = internalDrones[id]
+	if not d then
+		return nil
+	end
+	d.object:jump()
 end)

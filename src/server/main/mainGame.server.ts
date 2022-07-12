@@ -44,8 +44,8 @@ Players.PlayerAdded.Connect((client) => {
 
     let mix: serverDataInterface['playerConfiguration'][number] = {
         items: {
-            primary: m870_server_definition('Gun1', characterClass), //ofc, we gonna generate those normally
-            //TODO: ^PUT THE CHARACTERCLASS INSIDE HERE AND USE IT AS VERIFICATION
+            primary: m870_server_definition('Gun1', characterClass),
+            secondary: hk416_server_definition('Gun2', characterClass),
         },
         currentReinforcement: undefined,
 
@@ -61,10 +61,17 @@ Players.PlayerAdded.Connect((client) => {
 
     mix.items.primary.setUser(client)
 
+    mix.items.secondary.setUser(client)
+
     internalIdentification['Gun1'] = {
         owner: client,
         object: mix.items.primary
     };
+
+    internalIdentification['Gun2'] = {
+        owner: client,
+        object: mix.items.secondary
+    }
 
     serverData.playerConfiguration[client.UserId] = mix
 })
@@ -202,8 +209,12 @@ system.remote.server.on('observeCamera', (player, id, view) => {
 
 system.remote.server.on('moveDrone', (player, id, dir) => {
     let d = internalDrones[id]
-    print('this', id)
     if (!d) return;
     d.object.update(dir)
-    print('updated!', dir)
+})
+
+system.remote.server.on('jumpDrone', (player, id) => {
+    let d = internalDrones[id]
+    if (!d) return;
+    d.object.jump()
 })

@@ -7,7 +7,8 @@ declare global {
             player: Player,
             currentEquipped: serverGun | undefined
             items: {
-                primary: serverGun
+                primary: serverGun,
+                secondary: serverGun
             },
             currentReinforcement: undefined | {cancel: () => void},
             characterClass: user,

@@ -43,8 +43,16 @@ do
 		end
 		return if _condition then self.owner else (if firstalivemember then firstalivemember else self.cameraQueue[1])
 	end
-	function serverDrone:update(dir)
-		self.model.PrimaryPart:ApplyImpulse(dir)
+	function serverDrone:update(v)
+		print(v)
+		local avy = self.model.PrimaryPart.AssemblyLinearVelocity.Y
+		if avy > .1 then
+			return nil
+		end
+		self.model.PrimaryPart.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
+	end
+	function serverDrone:jump()
+		self.model.PrimaryPart:ApplyImpulse(Vector3.new(0, 10, 0))
 	end
 	function serverDrone:addToQueue(player)
 		if (table.find(self.cameraQueue, player) or 0) - 1 == -1 then

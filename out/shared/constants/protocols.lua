@@ -57,5 +57,8 @@ local protocols = {
 	cameraControllerChanged = {
 		protocol = remoteProtocol.new("camera_controller_changed", { t.Instance, t.string, t.boolean }),
 	},
+	jumpDrone = {
+		protocol = remoteProtocol.new("drone_jump", { t.Instance, t.string }),
+	},
 }
 return protocols

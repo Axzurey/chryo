@@ -16,11 +16,13 @@ import system from "shared/entities/system";
 import item from "./item";
 import drone from "shared/classes/drone";
 import observable from "shared/classes/observable";
+import userContext from "shared/util/userContext";
 
 const client = Players.LocalPlayer;
 
 export default class actionController {
-	private equippedItem: item | undefined;
+	public equippedItem: item | undefined;
+	public itemBeingEquipped: boolean = false;
 
 	public keybinds = {
 		aim: Enum.UserInputType.MouseButton2,
@@ -34,7 +36,9 @@ export default class actionController {
 		rappel: Enum.KeyCode.Space,
 		reinforce: Enum.KeyCode.V,
 		throwDrone: Enum.KeyCode.Six,
-		toggleCameras: Enum.KeyCode.Five
+		toggleCameras: Enum.KeyCode.Five,
+		primary: Enum.KeyCode.One,
+		secondary: Enum.KeyCode.Two
 	}
 
 	vaulting: boolean = false;
@@ -47,7 +51,7 @@ export default class actionController {
 	start = Enum.UserInputState.Begin;
 	end = Enum.UserInputState.End;
 
-	cameras: observable[] = []
+	cameras: observable[] = [];
 
 	actionMap: Record<keyof typeof this.keybinds, (state: Enum.UserInputState) => void> = {
 		aim: (state) => {
@@ -76,10 +80,6 @@ export default class actionController {
 					gun.fireButtonDown = true;
 					gun.currentClickId = HttpService.GenerateGUID();
 				}
-
-				
-
-				
 			}
 			else if (this.ending(state) && this.equippedIsAGun(this.equippedItem)) {
 				let gun = this.equippedItem;
@@ -233,13 +233,33 @@ export default class actionController {
 
 			if (this.onCameras) {
 				let cameraIndex = this.cameras[this.cameraIndex];
+		
+			}
+		},
+		primary: (state) => {
+			let gun = this.guns[0];
 
+			if (!this.equippedIsAGun(gun)) return;
+
+			if (this.starting(state)) {
+				gun.equip()
+			}
+		},
+		secondary: (state) => {
+			let gun = this.guns[1];
+
+			if (!this.equippedIsAGun(gun)) return;
+
+			if (this.starting(state)) {
+				gun.equip()
 			}
 		}
 	}
 
 	onCameras: boolean = false;
 	cameraIndex: number = 0;
+
+	guns: gun[] = []
 
 	private starting(state: Enum.UserInputState): state is Enum.UserInputState.Begin {
 		if (state === Enum.UserInputState.Begin) return true;
@@ -268,11 +288,16 @@ export default class actionController {
 		clientExposed.setClientConfig(clientSettings);
 
 		let item = m870_definition('Gun1');
+		let item2 = hk416_definition('Gun2');
+		this.guns.push(item);
+		this.guns.push(item2)
 
 		this.equippedItem = item;
 
 		RunService.BindToRenderStep('main_render', Enum.RenderPriority.Last.Value, (dt) => {
 			let equipped = this.equippedItem;
+			let humanoid = this.character.FindFirstChild("Humanoid") as Humanoid;
+			let camera = getCamera();
 
 			if (this.character.PrimaryPart) {
 				if (this.vaulting || this.rappelling) {
@@ -283,13 +308,35 @@ export default class actionController {
 				}
 			}
 
-			if (this.equippedIsAGun(equipped)) {
+			//UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter;
+			//client.CameraMode = Enum.CameraMode.LockFirstPerson
+
+			if (this.onCameras) {
+				let index = this.cameraIndex;
+				let cameraChoice = index < this.cameras.size() ? this.cameras[this.cameraIndex] : this.cameras[0]
+
+				humanoid.WalkSpeed = 0;
+
+				camera.CFrame = cameraChoice.model.focus.CFrame;
+			}
+			else if (this.equippedIsAGun(equipped)) {
 				equipped.update(dt);
+				
+				let [cx, cy, cz] = camera.CFrame.ToOrientation();
+
+				let recoilUpdated = equipped.springs.recoil.update(dt);
+
+				camera.CFrame = new CFrame(camera.CFrame.Position)
+					.mul(equipped.values.stanceOffset.Value)
+					.mul(CFrame.fromOrientation(cx, cy, cz))
+					.mul(equipped.values.leanOffsetCamera.Value)
+					.mul(CFrame.Angles(math.rad(recoilUpdated.Y), math.rad(recoilUpdated.X), 0));
 			}
 
 			this.cameras.forEach((v) => {
 				v.update()
 			})
+
 		})
 
 		UserInputService.MouseIconEnabled = false;
@@ -357,5 +404,11 @@ export default class actionController {
 			}
 		}
 		return false;
+	}
+	getTransferCFrameValues() {
+		let g = this.equippedItem
+		if (!this.equippedIsAGun(g)) return;
+		
+		return g.values;
 	}
 }

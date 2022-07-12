@@ -5,6 +5,8 @@ local item = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "base
 local paths = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "constants", "paths")
 local _clientExposed = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "global", "clientExposed")
 local clientExposed = _clientExposed
+local getActionController = _clientExposed.getActionController
+local getCamera = _clientExposed.getCamera
 local getClientConfig = _clientExposed.getClientConfig
 local _gunwork = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunwork")
 local gunwork = _gunwork
@@ -288,6 +290,11 @@ do
 					tracer.new(effectOrigin, spreadDirection, 1.5, self.tracerColor)
 					controller.crosshairController:pushRecoil(spread, self.recoilRegroupTime)
 					system.remote.client.fireServer("fireContext", self.serverItemIdentification, newFireCFrame)
+					local _fn = system.poly
+					local _exp = newFireCFrame.Position
+					local _position = newFireCFrame.Position
+					local _arg0 = newFireCFrame.LookVector * 999
+					_fn.drawLine(_exp, _position + _arg0)
 				end,
 				[fireMode.semi] = function()
 					local _ = cases[fireMode.auto]
@@ -467,6 +474,9 @@ do
 		if not self.viewmodel.PrimaryPart then
 			return nil
 		end
+		if not self.userEquipped and not self.userEquipping then
+			return nil
+		end
 		self.viewmodel.aimpart.Anchored = true
 		local firemode = self.togglableFireModes[self.currentFiremode + 1]
 		if not firemode then
@@ -539,14 +549,7 @@ do
 		local _viewmodelBob = self.cframes.viewmodelBob
 		local _cFrame_1 = CFrame.new(0, 0, recoilUpdated.Z)
 		_fn_1:SetPrimaryPartCFrame(_cFrame * _value * _arg0_1 * _idleOffset * _value_1 * _value_2 * _viewmodelBob * _cFrame_1)
-		local _cFrame_2 = CFrame.new(camera.CFrame.Position)
-		local _value_3 = self.values.stanceOffset.Value
-		local _arg0_2 = CFrame.fromOrientation(cx, cy, cz)
-		local _value_4 = self.values.leanOffsetCamera.Value
-		local _arg0_3 = CFrame.Angles(math.rad(recoilUpdated.Y), math.rad(recoilUpdated.X), 0)
-		camera.CFrame = _cFrame_2 * _value_3 * _arg0_2 * _value_4 * _arg0_3
 		self.cameraCFrame = camera.CFrame
-		self.viewmodel.Parent = camera
 		self.character.Humanoid.WalkSpeed = clientExposed.getBaseWalkSpeed() * (if self.stance == -1 then self.multipliers.speed.prone else (if self.stance == 0 then self.multipliers.speed.crouch else 1))
 		local generalSettings = getClientConfig().settings.general
 		local lerpedADS = mathf.lerp(generalSettings.sensitivity, generalSettings.adsSensitivity, self.values.aimDelta.Value)
@@ -554,6 +557,49 @@ do
 		if self.loadedAnimations.idle and not self.loadedAnimations.idle.IsPlaying then
 			self.loadedAnimations.idle:Play()
 		end
+	end
+	function gun:equip()
+		if not self.canBeEquipped then
+			return nil
+		end
+		if self.userEquipped or self.userEquipping then
+			return nil
+		end
+		local ac = getActionController()
+		self.userEquipping = true
+		local z = ac:getTransferCFrameValues()
+		if z then
+			for i, v in pairs(z) do
+				self.values[i] = v
+			end
+		end
+		self:lean(0)
+		self:aim(false)
+		if ac.equippedItem then
+			ac.equippedItem:unequip()
+		end
+		ac.itemBeingEquipped = true
+		task.wait(self.equipTime)
+		self.userEquipping = false
+		self.userEquipped = true
+		ac.itemBeingEquipped = false
+		ac.equippedItem = self
+		self.viewmodel.Parent = getCamera()
+	end
+	function gun:forceEquip()
+		self.userEquipped = true
+		self.userEquipping = false
+		self.viewmodel.Parent = getCamera()
+	end
+	function gun:unequip()
+		self.userEquipped = false
+		self.userEquipping = false
+		self.viewmodel.Parent = nil
+	end
+	function gun:forceUnequip()
+		self.userEquipped = false
+		self.userEquipping = false
+		self.viewmodel.Parent = nil
 	end
 end
 return {

@@ -67,7 +67,11 @@ const protocols = {
 	cameraControllerChanged: {
 		protocol: new remoteProtocol<() => void, (cameraId: string, controller: Player | undefined) => void>('camera_controller_changed', 
         [t.Instance, t.string, t.boolean]),
-	}
+	},
+	jumpDrone: {
+		protocol: new remoteProtocol<(player: Player, cameraId: string) => void, () => void>('drone_jump', 
+        [t.Instance, t.string]),
+	},
 }
 
 export = protocols;

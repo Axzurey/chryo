@@ -33,8 +33,14 @@ export default class serverDrone {
         return this.cameraQueue.indexOf(this.owner) !== -1 && this.serverDataPointer.playerConfiguration[this.owner.UserId].characterClass.alive() 
         ? this.owner : (firstalivemember ? firstalivemember: this.cameraQueue[0]);
     }
-    update(dir: Vector3) {
-        this.model.PrimaryPart!.ApplyImpulse(dir) //goes exponentially faster!
+    update(v: Vector3) {
+        print(v)
+        let avy = this.model.PrimaryPart!.AssemblyLinearVelocity.Y;
+        if (math.abs(avy) > .1) return;
+        this.model.PrimaryPart!.AssemblyLinearVelocity = new Vector3(v.X, 0, v.Z);
+    }
+    jump() {
+        this.model.PrimaryPart!.ApplyImpulse(new Vector3(0, 10, 0));
     }
     addToQueue(player: Player) {
         if (this.cameraQueue.indexOf(player) === -1) {

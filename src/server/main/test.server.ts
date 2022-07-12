@@ -1,6 +1,8 @@
 import { RunService, Workspace } from "@rbxts/services";
 import physicsObject from "shared/phantom/physicsObject";
 
+/** 
+
 let i = new Instance("Part");
 i.Anchored = true;
 i.Color = Color3.fromRGB(255, 0, 255)
@@ -23,4 +25,4 @@ while (true) {
         math.random() * 1000, 
         math.random() * 1000 * (math.random() > .5 ? 1 : -1))
     )
-}
+}*/

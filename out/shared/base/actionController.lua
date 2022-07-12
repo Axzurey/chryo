@@ -8,6 +8,7 @@ local UserInputService = _services.UserInputService
 local Workspace = _services.Workspace
 local newThread = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "utils").newThread
 local crosshairController = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "classes", "crosshairController").default
+local hk416_definition = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunDefinitions", "hk416").default
 local m870_definition = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "gunDefinitions", "m870").default
 local clientConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "global", "clientConfig").default
 local rappel = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "mechanics", "rappel")
@@ -37,6 +38,7 @@ do
 		return self:constructor(...) or self
 	end
 	function actionController:constructor()
+		self.itemBeingEquipped = false
 		self.keybinds = {
 			aim = Enum.UserInputType.MouseButton2,
 			fire = Enum.UserInputType.MouseButton1,
@@ -50,6 +52,8 @@ do
 			reinforce = Enum.KeyCode.V,
 			throwDrone = Enum.KeyCode.Six,
 			toggleCameras = Enum.KeyCode.Five,
+			primary = Enum.KeyCode.One,
+			secondary = Enum.KeyCode.Two,
 		}
 		self.vaulting = false
 		self.rappelling = false
@@ -242,9 +246,28 @@ do
 					local cameraIndex = self.cameras[self.cameraIndex + 1]
 				end
 			end,
+			primary = function(state)
+				local gun = self.guns[1]
+				if not self:equippedIsAGun(gun) then
+					return nil
+				end
+				if self:starting(state) then
+					gun:equip()
+				end
+			end,
+			secondary = function(state)
+				local gun = self.guns[2]
+				if not self:equippedIsAGun(gun) then
+					return nil
+				end
+				if self:starting(state) then
+					gun:equip()
+				end
+			end,
 		}
 		self.onCameras = false
 		self.cameraIndex = 0
+		self.guns = {}
 		self.character = Players.LocalPlayer.Character or (Players.LocalPlayer.CharacterAdded:Wait())
 		if not self.character.PrimaryPart then
 			self.character:GetPropertyChangedSignal("PrimaryPart"):Wait()
@@ -255,9 +278,18 @@ do
 		clientExposed.setBaseWalkSpeed(12)
 		clientExposed.setClientConfig(clientSettings)
 		local item = m870_definition("Gun1")
+		local item2 = hk416_definition("Gun2")
+		local _guns = self.guns
+		local _item = item
+		table.insert(_guns, _item)
+		local _guns_1 = self.guns
+		local _item2 = item2
+		table.insert(_guns_1, _item2)
 		self.equippedItem = item
 		RunService:BindToRenderStep("main_render", Enum.RenderPriority.Last.Value, function(dt)
 			local equipped = self.equippedItem
+			local humanoid = self.character:FindFirstChild("Humanoid")
+			local camera = getCamera()
 			if self.character.PrimaryPart then
 				if self.vaulting or self.rappelling then
 					self.character.PrimaryPart.Anchored = true
@@ -265,8 +297,23 @@ do
 					self.character.PrimaryPart.Anchored = false
 				end
 			end
-			if self:equippedIsAGun(equipped) then
+			-- UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter;
+			-- client.CameraMode = Enum.CameraMode.LockFirstPerson
+			if self.onCameras then
+				local index = self.cameraIndex
+				local cameraChoice = if index < #self.cameras then self.cameras[self.cameraIndex + 1] else self.cameras[1]
+				humanoid.WalkSpeed = 0
+				camera.CFrame = cameraChoice.model.focus.CFrame
+			elseif self:equippedIsAGun(equipped) then
 				equipped:update(dt)
+				local cx, cy, cz = camera.CFrame:ToOrientation()
+				local recoilUpdated = equipped.springs.recoil:update(dt)
+				local _cFrame = CFrame.new(camera.CFrame.Position)
+				local _value = equipped.values.stanceOffset.Value
+				local _arg0 = CFrame.fromOrientation(cx, cy, cz)
+				local _value_1 = equipped.values.leanOffsetCamera.Value
+				local _arg0_1 = CFrame.Angles(math.rad(recoilUpdated.Y), math.rad(recoilUpdated.X), 0)
+				camera.CFrame = _cFrame * _value * _arg0 * _value_1 * _arg0_1
 			end
 			local _cameras = self.cameras
 			local _arg0 = function(v)
@@ -359,6 +406,13 @@ do
 			end
 		end
 		return false
+	end
+	function actionController:getTransferCFrameValues()
+		local g = self.equippedItem
+		if not self:equippedIsAGun(g) then
+			return nil
+		end
+		return g.values
 	end
 end
 return {

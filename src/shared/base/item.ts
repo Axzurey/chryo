@@ -1,3 +1,4 @@
+import { getActionController } from "shared/global/clientExposed";
 import gunwork from "shared/gunwork";
 
 export default abstract class item {
@@ -11,17 +12,6 @@ export default abstract class item {
 	typeIdentifier: gunwork.itemTypeIdentifier = gunwork.itemTypeIdentifier.none;
 
 	//internal
-	//maybe this can have another type, like a bot type?
-	private user?: Player;
-
-	getUser() {
-		return this.user
-	}
-
-	setUser(user: Player | undefined) {
-		this.user = user
-		this.userChanged(user)
-	}
 
 	userEquipped: boolean = false;
 	userEquipping: boolean = false;
@@ -64,12 +54,41 @@ export default abstract class item {
 	}
 
 	//methods
-	equip() {/**todo */}
-	forceEquip() {/**todo */}
-	unequip() {/**todo */}
-	forceUnequip() {/**todo */}
+	equip() {
+		if (!this.canBeEquipped) return;
+		if (this.userEquipped || this.userEquipping) return;
+
+		let ac = getActionController()
+
+		this.userEquipping = true;
+		
+		if (ac.equippedItem) {
+			ac.equippedItem.unequip()
+		}
+
+		ac.itemBeingEquipped = true;
+
+		task.wait(this.equipTime);
+
+		this.userEquipping = false;
+		this.userEquipped = true;
+
+		ac.itemBeingEquipped = false;
+		ac.equippedItem = this;
+	}
+	forceEquip() {
+		this.userEquipped = true;
+		this.userEquipping = false;
+	}
+	unequip() {
+		this.userEquipped = false;
+		this.userEquipping = false;
+	}
+	forceUnequip() {
+		this.userEquipped = false;
+		this.userEquipping = false;
+	}
 	drop() {/**todo */}
 	forceDrop() {/**todo */}
 	died() {/**todo */}
-	userChanged(user: Player | undefined) {/**todo */}
 }

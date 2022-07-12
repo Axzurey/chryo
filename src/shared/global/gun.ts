@@ -1,7 +1,7 @@
 import path from "shared/modules/path";
 import item from "shared/base/item";
 import paths from "shared/constants/paths";
-import clientExposed, { getClientConfig } from "shared/global/clientExposed";
+import clientExposed, { getActionController, getCamera, getClientConfig } from "shared/global/clientExposed";
 import gunwork, { fireMode, gunAnimationsConfig, gunAttachmentConfig, reloadType, sightModel } from "shared/gunwork";
 import utils, { later, newThread, random, tableUtils } from 'shared/modules/utils';
 import { HttpService, Players, TweenService, UserInputService } from "@rbxts/services";
@@ -368,6 +368,8 @@ export default class gun extends item {
 					controller.crosshairController.pushRecoil(spread, this.recoilRegroupTime);
 		
 					system.remote.client.fireServer('fireContext', this.serverItemIdentification, newFireCFrame);
+
+					system.poly.drawLine(newFireCFrame.Position, newFireCFrame.Position.add(newFireCFrame.LookVector.mul(999)))
 				},
 				[fireMode.semi]: () => {
 					cases[fireMode.auto]
@@ -565,6 +567,8 @@ export default class gun extends item {
 		
 		if (!this.viewmodel.PrimaryPart) return;
 
+		if (!this.userEquipped && !this.userEquipping) return;
+
 		this.viewmodel.aimpart.Anchored = true;
 
 		let firemode = this.togglableFireModes[this.currentFiremode];
@@ -649,15 +653,7 @@ export default class gun extends item {
 			.mul(new CFrame(0, 0, recoilUpdated.Z))
 		);
 
-		camera.CFrame = new CFrame(camera.CFrame.Position)
-			.mul(this.values.stanceOffset.Value)
-			.mul(CFrame.fromOrientation(cx, cy, cz))
-			.mul(this.values.leanOffsetCamera.Value)
-			.mul(CFrame.Angles(math.rad(recoilUpdated.Y), math.rad(recoilUpdated.X), 0));
-
 		this.cameraCFrame = camera.CFrame;
-
-		this.viewmodel.Parent = camera;
 
 		this.character.Humanoid.WalkSpeed = clientExposed.getBaseWalkSpeed() 
 			* (this.stance === -1? this.multipliers.speed.prone: (this.stance === 0? this.multipliers.speed.crouch: 1))
@@ -671,4 +667,53 @@ export default class gun extends item {
 			this.loadedAnimations.idle.Play()
 		}
     }
+
+	override equip() {
+		if (!this.canBeEquipped) return;
+		if (this.userEquipped || this.userEquipping) return;
+
+		let ac = getActionController()
+
+		this.userEquipping = true;
+
+		let z = ac.getTransferCFrameValues();
+
+		if (z) {
+			for (const [i, v] of pairs(z)) {
+				this.values[i] = v as never;
+			}
+		}
+
+		this.lean(0);
+		this.aim(false);
+		
+		if (ac.equippedItem) {
+			ac.equippedItem.unequip()
+		}
+		ac.itemBeingEquipped = true;
+
+		task.wait(this.equipTime);
+
+		this.userEquipping = false;
+		this.userEquipped = true;
+
+		ac.itemBeingEquipped = false;
+		ac.equippedItem = this;
+		this.viewmodel.Parent = getCamera();
+	}
+	override forceEquip() {
+		this.userEquipped = true;
+		this.userEquipping = false;
+		this.viewmodel.Parent = getCamera();
+	}
+	override unequip() {
+		this.userEquipped = false;
+		this.userEquipping = false;
+		this.viewmodel.Parent = undefined
+	}
+	override forceUnequip() {
+		this.userEquipped = false;
+		this.userEquipping = false;
+		this.viewmodel.Parent = undefined
+	}
 }
